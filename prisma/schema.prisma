@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  mascot    String
+  level     Int      @default(1)
+  xp        Int      @default(0)
+  streak    Int      @default(0)
+  ownerId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  members   Member[]
+  sprints   Sprint[]
+  ceremonies Ceremony[]
+  badges    Badge[]
+}
+
+model Member {
+  id       String @id @default(cuid())
+  userId   String
+  teamId   String
+  role     String @default("member")
+  joinedAt DateTime @default(now())
+  team     Team   @relation(fields: [teamId], references: [id])
+  @@unique([teamId, userId])
+}
+
+model Sprint {
+  id         String   @id @default(cuid())
+  number     Int
+  theme      String
+  teamId     String
+  status     String   @default("active")
+  startedAt  DateTime @default(now())
+  endedAt    DateTime?
+  team       Team     @relation(fields: [teamId], references: [id])
+  ceremonies Ceremony[]
+  quests     Quest[]
+}
+
+model Ceremony {
+  id         String   @id @default(cuid())
+  type       String
+  gameMode   String
+  teamId     String
+  sprintId   String
+  status     String   @default("active")
+  startedAt  DateTime @default(now())
+  endedAt    DateTime?
+  round      Int      @default(0)
+  team       Team     @relation(fields: [teamId], references: [id])
+  sprint     Sprint   @relation(fields: [sprintId], references: [id])
+  comments   Comment[]
+  votes      Vote[]
+  actions    Action[]
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  content    String
+  author     String
+  anonymous  Boolean  @default(false)
+  category   String
+  ceremonyId String
+  ceremony   Ceremony @relation(fields: [ceremonyId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model Vote {
+  id         String   @id @default(cuid())
+  option     String
+  userId     String
+  ceremonyId String
+  ceremony   Ceremony @relation(fields: [ceremonyId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model Action {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  owner       String
+  status      String   @default("pending")
+  questId     String?
+  quest       Quest?   @relation(fields: [questId], references: [id])
+  ceremonyId  String
+  ceremony    Ceremony @relation(fields: [ceremonyId], references: [id])
+  dueDate     DateTime?
+  completedAt DateTime?
+  xpValue     Int      @default(50)
+  createdAt   DateTime @default(now())
+}
+
+model Quest {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  xpValue     Int      @default(300)
+  status      String   @default("active")
+  sprintId    String
+  sprint      Sprint   @relation(fields: [sprintId], references: [id])
+  actions     Action[]
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model Badge {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id])
+  earnedAt    DateTime @default(now())
+}
