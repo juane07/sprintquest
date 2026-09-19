@@ -105,7 +105,8 @@ function DashboardInner() {
   return (
     <main className="min-h-screen p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center gap-6 mb-6">
+        <a href="/" className="text-sm text-gray-400 hover:text-teal transition">← Home</a>
+        <div className="flex items-center gap-6 mb-6 mt-2">
           <div className="text-6xl">{team.mascot}</div>
           <div>
             <h1 className="text-4xl font-bold text-gradient">{team.name}</h1>
