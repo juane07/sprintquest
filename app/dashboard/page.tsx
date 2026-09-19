@@ -2,14 +2,23 @@
 import { Suspense, useState, useEffect } from "react"
 import { getSupabase } from "@/lib/supabase"
 import { useRouter, useSearchParams } from "next/navigation"
-import { GAME_MODES } from "@/constants"
+import { MODE_CONFIG } from "@/constants"
+
+async function awardBadge(supabase: any, teamId: string, name: string, description: string) {
+  const { data } = await supabase.from("Badge").select("id").eq("teamId", teamId).eq("name", name).limit(1)
+  if (!data || data.length === 0) {
+    await supabase.from("Badge").insert({ name, description, teamId })
+  }
+}
 
 function DashboardInner() {
   const [team, setTeam] = useState<any>(null)
   const [ceremonies, setCeremonies] = useState<any[]>([])
-  const [quests, setQuests] = useState<any[]>([])
+  const [actions, setActions] = useState<any[]>([])
+  const [badges, setBadges] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState<string | null>(null)
+  const [completing, setCompleting] = useState<string | null>(null)
   const [error, setError] = useState("")
   const [copied, setCopied] = useState(false)
   const router = useRouter()
@@ -25,12 +34,16 @@ function DashboardInner() {
         if (te || !t) { setError("Team not found."); return }
         setTeam(t)
         const { data: c } = await supabase.from("Ceremony").select("*").eq("teamId", teamId).order("startedAt", { ascending: false })
-        if (c) setCeremonies(c)
-        const { data: sprints } = await supabase.from("Sprint").select("id").eq("teamId", teamId)
-        if (sprints && sprints.length > 0) {
-          const { data: q } = await supabase.from("Quest").select("*").in("sprintId", sprints.map((s: any) => s.id))
-          if (q) setQuests(q)
+        if (c) {
+          setCeremonies(c)
+          const ids = c.map((x: any) => x.id)
+          if (ids.length > 0) {
+            const { data: a } = await supabase.from("Action").select("*").in("ceremonyId", ids).order("createdAt", { ascending: false })
+            if (a) setActions(a)
+          }
         }
+        const { data: b } = await supabase.from("Badge").select("*").eq("teamId", teamId).order("earnedAt", { ascending: false })
+        if (b) setBadges(b)
       } catch (e: any) {
         setError(e?.message ?? "Failed to load team.")
       } finally {
@@ -76,6 +89,27 @@ function DashboardInner() {
     }
   }
 
+  const completeAction = async (action: any) => {
+    if (!teamId || completing) return
+    setCompleting(action.id)
+    try {
+      const supabase = getSupabase()
+      await supabase.from("Action").update({ status: "completed", completedAt: new Date().toISOString() }).eq("id", action.id)
+      const { data: t } = await supabase.from("Team").select("xp").eq("id", teamId).single()
+      const gain = action.xpValue ?? 50
+      if (t) {
+        await supabase.from("Team").update({ xp: (t.xp ?? 0) + gain }).eq("id", teamId)
+        setTeam({ ...team, xp: (t.xp ?? 0) + gain })
+      }
+      await awardBadge(supabase, teamId, "Closer", "Completed your first action item")
+      setActions(prev => prev.map(a => (a.id === action.id ? { ...a, status: "completed" } : a)))
+      const { data: b } = await supabase.from("Badge").select("*").eq("teamId", teamId).order("earnedAt", { ascending: false })
+      if (b) setBadges(b)
+    } finally {
+      setCompleting(null)
+    }
+  }
+
   const copyCode = async () => {
     const code = team?.joinCode ?? ""
     if (!code) return
@@ -110,7 +144,10 @@ function DashboardInner() {
           <div className="text-6xl">{team.mascot}</div>
           <div>
             <h1 className="text-4xl font-bold text-gradient">{team.name}</h1>
-            <span className="bg-gold/20 text-gold px-4 py-1 rounded-full font-bold">Level {level}</span>
+            <div className="flex gap-2 mt-1 flex-wrap items-center">
+              <span className="bg-gold/20 text-gold px-4 py-1 rounded-full font-bold">Level {level}</span>
+              {(team.streak ?? 0) > 0 && <span className="bg-teal/20 text-teal px-4 py-1 rounded-full font-bold">🔥 {team.streak}-sprint streak</span>}
+            </div>
           </div>
         </div>
         <div className="glass rounded-xl p-4 mb-8">
@@ -135,7 +172,7 @@ function DashboardInner() {
         )}
         <h2 className="text-2xl font-bold mb-4">🎮 Start a Ceremony</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
-          {Object.entries(GAME_MODES).map(([key, mode]) => (
+          {Object.entries(MODE_CONFIG).map(([key, mode]) => (
             <button key={key} onClick={() => startCeremony(key)} disabled={starting !== null} className="glass rounded-xl p-6 text-left hover:border-gold transition cursor-pointer disabled:opacity-50">
               <div className="text-3xl mb-2">{mode.name.split(" ")[0]}</div>
               <div className="text-gray-200 font-bold">{starting === key ? "Starting..." : mode.name}</div>
@@ -143,17 +180,42 @@ function DashboardInner() {
             </button>
           ))}
         </div>
-        <section className="mb-12"><h2 className="text-2xl font-bold mb-4">📋 Past Ceremonies</h2>
-          <div className="space-y-4">{ceremonies.length === 0 && <p className="text-gray-400">No ceremonies yet — start your first mission above!</p>}
-            {ceremonies.map((c: any) => <a key={c.id} href={`/retro/${c.id}`} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block"><span className="font-bold">{(GAME_MODES as any)[c.gameMode]?.name ?? c.gameMode}</span><span className="text-gray-400">{c.startedAt ? new Date(c.startedAt).toLocaleDateString() : ""}</span></a>)}
-          </div>
-        </section>
-        {quests.length > 0 && (
-          <section className="mb-12"><h2 className="text-2xl font-bold mb-4">⚔️ Active Quests</h2>
-            <div className="space-y-3">{quests.map((q: any) => <div key={q.id} className="glass rounded-xl p-4 flex justify-between items-center"><span>{q.title}</span><span className="text-gold font-bold">+{q.xpValue} XP</span></div>)}
+        {badges.length > 0 && (
+          <section className="mb-8"><h2 className="text-xl font-bold mb-3">🏅 Badges</h2>
+            <div className="flex gap-3 flex-wrap">{badges.map((b: any) => <div key={b.id} title={b.description} className="glass rounded-xl px-4 py-2 text-sm"><span className="font-bold">{b.name}</span> <span className="text-gray-400">· {b.description}</span></div>)}
             </div>
           </section>
         )}
+        {(() => {
+          const open = actions.filter(a => a.status !== "completed")
+          const done = actions.filter(a => a.status === "completed")
+          if (actions.length === 0) return null
+          return (
+            <section className="mb-12"><h2 className="text-2xl font-bold mb-4">⚔️ Action Items ({open.length} open)</h2>
+              <p className="text-sm text-gray-400 mb-3">Commitments from your retros. Completing one earns its XP immediately.</p>
+              <div className="space-y-3">
+                {open.map((a: any) => (
+                  <div key={a.id} className="glass rounded-xl p-4 flex items-center gap-3">
+                    <button onClick={() => completeAction(a)} disabled={completing !== null} className="w-6 h-6 rounded border border-gray-500 hover:border-gold shrink-0 disabled:opacity-50" title="Mark done">{completing === a.id ? "..." : ""}</button>
+                    <div><div className="font-bold">{a.title}</div><div className="text-xs text-gray-500">{a.owner}{a.dueDate ? ` · due ${new Date(a.dueDate).toLocaleDateString()}` : ""}</div></div>
+                    <span className="ml-auto text-gold font-bold shrink-0">+{a.xpValue ?? 50} XP</span>
+                  </div>
+                ))}
+                {done.slice(0, 5).map((a: any) => (
+                  <div key={a.id} className="rounded-xl p-4 flex items-center gap-3 border border-gray-800 opacity-60">
+                    <span className="text-teal font-bold">✓</span>
+                    <div><div className="line-through text-gray-400">{a.title}</div><div className="text-xs text-gray-600">{a.owner}</div></div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )
+        })()}
+        <section className="mb-12"><h2 className="text-2xl font-bold mb-4">📋 Past Ceremonies</h2>
+          <div className="space-y-4">{ceremonies.length === 0 && <p className="text-gray-400">No ceremonies yet — start your first mission above!</p>}
+            {ceremonies.map((c: any) => <a key={c.id} href={`/retro/${c.id}`} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block"><span className="font-bold">{(MODE_CONFIG as any)[c.gameMode]?.name ?? c.gameMode}</span><span className="text-gray-400">{c.startedAt ? new Date(c.startedAt).toLocaleDateString() : ""}</span></a>)}
+          </div>
+        </section>
       </div>
     </main>
   )
