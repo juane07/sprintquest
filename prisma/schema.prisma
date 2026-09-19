@@ -8,15 +8,16 @@ datasource db {
 }
 
 model Team {
-  id        String   @id @default(cuid())
+  id        String   @id @default(dbgenerated("gen_random_uuid()::text"))
   name      String
   mascot    String
+  joinCode  String   @unique
   level     Int      @default(1)
   xp        Int      @default(0)
   streak    Int      @default(0)
   ownerId   String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(dbgenerated("now()"))
   members   Member[]
   sprints   Sprint[]
   ceremonies Ceremony[]
@@ -24,7 +25,7 @@ model Team {
 }
 
 model Member {
-  id       String @id @default(cuid())
+  id       String @id @default(dbgenerated("gen_random_uuid()::text"))
   userId   String
   teamId   String
   role     String @default("member")
@@ -34,7 +35,7 @@ model Member {
 }
 
 model Sprint {
-  id         String   @id @default(cuid())
+  id         String   @id @default(dbgenerated("gen_random_uuid()::text"))
   number     Int
   theme      String
   teamId     String
@@ -47,7 +48,7 @@ model Sprint {
 }
 
 model Ceremony {
-  id         String   @id @default(cuid())
+  id         String   @id @default(dbgenerated("gen_random_uuid()::text"))
   type       String
   gameMode   String
   teamId     String
@@ -64,7 +65,7 @@ model Ceremony {
 }
 
 model Comment {
-  id         String   @id @default(cuid())
+  id         String   @id @default(dbgenerated("gen_random_uuid()::text"))
   content    String
   author     String
   anonymous  Boolean  @default(false)
@@ -75,7 +76,7 @@ model Comment {
 }
 
 model Vote {
-  id         String   @id @default(cuid())
+  id         String   @id @default(dbgenerated("gen_random_uuid()::text"))
   option     String
   userId     String
   ceremonyId String
@@ -84,7 +85,7 @@ model Vote {
 }
 
 model Action {
-  id          String   @id @default(cuid())
+  id          String   @id @default(dbgenerated("gen_random_uuid()::text"))
   title       String
   description String
   owner       String
@@ -100,7 +101,7 @@ model Action {
 }
 
 model Quest {
-  id          String   @id @default(cuid())
+  id          String   @id @default(dbgenerated("gen_random_uuid()::text"))
   title       String
   description String
   xpValue     Int      @default(300)
@@ -113,7 +114,7 @@ model Quest {
 }
 
 model Badge {
-  id          String   @id @default(cuid())
+  id          String   @id @default(dbgenerated("gen_random_uuid()::text"))
   name        String
   description String
   teamId      String

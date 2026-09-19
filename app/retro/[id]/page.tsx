@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
 import { getSupabase } from "@/lib/supabase"
+import { useRouter } from "next/navigation"
 import { GAME_MODES, CATEGORIES } from "@/constants"
 
 export default function RetroPage({ params }: { params: { id: string } }) {
@@ -11,6 +12,9 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   const [category, setCategory] = useState("Positive")
   const [anonymous, setAnonymous] = useState(false)
   const [voting, setVoting] = useState(false)
+  const [finishing, setFinishing] = useState(false)
+  const [reward, setReward] = useState<number | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     const supabase = getSupabase()
@@ -29,6 +33,38 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     const supabase = getSupabase()
     const { data, error } = await supabase.from("Comment").insert({ ceremonyId: params.id, content: newComment, author: "User", anonymous, category }).select().single()
     if (!error && data) { setComments(prev => [...prev, data]); setNewComment("") }
+  }
+
+  const finishCeremony = async () => {
+    if (finishing || ceremony?.status === "completed") return
+    setFinishing(true)
+    try {
+      const supabase = getSupabase()
+      const xpEarned = 100 + comments.length * 10
+      await supabase.from("Ceremony").update({ status: "completed", endedAt: new Date().toISOString() }).eq("id", params.id)
+      const { data: t } = await supabase.from("Team").select("xp").eq("id", ceremony.teamId).single()
+      if (t) await supabase.from("Team").update({ xp: (t.xp ?? 0) + xpEarned }).eq("id", ceremony.teamId)
+      setReward(xpEarned)
+    } catch (e) {
+      alert("Could not finish the ceremony. Try again.")
+    } finally {
+      setFinishing(false)
+    }
+  }
+
+  if (reward !== null) {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-8">
+        <div className="glass rounded-xl p-10 max-w-md w-full text-center">
+          <div className="text-6xl mb-4">🎉</div>
+          <h1 className="text-3xl font-bold text-gradient mb-2">Quest Complete!</h1>
+          <p className="text-gray-400 mb-4">Your team earned</p>
+          <div className="text-5xl font-bold text-gold mb-4">+{reward} XP</div>
+          <p className="text-sm text-gray-400 mb-6">{comments.length} {comments.length === 1 ? "entry" : "entries"} shared · every voice counts, no leaderboards</p>
+          <button onClick={() => router.push(`/dashboard?team=${ceremony?.teamId}`)} className="w-full p-3 bg-gold text-black font-bold rounded-lg hover:bg-yellow-400">Back to team dashboard</button>
+        </div>
+      </main>
+    )
   }
 
   return (
@@ -52,7 +88,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
               if (catComments.length === 0) return null
               return <div key={cat}><h3 className="text-lg font-bold mb-3">{cat}</h3><div className="space-y-3">{catComments.map((c: any) => <div key={c.id} className="glass rounded-xl p-4"><div className="text-sm text-gray-400 mb-1">{anonymous ? "Anonymous" : c.author}</div><div>{c.content}</div></div>)}</div></div>
             })}</div>
-            <div className="flex justify-between mt-8"><button onClick={() => setRound(round + 1)} className="p-3 bg-teal text-white font-bold rounded-lg">Next Round →</button><button onClick={() => alert("End ceremony")} className="p-3 bg-red-600 text-white font-bold rounded-lg">End</button></div>
+            <div className="flex justify-between mt-8"><button onClick={() => setRound(round + 1)} className="p-3 bg-teal text-white font-bold rounded-lg">Next Round →</button>{ceremony?.status === "completed" ? <span className="p-3 bg-gold/20 text-gold font-bold rounded-lg">Completed ✓</span> : <button onClick={finishCeremony} disabled={finishing} className="p-3 bg-red-600 text-white font-bold rounded-lg disabled:opacity-50">{finishing ? "Finishing..." : "Finish + Earn XP"}</button>}</div>
           </>
         ) : (
           <div className="glass rounded-xl p-8 text-center"><h2 className="text-2xl font-bold mb-6">Cast Your Vote</h2><div className="space-y-4">{CATEGORIES.map(cat => <button key={cat} onClick={() => setVoting(false)} className="w-full glass rounded-xl p-4 hover:border-gold transition">{cat} ({comments.filter((c: any) => c.category === cat).length})</button>)}</div></div>
