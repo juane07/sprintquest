@@ -27,6 +27,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   const [reward, setReward] = useState<number | null>(null)
   const [leveledUp, setLeveledUp] = useState(false)
   const [streakInfo, setStreakInfo] = useState<string | null>(null)
+  const [nextQuests, setNextQuests] = useState<any[]>([])
   const [secondsLeft, setSecondsLeft] = useState(ROUND_SECONDS)
   // action-item creation
   const [actionFor, setActionFor] = useState<any>(null)
@@ -171,6 +172,9 @@ export default function RetroPage({ params }: { params: { id: string } }) {
       // first-ceremony badge
       const { data: done } = await supabase.from("Ceremony").select("id").eq("teamId", ceremony.teamId).eq("status", "completed")
       if (done && done.length <= 1) await awardBadge(supabase, ceremony.teamId, "First Quest", "Completed your first ceremony")
+      // next quests born from this retro
+      const { data: nq } = await supabase.from("Action").select("*").eq("ceremonyId", params.id).neq("status", "completed").order("createdAt")
+      if (nq) setNextQuests(nq)
       setReward(xpEarned + bonus)
     } catch (e) {
       alert("Could not finish the ceremony. Try again.")
@@ -193,6 +197,12 @@ export default function RetroPage({ params }: { params: { id: string } }) {
           <p className="text-gray-400 mb-4">Your team earned</p>
           <div className="text-5xl font-bold text-gold mb-4">+{reward} XP</div>
           {streakInfo && <p className="text-sm text-teal mb-3">{streakInfo}</p>}
+          {nextQuests.length > 0 && (
+            <div className="text-left bg-dark/50 rounded-xl p-4 mb-6">
+              <p className="font-bold mb-2">⚔️ Your next quests</p>
+              {nextQuests.map(q => <div key={q.id} className="flex justify-between text-sm py-1"><span>{q.title} <span className="text-gray-500">· {q.owner}</span></span><span className="text-gold font-bold">+{q.xpValue ?? 50}</span></div>)}
+            </div>
+          )}
           <p className="text-sm text-gray-400 mb-6">{comments.length} {comments.length === 1 ? "entry" : "entries"} shared · every voice counts, no leaderboards</p>
           <button onClick={() => router.push(`/dashboard?team=${ceremony?.teamId}`)} className="w-full p-3 bg-gold text-black font-bold rounded-lg hover:bg-yellow-400">Back to team dashboard</button>
         </div>
