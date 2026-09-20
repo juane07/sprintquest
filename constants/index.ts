@@ -223,6 +223,25 @@ export const MODE_CONFIG: Record<string, ModeConfig> = {
     victoryTitle: "Calibrated!",
     victoryEmoji: "⚖️",
   },
+  BUG_BASH: {
+    name: "🐞 Bug Bash",
+    desc: "Hunt bugs together, vote the nastiest",
+    intro: "Everyone hunts. Log bugs, add repro steps, vote the nastiest. What gets logged gets fixed.",
+    rounds: [
+      { title: "Hunt", prompt: "Find bugs. One per entry — what broke and where." },
+      { title: "Repro", prompt: "Add repro steps. Hit 👍 on bugs you reproduced too." },
+      { title: "Vote the nastiest", prompt: "Which bug is the nastiest? Most 👍 wins." },
+      { title: "Triage", prompt: "Top bugs become action items with owners. Nothing evaporates." },
+    ],
+    categories: [
+      { name: "🐞 Bug", hint: "What broke, where" },
+      { name: "🔁 Repro", hint: "Steps to reproduce" },
+      { name: "✅ Fixed?", hint: "Already fixed or duplicate" },
+    ],
+    voteTitle: "Which bug is the nastiest?",
+    victoryTitle: "Inbox Zero... ish!",
+    victoryEmoji: "🧹",
+  },
 }
 
 // Team level required to unlock each retro mode. Level comes from Team XP.
@@ -233,6 +252,7 @@ export const MODE_UNLOCK_LEVEL: Record<string, number> = {
   BOSS_BATTLE: 2,
   DETECTIVE: 2,
   PLUS_DELTA: 2,
+  BUG_BASH: 2,
   MISSION_CONTROL: 3,
   TEAM_BATTLE: 3,
   FOUR_LS: 3,
