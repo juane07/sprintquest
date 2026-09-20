@@ -231,6 +231,9 @@ function DashboardInner() {
     }
   }
 
+  const ceremonyHref = (c: any) => c.type === "review" ? `/review/${c.id}` : c.type === "planning" ? `/planning/${c.id}` : `/retro/${c.id}`
+  const ceremonyName = (c: any) => c.type === "review" ? "📊 Sprint Review" : c.type === "planning" ? "🃏 Planning Poker" : ((MODE_CONFIG as any)[c.gameMode]?.name ?? c.gameMode)
+
   const copyCode = async () => {
     const code = team?.joinCode ?? ""
     if (!code) return
@@ -316,6 +319,11 @@ function DashboardInner() {
             <div className="text-gray-200 font-bold">{starting === "REVIEW" ? "Starting..." : "📊 Sprint Review"}</div>
             <div className="text-sm text-gray-400 mt-1">Demo the increment, quiz stakeholders, gather feedback</div>
           </button>
+          <button onClick={() => startCeremony("PLANNING", "planning")} disabled={starting !== null} className="glass rounded-xl p-6 text-left hover:border-gold transition cursor-pointer disabled:opacity-50 border-dashed">
+            <div className="text-3xl mb-2">🃏</div>
+            <div className="text-gray-200 font-bold">{starting === "PLANNING" ? "Starting..." : "🃏 Planning Poker"}</div>
+            <div className="text-sm text-gray-400 mt-1">Estimate stories together, reveal at the same time</div>
+          </button>
         </div>
         {badges.length > 0 && (
           <section className="mb-8"><h2 className="text-xl font-bold mb-3">🏅 Badges</h2>
@@ -399,7 +407,7 @@ function DashboardInner() {
         )}
         <section className="mb-12"><h2 className="text-2xl font-bold mb-4">📋 Past Ceremonies</h2>
           <div className="space-y-4">{ceremonies.length === 0 && <p className="text-gray-400">No ceremonies yet — start your first mission above!</p>}
-            {ceremonies.map((c: any) => <a key={c.id} href={c.type === "review" ? `/review/${c.id}` : `/retro/${c.id}`} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block"><span className="font-bold">{c.type === "review" ? "📊 Sprint Review" : ((MODE_CONFIG as any)[c.gameMode]?.name ?? c.gameMode)}</span><span className="text-gray-400">{c.startedAt ? new Date(c.startedAt).toLocaleDateString() : ""}</span></a>)}
+            {ceremonies.map((c: any) => <a key={c.id} href={ceremonyHref(c)} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block"><span className="font-bold">{ceremonyName(c)}</span><span className="text-gray-400">{c.startedAt ? new Date(c.startedAt).toLocaleDateString() : ""}</span></a>)}
           </div>
         </section>
       </div>

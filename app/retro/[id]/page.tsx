@@ -4,6 +4,7 @@ import { getSupabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { MODE_CONFIG, DEFAULT_MODE } from "@/constants"
 import { ceremonyReward, streakBonus, levelForXp, actionXp } from "@/lib/xp"
+import Presence from "@/components/Presence"
 
 const REACTION_EMOJIS = ["❤️", "🔥", "👍"]
 const ROUND_SECONDS = 5 * 60
@@ -184,14 +185,16 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     }
   }
 
-  if (ceremony && ceremony.type === "review") {
+  if (ceremony && (ceremony.type === "review" || ceremony.type === "planning")) {
+    const dest = ceremony.type === "review" ? `/review/${params.id}` : `/planning/${params.id}`
+    const label = ceremony.type === "review" ? "📊 Sprint Review" : "🃏 Planning Poker"
     return (
       <main className="min-h-screen flex items-center justify-center p-8">
         <div className="glass rounded-xl p-10 max-w-md w-full text-center">
-          <div className="text-6xl mb-4">📊</div>
-          <h1 className="text-2xl font-bold mb-2">This is a Sprint Review</h1>
-          <p className="text-gray-400 mb-6">Reviews run on the demo stage, not the retro board.</p>
-          <button onClick={() => router.push(`/review/${params.id}`)} className="w-full p-3 bg-gold text-black font-bold rounded-lg hover:bg-yellow-400">Go to the review →</button>
+          <div className="text-6xl mb-4">{ceremony.type === "review" ? "📊" : "🃏"}</div>
+          <h1 className="text-2xl font-bold mb-2">This is a {label}</h1>
+          <p className="text-gray-400 mb-6">Different stage, different game — take me there.</p>
+          <button onClick={() => router.push(dest)} className="w-full p-3 bg-gold text-black font-bold rounded-lg hover:bg-yellow-400">Go →</button>
         </div>
       </main>
     )
@@ -287,7 +290,8 @@ export default function RetroPage({ params }: { params: { id: string } }) {
         </div>
         <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
           <div><h1 className="text-3xl font-bold text-gradient">{mode.name}</h1><p className="text-gray-400">Round {Math.min(round, totalRounds)} of {totalRounds}: {currentRound.title}</p></div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Presence channel={params.id} />
             <span className={`px-4 py-2 rounded-full font-bold ${secondsLeft === 0 ? "bg-red-900/60 text-red-200" : "bg-navy-800 border border-gray-700 text-gray-300"}`}>⏱ {secondsLeft === 0 ? "Time!" : `${mm}:${ss}`}</span>
             <span className="bg-gold/20 text-gold px-4 py-2 rounded-full font-bold">{comments.length} entries</span>
           </div>

@@ -64,6 +64,7 @@ model Ceremony {
   votes      Vote[]
   actions    Action[]
   reviewQuestions ReviewQuestion[]
+  planningStories PlanningStory[]
 }
 
 model Comment {
@@ -144,4 +145,14 @@ model DailyPulse {
   today     String
   blockers  String
   createdAt DateTime @default(now())
+}
+
+model PlanningStory {
+  id         String   @id @default(dbgenerated("gen_random_uuid()::text"))
+  title      String
+  points     Int?
+  status     String   @default("voting")
+  ceremonyId String
+  ceremony   Ceremony @relation(fields: [ceremonyId], references: [id])
+  createdAt  DateTime @default(now())
 }

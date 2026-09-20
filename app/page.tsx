@@ -1,10 +1,25 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { getSupabase } from "@/lib/supabase"
 import { generateJoinCode, normalizeCode } from "@/lib/joinCode"
 
 const MASCOTS = ["🐉", "🦊", "🚀", "🤖", "🐙"]
+
+interface SavedTeam { id: string; name: string; mascot: string; joinCode: string }
+
+function loadTeams(): SavedTeam[] {
+  try {
+    return JSON.parse(window.localStorage.getItem("sq_teams") ?? "[]")
+  } catch {
+    return []
+  }
+}
+
+function saveTeam(t: SavedTeam) {
+  const list = loadTeams().filter((x) => x.id !== t.id)
+  window.localStorage.setItem("sq_teams", JSON.stringify([{ id: t.id, name: t.name, mascot: t.mascot, joinCode: t.joinCode }, ...list].slice(0, 10)))
+}
 
 async function uniqueJoinCode(supabase: any) {
   for (let i = 0; i < 5; i++) {
@@ -23,7 +38,10 @@ export default function Home() {
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
   const [demoBusy, setDemoBusy] = useState(false)
+  const [myTeams, setMyTeams] = useState<SavedTeam[]>([])
   const router = useRouter()
+
+  useEffect(() => { setMyTeams(loadTeams()) }, [])
 
   const createTeam = async () => {
     setError("")
@@ -38,6 +56,7 @@ export default function Home() {
         .select()
         .single()
       if (e) { setError(e.message); return }
+      saveTeam(data)
       router.push(`/dashboard?team=${data.id}`)
     } catch (e: any) {
       setError(e?.message ?? "Connection error. Check Supabase config.")
@@ -60,6 +79,7 @@ export default function Home() {
         data = res.data
       }
       if (!data) { setError(`No team found with code "${code}". Check it and try again.`); return }
+      saveTeam(data)
       router.push(`/dashboard?team=${data.id}`)
     } catch (e: any) {
       setError(e?.message ?? "Connection error.")
@@ -96,6 +116,7 @@ export default function Home() {
         { ceremonyId: ceremony.id, content: "Try a 15-minute review SLA for urgent PRs", author: "Alex (demo)", category: "Idea" },
       ])
       router.push(`/retro/${ceremony.id}`)
+      saveTeam(team)
     } catch (e: any) {
       setError(e?.message ?? "Could not start demo.")
     } finally {
@@ -130,6 +151,7 @@ export default function Home() {
                   </button>
                 ))}
               </div>
+              <input type="text" placeholder="Or paste any emoji 🦄" value={MASCOTS.includes(mascot) ? "" : mascot} onChange={(e) => setMascot(e.target.value || "🐉")} maxLength={8} className="mt-2 w-full p-2 rounded-lg bg-dark border border-gray-600 text-white placeholder-gray-500 text-sm" />
             </div>
             <button onClick={createTeam} disabled={busy} className="w-full p-3 bg-gold text-black font-bold rounded-lg hover:bg-yellow-400 disabled:opacity-50">
               {busy ? "Creating..." : "Create Team"}
@@ -178,6 +200,20 @@ export default function Home() {
       <button onClick={startDemo} disabled={demoBusy} className="mt-4 text-teal hover:text-white transition disabled:opacity-50">
         {demoBusy ? "Preparing your demo..." : "⚡ Just looking? Try an instant demo — no setup"}
       </button>
+      {myTeams.length > 0 && (
+        <div className="mt-8 w-full max-w-md">
+          <p className="text-sm text-gray-400 mb-2 text-center">Your teams on this device</p>
+          <div className="space-y-2">
+            {myTeams.map(t => (
+              <a key={t.id} href={`/dashboard?team=${t.id}`} className="glass rounded-xl p-3 flex items-center gap-3 hover:border-gold transition block">
+                <span className="text-2xl">{t.mascot}</span>
+                <span className="font-bold">{t.name}</span>
+                <span className="ml-auto font-mono text-teal text-sm">{t.joinCode}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
       <p className="text-gray-500 mt-6 text-sm">No account needed — join with a team code</p>
     </main>
   )

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react"
 import { getSupabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
+import Presence from "@/components/Presence"
 
 const REVIEW_CATS = ["🎤 Demo", "❓ Question", "💬 Feedback"]
 
@@ -146,7 +147,7 @@ export default function ReviewPage({ params }: { params: { id: string } }) {
         </div>
         <div className="flex justify-between items-center mb-2">
           <h1 className="text-3xl font-bold text-gradient">📊 Sprint Review</h1>
-          <span className="bg-gold/20 text-gold px-4 py-2 rounded-full font-bold">{comments.length} entries</span>
+          <div className="flex gap-2"><Presence channel={params.id} /><span className="bg-gold/20 text-gold px-4 py-2 rounded-full font-bold">{comments.length} entries</span></div>
         </div>
         <p className="text-gray-300 mb-6 glass rounded-xl p-4">Demo the increment, quiz your stakeholders, gather feedback. No slides marathons — show, don&apos;t tell.</p>
 
