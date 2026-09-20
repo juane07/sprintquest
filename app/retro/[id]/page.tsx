@@ -184,6 +184,19 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     }
   }
 
+  if (ceremony && ceremony.type === "review") {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-8">
+        <div className="glass rounded-xl p-10 max-w-md w-full text-center">
+          <div className="text-6xl mb-4">📊</div>
+          <h1 className="text-2xl font-bold mb-2">This is a Sprint Review</h1>
+          <p className="text-gray-400 mb-6">Reviews run on the demo stage, not the retro board.</p>
+          <button onClick={() => router.push(`/review/${params.id}`)} className="w-full p-3 bg-gold text-black font-bold rounded-lg hover:bg-yellow-400">Go to the review →</button>
+        </div>
+      </main>
+    )
+  }
+
   const openPrevActions = prevActions.filter(a => a.status !== "completed")
   const mm = Math.floor(secondsLeft / 60)
   const ss = String(secondsLeft % 60).padStart(2, "0")

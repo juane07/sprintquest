@@ -45,6 +45,7 @@ model Sprint {
   team       Team     @relation(fields: [teamId], references: [id])
   ceremonies Ceremony[]
   quests     Quest[]
+  pulses     DailyPulse[]
 }
 
 model Ceremony {
@@ -62,6 +63,7 @@ model Ceremony {
   comments   Comment[]
   votes      Vote[]
   actions    Action[]
+  reviewQuestions ReviewQuestion[]
 }
 
 model Comment {
@@ -120,4 +122,26 @@ model Badge {
   teamId      String
   team        Team     @relation(fields: [teamId], references: [id])
   earnedAt    DateTime @default(now())
+}
+
+model ReviewQuestion {
+  id         String   @id @default(dbgenerated("gen_random_uuid()::text"))
+  prompt     String
+  options    String[]
+  correctIdx Int?
+  status     String   @default("open")
+  ceremonyId String
+  ceremony   Ceremony @relation(fields: [ceremonyId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model DailyPulse {
+  id        String   @id @default(dbgenerated("gen_random_uuid()::text"))
+  sprintId  String
+  sprint    Sprint   @relation(fields: [sprintId], references: [id])
+  author    String
+  yesterday String
+  today     String
+  blockers  String
+  createdAt DateTime @default(now())
 }
