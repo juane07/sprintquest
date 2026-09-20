@@ -326,6 +326,23 @@ function DashboardInner() {
   const ceremonyHref = (c: any) => c.type === "review" ? `/review/${c.id}` : c.type === "planning" ? `/planning/${c.id}` : `/retro/${c.id}`
   const ceremonyName = (c: any) => c.type === "review" ? "📊 Sprint Review" : c.type === "planning" ? "🃏 Planning Poker" : ((MODE_CONFIG as any)[c.gameMode]?.name ?? c.gameMode)
 
+  const [reminding, setReminding] = useState(false)
+  const [remindMsg, setRemindMsg] = useState("")
+  const remindOnSlack = async () => {
+    if (!teamId || reminding) return
+    setReminding(true)
+    setRemindMsg("")
+    try {
+      const res = await fetch("/api/slack/remind", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ teamId }) })
+      const j = await res.json()
+      setRemindMsg(res.ok ? `📣 Posted ${j.count} open actions to Slack!` : (j.error ?? "Slack post failed"))
+    } catch {
+      setRemindMsg("Slack post failed")
+    } finally {
+      setReminding(false)
+    }
+  }
+
   const copyCode = async () => {
     const code = team?.joinCode ?? ""
     if (!code) return
@@ -447,7 +464,7 @@ function DashboardInner() {
           const done = actions.filter(a => a.status === "completed")
           if (actions.length === 0) return null
           return (
-            <section className="mb-12"><h2 className="text-2xl font-bold mb-4">⚔️ Action Items ({open.length} open)</h2>
+            <section className="mb-12"><div className="flex items-center gap-3 mb-4 flex-wrap"><h2 className="text-2xl font-bold">⚔️ Action Items ({open.length} open)</h2><button onClick={remindOnSlack} disabled={reminding || open.length === 0} className="text-xs px-3 py-1.5 rounded-lg border border-gray-600 hover:border-gold text-gray-300 disabled:opacity-50">{reminding ? "Posting…" : "📣 Slack reminder"}</button></div>{remindMsg && <p className="text-sm text-teal mb-3">{remindMsg}</p>}
               <p className="text-sm text-gray-400 mb-3">Commitments from your retros. Completing one earns its XP immediately.</p>
               <div className="space-y-3">
                 {open.map((a: any) => (

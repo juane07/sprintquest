@@ -6,6 +6,7 @@ import { MODE_CONFIG, DEFAULT_MODE } from "@/constants"
 import { ceremonyReward, streakBonus, levelForXp, actionXp } from "@/lib/xp"
 import Presence from "@/components/Presence"
 import Navbar from "@/components/Navbar"
+import ShareRecap from "@/components/ShareRecap"
 
 const REACTION_EMOJIS = ["❤️", "🔥", "👍"]
 const ROUND_SECONDS = 5 * 60
@@ -256,6 +257,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
             </div>
           )}
           <p className="text-sm text-gray-400 mb-6">{comments.length} {comments.length === 1 ? "entry" : "entries"} shared · every voice counts, no leaderboards</p>
+          <ShareRecap ceremonyId={params.id} xp={reward} />
           <button onClick={() => router.push(`/dashboard?team=${ceremony?.teamId}`)} className="w-full p-3 bg-gold text-black font-bold rounded-lg hover:bg-yellow-400">Back to team dashboard</button>
         </div>
       </main>

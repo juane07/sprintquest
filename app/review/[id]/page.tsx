@@ -4,6 +4,7 @@ import { getSupabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import Presence from "@/components/Presence"
 import Navbar from "@/components/Navbar"
+import ShareRecap from "@/components/ShareRecap"
 
 const REVIEW_CATS = ["🎤 Demo", "❓ Question", "💬 Feedback"]
 
@@ -133,6 +134,7 @@ export default function ReviewPage({ params }: { params: { id: string } }) {
           <h1 className="text-3xl font-bold text-gradient mb-2">Review Wrapped!</h1>
           <div className="text-5xl font-bold text-gold mb-4">+{reward} XP</div>
           <p className="text-sm text-gray-400 mb-6">{comments.length} demos & questions · stakeholders engaged, no status-report coma</p>
+          <ShareRecap ceremonyId={params.id} xp={reward} />
           <button onClick={() => router.push(`/dashboard?team=${ceremony?.teamId}`)} className="w-full p-3 bg-gold text-black font-bold rounded-lg hover:bg-yellow-400">Back to team dashboard</button>
         </div>
       </main>
