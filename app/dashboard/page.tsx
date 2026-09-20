@@ -4,6 +4,7 @@ import { getSupabase } from "@/lib/supabase"
 import { useRouter, useSearchParams } from "next/navigation"
 import { MODE_CONFIG } from "@/constants"
 import { progressToNext, actionXp } from "@/lib/xp"
+import Navbar from "@/components/Navbar"
 
 async function awardBadge(supabase: any, teamId: string, name: string, description: string) {
   const { data } = await supabase.from("Badge").select("id").eq("teamId", teamId).eq("name", name).limit(1)
@@ -279,7 +280,9 @@ function DashboardInner() {
   const progress = progressToNext(xp)
 
   return (
-    <main className="min-h-screen p-8">
+    <>
+      <Navbar team={team ? { id: team.id, name: team.name, mascot: team.mascot } : null} />
+      <main className="min-h-screen p-8">
       <div className="max-w-6xl mx-auto">
         <a href="/" className="text-sm text-gray-400 hover:text-teal transition">← Home</a>
         {teamId && <a href={`/history?team=${teamId}`} className="ml-4 text-sm text-gray-400 hover:text-teal transition">📜 Team history</a>}
@@ -447,7 +450,8 @@ function DashboardInner() {
           </div>
         </section>
       </div>
-    </main>
+      </main>
+    </>
   )
 }
 

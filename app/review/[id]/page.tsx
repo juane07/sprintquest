@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import { getSupabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import Presence from "@/components/Presence"
+import Navbar from "@/components/Navbar"
 
 const REVIEW_CATS = ["🎤 Demo", "❓ Question", "💬 Feedback"]
 
@@ -139,7 +140,9 @@ export default function ReviewPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <main className="min-h-screen p-8">
+    <>
+      <Navbar team={ceremony ? { id: ceremony.teamId } : null} />
+      <main className="min-h-screen p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex gap-4 mb-4 text-sm">
           <a href="/" className="text-gray-400 hover:text-teal transition">← Home</a>
@@ -222,6 +225,7 @@ export default function ReviewPage({ params }: { params: { id: string } }) {
             : <button onClick={finishReview} disabled={finishing} className="p-3 bg-red-600 text-white font-bold rounded-lg disabled:opacity-50">{finishing ? "Wrapping..." : "Wrap up + Earn XP"}</button>}
         </div>
       </div>
-    </main>
+      </main>
+    </>
   )
 }

@@ -3,6 +3,7 @@ import { Suspense, useState, useEffect } from "react"
 import { getSupabase } from "@/lib/supabase"
 import { useSearchParams } from "next/navigation"
 import { MODE_CONFIG } from "@/constants"
+import Navbar from "@/components/Navbar"
 
 function HistoryInner() {
   const [team, setTeam] = useState<any>(null)
@@ -64,7 +65,9 @@ function HistoryInner() {
   ]
 
   return (
-    <main className="min-h-screen p-8">
+    <>
+      <Navbar team={team ? { id: team.id, name: team.name, mascot: team.mascot } : null} />
+      <main className="min-h-screen p-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex gap-4 mb-4 text-sm">
           <a href="/" className="text-gray-400 hover:text-teal transition">← Home</a>
@@ -104,7 +107,8 @@ function HistoryInner() {
           </section>
         )}
       </div>
-    </main>
+      </main>
+    </>
   )
 }
 

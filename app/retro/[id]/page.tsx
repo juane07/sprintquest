@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { MODE_CONFIG, DEFAULT_MODE } from "@/constants"
 import { ceremonyReward, streakBonus, levelForXp, actionXp } from "@/lib/xp"
 import Presence from "@/components/Presence"
+import Navbar from "@/components/Navbar"
 
 const REACTION_EMOJIS = ["❤️", "🔥", "👍"]
 const ROUND_SECONDS = 5 * 60
@@ -316,7 +317,9 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   )
 
   return (
-    <main className="min-h-screen p-8">
+    <>
+      <Navbar team={ceremony ? { id: ceremony.teamId } : null} />
+      <main className="min-h-screen p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex gap-4 mb-4 text-sm">
           <a href="/" className="text-gray-400 hover:text-teal transition">← Home</a>
@@ -394,6 +397,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
           </div>
         </div>
       )}
-    </main>
+      </main>
+    </>
   )
 }
