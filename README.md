@@ -25,9 +25,9 @@ NEXTAUTH_SECRET=your-secret
 ## Architecture
 
 - **Next.js 14** — App Router, TypeScript, Tailwind CSS
-- **Supabase** — PostgreSQL, Auth, Realtime, Storage
-- **Prisma** — ORM for database schema
-- **Socket.io** — Real-time collaboration for ceremonies
+- **Supabase** — PostgreSQL, Realtime (comments, reactions), Storage
+- **Prisma** — database schema management (`db push` is source of truth for defaults)
+- **Vitest** — unit tests (`npm test`)
 
 ## Game Modes
 
@@ -55,3 +55,14 @@ All free-tier verified:
 - Database: Supabase (500MB Postgres free)
 - Real-time: Supabase Realtime (built-in)
 - AI: OpenCode built-in models (free)
+
+## Project Status (MVP v1 — done)
+
+Gamified Retrospective loop complete: team creation + mascots, 5 differentiated
+game modes, 6-letter join codes (no account), timed rounds with facilitator
+prompts, anonymous entries, live emoji reactions, entries → action items
+(owner + due date + XP), previous-retro follow-up review, streaks, badges,
+level-ups, Team XP. `npm test` (19 unit tests) green.
+
+Security note: anon key has SELECT/INSERT/UPDATE, DELETE only on votes.
+Enable RLS with real auth before onboarding external teams.

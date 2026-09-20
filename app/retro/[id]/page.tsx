@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import { getSupabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { MODE_CONFIG, DEFAULT_MODE } from "@/constants"
+import { ceremonyReward, streakBonus, levelForXp, actionXp } from "@/lib/xp"
 
 const REACTION_EMOJIS = ["❤️", "🔥", "👍"]
 const ROUND_SECONDS = 5 * 60
@@ -132,7 +133,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     const supabase = getSupabase()
     await supabase.from("Action").update({ status: "completed", completedAt: new Date().toISOString() }).eq("id", action.id)
     const { data: t } = await supabase.from("Team").select("xp").eq("id", teamId).single()
-    if (t) await supabase.from("Team").update({ xp: (t.xp ?? 0) + (action.xpValue ?? 50) }).eq("id", teamId)
+    if (t) await supabase.from("Team").update({ xp: (t.xp ?? 0) + actionXp(action.xpValue) }).eq("id", teamId)
     await awardBadge(supabase, teamId, "Closer", "Completed your first action item")
     setPrevActions(prev => prev.map(a => (a.id === action.id ? { ...a, status: "completed" } : a)))
   }
@@ -147,7 +148,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     setFinishing(true)
     try {
       const supabase = getSupabase()
-      const xpEarned = 100 + comments.length * 10
+      const xpEarned = ceremonyReward(comments.length)
       await supabase.from("Ceremony").update({ status: "completed", endedAt: new Date().toISOString() }).eq("id", params.id)
       const { data: t } = await supabase.from("Team").select("xp, streak").eq("id", ceremony.teamId).single()
       const before = t?.xp ?? 0
@@ -157,7 +158,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
       if (prevCeremony && prevActions.length > 0) {
         if (prevActions.every(a => a.status === "completed")) {
           const streak = (t?.streak ?? 0) + 1
-          bonus = streak * 50
+          bonus = streakBonus(streak)
           await supabase.from("Team").update({ streak }).eq("id", ceremony.teamId)
           streakMsg = `🔥 ${streak}-sprint improvement streak! +${bonus} XP`
           if (streak >= 3) await awardBadge(supabase, ceremony.teamId, "On Fire", "3-sprint improvement streak")
@@ -167,7 +168,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
       }
       const after = before + xpEarned + bonus
       await supabase.from("Team").update({ xp: after }).eq("id", ceremony.teamId)
-      if (Math.floor(after / 1000) > Math.floor(before / 1000)) setLeveledUp(true)
+      if (levelForXp(after) > levelForXp(before)) setLeveledUp(true)
       setStreakInfo(streakMsg)
       // first-ceremony badge
       const { data: done } = await supabase.from("Ceremony").select("id").eq("teamId", ceremony.teamId).eq("status", "completed")

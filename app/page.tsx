@@ -2,23 +2,17 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { getSupabase } from "@/lib/supabase"
+import { generateJoinCode, normalizeCode } from "@/lib/joinCode"
 
 const MASCOTS = ["🐉", "🦊", "🚀", "🤖", "🐙"]
-const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
-
-function randomCode(len = 6) {
-  let s = ""
-  for (let i = 0; i < len; i++) s += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)]
-  return s
-}
 
 async function uniqueJoinCode(supabase: any) {
   for (let i = 0; i < 5; i++) {
-    const code = randomCode()
+    const code = generateJoinCode()
     const { data } = await supabase.from("Team").select("id").eq("joinCode", code).limit(1)
     if (!data || data.length === 0) return code
   }
-  return randomCode() + randomCode(2)
+  return generateJoinCode() + generateJoinCode(2)
 }
 
 export default function Home() {
@@ -54,7 +48,7 @@ export default function Home() {
 
   const joinTeam = async () => {
     setError("")
-    const code = joinCode.trim().toUpperCase()
+    const code = normalizeCode(joinCode)
     if (!code) { setError("Please enter a team code"); return }
     setBusy(true)
     try {
@@ -62,7 +56,7 @@ export default function Home() {
       // short code first, fall back to full team ID for older teams
       let { data } = await supabase.from("Team").select("*").eq("joinCode", code).single()
       if (!data && code.length > 10) {
-        const res = await supabase.from("Team").select("*").eq("id", joinCode.trim()).single()
+        const res = await supabase.from("Team").select("*").eq("id", normalizeCode(joinCode)).single()
         data = res.data
       }
       if (!data) { setError(`No team found with code "${code}". Check it and try again.`); return }

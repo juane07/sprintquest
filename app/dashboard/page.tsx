@@ -3,6 +3,7 @@ import { Suspense, useState, useEffect } from "react"
 import { getSupabase } from "@/lib/supabase"
 import { useRouter, useSearchParams } from "next/navigation"
 import { MODE_CONFIG } from "@/constants"
+import { progressToNext, actionXp } from "@/lib/xp"
 
 async function awardBadge(supabase: any, teamId: string, name: string, description: string) {
   const { data } = await supabase.from("Badge").select("id").eq("teamId", teamId).eq("name", name).limit(1)
@@ -96,7 +97,7 @@ function DashboardInner() {
       const supabase = getSupabase()
       await supabase.from("Action").update({ status: "completed", completedAt: new Date().toISOString() }).eq("id", action.id)
       const { data: t } = await supabase.from("Team").select("xp").eq("id", teamId).single()
-      const gain = action.xpValue ?? 50
+      const gain = actionXp(action.xpValue)
       if (t) {
         await supabase.from("Team").update({ xp: (t.xp ?? 0) + gain }).eq("id", teamId)
         setTeam({ ...team, xp: (t.xp ?? 0) + gain })
@@ -133,8 +134,7 @@ function DashboardInner() {
 
   const level = team.level ?? 1
   const xp = team.xp ?? 0
-  const xpForNext = 1000
-  const progress = Math.min(100, Math.round(((xp % xpForNext) / xpForNext) * 100))
+  const progress = progressToNext(xp)
 
   return (
     <main className="min-h-screen p-8">
