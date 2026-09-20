@@ -20,6 +20,9 @@ function DashboardInner() {
   const [activeSprint, setActiveSprint] = useState<any>(null)
   const [sprintQuests, setSprintQuests] = useState<any[]>([])
   const [recentComments, setRecentComments] = useState<any[]>([])
+  const [aiInsights, setAiInsights] = useState<{ recurring: string[]; suggestion: string } | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState("")
   const [qTitle, setQTitle] = useState("")
   const [qDesc, setQDesc] = useState("")
   const [qXp, setQxp] = useState("300")
@@ -172,6 +175,22 @@ function DashboardInner() {
     }
   }
 
+  const requestAiInsights = async () => {
+    if (!teamId || aiLoading) return
+    setAiLoading(true)
+    setAiError("")
+    try {
+      const res = await fetch("/api/insights", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ teamId }) })
+      const j = await res.json()
+      if (!res.ok) { setAiError(j.error ?? "AI insights failed"); return }
+      setAiInsights({ recurring: j.recurring ?? [], suggestion: j.suggestion ?? "" })
+    } catch (e: any) {
+      setAiError(e?.message ?? "AI insights failed")
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
   const gameMasterTips = () => {
     const tips: string[] = []
     if (ceremonies.length === 0) return ["Run your first retro — Sailboat is a great warm-up. The team will get it in minutes."]
@@ -302,6 +321,23 @@ function DashboardInner() {
               <h2 className="text-xl font-bold mb-1">🧠 Game Master</h2>
               <p className="text-xs text-gray-500 mb-3">Rule-based insights from your team data (AI facilitation comes later).</p>
               <ul className="space-y-2 text-gray-300">{tips.map((t, i) => <li key={i}>• {t}</li>)}</ul>
+              <div className="mt-4 pt-3 border-t border-gray-700">
+                {!aiInsights && (
+                  <button onClick={requestAiInsights} disabled={aiLoading} className="text-sm px-3 py-1.5 rounded-lg bg-gold/20 text-gold font-bold hover:bg-gold hover:text-black disabled:opacity-50">
+                    {aiLoading ? "Consulting the AI…" : "✨ Detect cross-sprint patterns (AI)"}
+                  </button>
+                )}
+                {aiError && <p className="text-sm text-red-300 mt-2">{aiError}</p>}
+                {aiInsights && (
+                  <div className="text-sm mt-1">
+                    {aiInsights.recurring.length > 0 ? (
+                      <><p className="font-bold text-gray-200 mb-1">🔁 Recurring across sprints:</p>
+                      <ul className="space-y-1 text-gray-300 mb-2">{aiInsights.recurring.map((r, i) => <li key={i}>• {r}</li>)}</ul></>
+                    ) : <p className="text-gray-400 mb-2">No repeating issues detected — clean record. 🎉</p>}
+                    {aiInsights.suggestion && <p className="text-teal">💡 {aiInsights.suggestion}</p>}
+                  </div>
+                )}
+              </div>
             </div>
           )
         })()}

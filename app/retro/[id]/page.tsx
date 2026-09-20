@@ -30,6 +30,9 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   const [leveledUp, setLeveledUp] = useState(false)
   const [streakInfo, setStreakInfo] = useState<string | null>(null)
   const [nextQuests, setNextQuests] = useState<any[]>([])
+  const [aiSummary, setAiSummary] = useState<string | null>(null)
+  const [aiActions, setAiActions] = useState<{ title: string; why: string; done?: boolean }[]>([])
+  const [aiLoading, setAiLoading] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState(ROUND_SECONDS)
   // action-item creation
   const [actionFor, setActionFor] = useState<any>(null)
@@ -130,6 +133,12 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     }
   }
 
+  const createSuggestedAction = async (s: { title: string; why: string }) => {
+    const supabase = getSupabase()
+    const { error } = await supabase.from("Action").insert({ title: s.title, description: s.why || "Suggested by Game Master", owner: "Unassigned", ceremonyId: params.id, xpValue: 100 })
+    if (!error) setAiActions(prev => prev.map(x => (x.title === s.title ? { ...x, done: true } : x)))
+  }
+
   const completeAction = async (action: any, teamId: string) => {
     const supabase = getSupabase()
     await supabase.from("Action").update({ status: "completed", completedAt: new Date().toISOString() }).eq("id", action.id)
@@ -178,6 +187,17 @@ export default function RetroPage({ params }: { params: { id: string } }) {
       const { data: nq } = await supabase.from("Action").select("*").eq("ceremonyId", params.id).neq("status", "completed").order("createdAt")
       if (nq) setNextQuests(nq)
       setReward(xpEarned + bonus)
+      setAiLoading(true)
+      try {
+        const res = await fetch("/api/summarize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ceremonyId: params.id }) })
+        const sj = await res.json()
+        if (res.ok) {
+          setAiSummary(sj.summary ?? null)
+          setAiActions((sj.actions ?? []).map((a: any) => ({ title: a.title, why: a.why })))
+          setCeremony((prev: any) => (prev ? { ...prev, summary: sj.summary ?? prev.summary } : prev))
+        }
+      } catch { /* AI is optional — XP already awarded */ }
+      setAiLoading(false)
     } catch (e) {
       alert("Could not finish the ceremony. Try again.")
     } finally {
@@ -214,6 +234,20 @@ export default function RetroPage({ params }: { params: { id: string } }) {
           <p className="text-gray-400 mb-4">Your team earned</p>
           <div className="text-5xl font-bold text-gold mb-4">+{reward} XP</div>
           {streakInfo && <p className="text-sm text-teal mb-3">{streakInfo}</p>}
+          <div className="text-left bg-dark/50 rounded-xl p-4 mb-4">
+            <p className="font-bold mb-2">🤖 Game Master summary</p>
+            {aiLoading && <p className="text-sm text-gray-400">Writing summary…</p>}
+            {!aiLoading && aiSummary && <p className="text-sm text-gray-300 mb-3">{aiSummary}</p>}
+            {!aiLoading && !aiSummary && <p className="text-sm text-gray-500">No AI summary (quota or connection).</p>}
+            {aiActions.map(a => (
+              <div key={a.title} className="flex items-center gap-2 py-1">
+                {a.done
+                  ? <span className="text-teal text-sm font-bold">✓</span>
+                  : <button onClick={() => createSuggestedAction(a)} className="text-xs px-2 py-0.5 rounded-full border border-gold text-gold hover:bg-gold hover:text-black">+ action</button>}
+                <span className="text-sm">{a.title} <span className="text-gray-500">· {a.why}</span></span>
+              </div>
+            ))}
+          </div>
           {nextQuests.length > 0 && (
             <div className="text-left bg-dark/50 rounded-xl p-4 mb-6">
               <p className="font-bold mb-2">⚔️ Your next quests</p>
@@ -297,6 +331,12 @@ export default function RetroPage({ params }: { params: { id: string } }) {
           </div>
         </div>
         {round === 1 && <p className="text-gray-300 mb-4 glass rounded-xl p-4">{mode.intro}</p>}
+        {round === 1 && ceremony?.summary && (
+          <div className="glass rounded-xl p-4 mb-4">
+            <p className="font-bold mb-1 text-sm">🤖 Game Master summary</p>
+            <p className="text-sm text-gray-300">{ceremony.summary}</p>
+          </div>
+        )}
         {round === 1 && prevCeremony && prevActions.length > 0 && (
           <div className="glass rounded-xl p-6 mb-6">
             <h3 className="font-bold mb-1">📋 Last ceremony&apos;s commitments ({openPrevActions.length} open)</h3>
