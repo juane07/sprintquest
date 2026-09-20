@@ -395,6 +395,13 @@ function DashboardInner() {
           </div>
         </div>
         {error && <div className="bg-red-900/60 text-red-200 p-3 rounded mb-4 text-sm">{error}</div>}
+        <nav className="flex gap-2 flex-wrap mb-8 text-sm">
+          <a href="#ceremonies" className="px-3 py-1.5 rounded-full border border-gray-700 text-gray-300 hover:border-gold">🎮 Ceremonies</a>
+          <a href="#actions" className="px-3 py-1.5 rounded-full border border-gray-700 text-gray-300 hover:border-gold">⚔️ Actions</a>
+          <a href="#quests" className="px-3 py-1.5 rounded-full border border-gray-700 text-gray-300 hover:border-gold">🎯 Quests</a>
+          <a href="#jira" className="px-3 py-1.5 rounded-full border border-gray-700 text-gray-300 hover:border-gold">🔗 Jira</a>
+          <a href="#pulse" className="px-3 py-1.5 rounded-full border border-gray-700 text-gray-300 hover:border-gold">☀️ Pulse</a>
+        </nav>
         {ceremonies.length === 0 && (
           <div className="glass rounded-xl p-6 mb-8">
             <h2 className="text-xl font-bold mb-3">🧭 Your first quest in 3 steps</h2>
@@ -433,7 +440,7 @@ function DashboardInner() {
             </div>
           )
         })()}
-        <h2 className="text-2xl font-bold mb-4">🎮 Start a Ceremony</h2>
+        <section className="mb-12" id="ceremonies"><h2 className="text-2xl font-bold mb-4">🎮 Start a Ceremony</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
           {Object.entries(MODE_CONFIG).map(([key, mode]) => (
             <button key={key} onClick={() => startCeremony(key)} disabled={starting !== null} className="glass rounded-xl p-6 text-left hover:border-gold transition cursor-pointer disabled:opacity-50">
@@ -464,7 +471,7 @@ function DashboardInner() {
           const done = actions.filter(a => a.status === "completed")
           if (actions.length === 0) return null
           return (
-            <section className="mb-12"><div className="flex items-center gap-3 mb-4 flex-wrap"><h2 className="text-2xl font-bold">⚔️ Action Items ({open.length} open)</h2><button onClick={remindOnSlack} disabled={reminding || open.length === 0} className="text-xs px-3 py-1.5 rounded-lg border border-gray-600 hover:border-gold text-gray-300 disabled:opacity-50">{reminding ? "Posting…" : "📣 Slack reminder"}</button></div>{remindMsg && <p className="text-sm text-teal mb-3">{remindMsg}</p>}
+            <section className="mb-12" id="actions"><div className="flex items-center gap-3 mb-4 flex-wrap"><h2 className="text-2xl font-bold">⚔️ Action Items ({open.length} open)</h2><button onClick={remindOnSlack} disabled={reminding || open.length === 0} className="text-xs px-3 py-1.5 rounded-lg border border-gray-600 hover:border-gold text-gray-300 disabled:opacity-50">{reminding ? "Posting…" : "📣 Slack reminder"}</button></div>{remindMsg && <p className="text-sm text-teal mb-3">{remindMsg}</p>}
               <p className="text-sm text-gray-400 mb-3">Commitments from your retros. Completing one earns its XP immediately.</p>
               <div className="space-y-3">
                 {open.map((a: any) => (
@@ -485,7 +492,7 @@ function DashboardInner() {
           )
         })()}
         {activeSprint && (
-          <section className="mb-12"><h2 className="text-2xl font-bold mb-1">🎯 Sprint {activeSprint.number} Quests</h2>
+          <section className="mb-12" id="quests"><h2 className="text-2xl font-bold mb-1">🎯 Sprint {activeSprint.number} Quests</h2>
             <p className="text-sm text-gray-400 mb-3">Big team commitments for this sprint. Finish one to claim its XP.</p>
             <div className="space-y-3 mb-4">
               {sprintQuests.filter(q => q.status !== "completed").map((q: any) => (
@@ -512,7 +519,7 @@ function DashboardInner() {
           </section>
         )}
         {activeSprint && (
-          <section className="mb-12"><h2 className="text-2xl font-bold mb-1">☀️ Daily Pulse</h2>
+          <section className="mb-12" id="pulse"><h2 className="text-2xl font-bold mb-1">☀️ Daily Pulse</h2>
             <p className="text-sm text-gray-400 mb-3">Async standup for sprint {activeSprint.number}. Check in once a day, earn +10 XP.</p>
             <div className="glass rounded-xl p-4 mb-4 grid grid-cols-1 md:grid-cols-2 gap-2">
               <input type="text" placeholder="Your name" value={pAuthor} onChange={e => setPAuthor(e.target.value)} className="p-2 rounded-lg bg-dark border border-gray-600 text-white placeholder-gray-500 text-sm" />
@@ -533,7 +540,7 @@ function DashboardInner() {
             </div>
           </section>
         )}
-        <section className="mb-12"><h2 className="text-2xl font-bold mb-1">🔗 Jira</h2>
+        <section className="mb-12" id="jira"><h2 className="text-2xl font-bold mb-1">🔗 Jira</h2>
           <p className="text-sm text-gray-400 mb-3">Link a Jira project and import open sprint issues as quests (+300 XP each).</p>
           <div className="glass rounded-xl p-4 mb-3 flex gap-2 flex-wrap">
             <input type="text" placeholder="Project key (e.g. PDC)" value={jiraProject} onChange={e => setJiraProject(e.target.value.toUpperCase())} maxLength={10} className="w-40 p-2 rounded-lg bg-dark border border-gray-600 text-white placeholder-gray-500 text-sm font-mono" />
