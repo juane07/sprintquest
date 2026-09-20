@@ -34,6 +34,13 @@ function DashboardInner() {
   const [pToday, setPToday] = useState("")
   const [pBlockers, setPBlockers] = useState("")
   const [savingPulse, setSavingPulse] = useState(false)
+  const [jiraProject, setJiraProject] = useState("")
+  const [savingJira, setSavingJira] = useState(false)
+  const [jiraIssues, setJiraIssues] = useState<any[]>([])
+  const [jiraSelected, setJiraSelected] = useState<string[]>([])
+  const [fetchingJira, setFetchingJira] = useState(false)
+  const [importingJira, setImportingJira] = useState(false)
+  const [jiraError, setJiraError] = useState("")
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState<string | null>(null)
   const [completing, setCompleting] = useState<string | null>(null)
@@ -51,6 +58,7 @@ function DashboardInner() {
         const { data: t, error: te } = await supabase.from("Team").select("*").eq("id", teamId).single()
         if (te || !t) { setError("Team not found."); return }
         setTeam(t)
+        if (t.jiraProject) setJiraProject(t.jiraProject)
         const { data: c } = await supabase.from("Ceremony").select("*").eq("teamId", teamId).order("startedAt", { ascending: false })
         if (c) {
           setCeremonies(c)
@@ -217,6 +225,70 @@ function DashboardInner() {
       if (days >= 14) tips.push(`It's been ${days} days since your last ceremony — momentum fades. Schedule the next one.`)
     }
     return tips.slice(0, 3)
+  }
+
+  const saveJiraProject = async () => {
+    if (!teamId) return
+    const { sanitizeProjectKey } = await import("@/lib/jira")
+    const key = sanitizeProjectKey(jiraProject)
+    if (!key) { setJiraError("Invalid project key (e.g. PDC)"); return }
+    setSavingJira(true)
+    try {
+      const supabase = getSupabase()
+      const { error } = await supabase.from("Team").update({ jiraProject: key }).eq("id", teamId)
+      if (error) { setJiraError(error.message); return }
+      setJiraProject(key)
+      setTeam({ ...team, jiraProject: key })
+      setJiraError("")
+    } finally {
+      setSavingJira(false)
+    }
+  }
+
+  const fetchJiraIssues = async () => {
+    if (!teamId) return
+    setFetchingJira(true)
+    setJiraError("")
+    try {
+      const res = await fetch("/api/jira/issues", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ teamId }) })
+      const j = await res.json()
+      if (!res.ok) { setJiraError(j.error ?? "Jira fetch failed"); return }
+      setJiraIssues(j.issues ?? [])
+      setJiraSelected((j.issues ?? []).map((i: any) => i.key))
+    } catch (e: any) {
+      setJiraError(e?.message ?? "Jira fetch failed")
+    } finally {
+      setFetchingJira(false)
+    }
+  }
+
+  const importJiraIssues = async () => {
+    if (!teamId || jiraSelected.length === 0) return
+    setImportingJira(true)
+    try {
+      const supabase = getSupabase()
+      let sprintId = activeSprint?.id ?? null
+      if (!sprintId) {
+        const { data: created } = await supabase.from("Sprint").insert({ number: 1, theme: "Sprint 1", teamId, status: "active" }).select().single()
+        if (created) { sprintId = created.id; setActiveSprint(created) }
+      }
+      if (!sprintId) { setJiraError("Could not create a sprint"); return }
+      const existing = new Set(sprintQuests.map(q => q.title))
+      const fresh = jiraIssues.filter(i => jiraSelected.includes(i.key) && !existing.has(`${i.key} ${i.summary}`))
+      for (const i of fresh) {
+        const { data } = await supabase.from("Quest").insert({
+          title: `${i.key} ${i.summary}`,
+          description: `${i.type} · ${i.status}${i.assignee ? ` · ${i.assignee}` : ""} · ${i.url}`,
+          xpValue: 300,
+          sprintId,
+        }).select().single()
+        if (data) setSprintQuests(prev => [...prev, data])
+      }
+      setJiraIssues(prev => prev.filter(i => !jiraSelected.includes(i.key)))
+      setJiraSelected([])
+    } finally {
+      setImportingJira(false)
+    }
   }
 
   const submitPulse = async () => {
@@ -444,6 +516,27 @@ function DashboardInner() {
             </div>
           </section>
         )}
+        <section className="mb-12"><h2 className="text-2xl font-bold mb-1">🔗 Jira</h2>
+          <p className="text-sm text-gray-400 mb-3">Link a Jira project and import open sprint issues as quests (+300 XP each).</p>
+          <div className="glass rounded-xl p-4 mb-3 flex gap-2 flex-wrap">
+            <input type="text" placeholder="Project key (e.g. PDC)" value={jiraProject} onChange={e => setJiraProject(e.target.value.toUpperCase())} maxLength={10} className="w-40 p-2 rounded-lg bg-dark border border-gray-600 text-white placeholder-gray-500 text-sm font-mono" />
+            <button onClick={saveJiraProject} disabled={savingJira} className="px-4 py-2 border border-gray-600 rounded-lg text-sm text-gray-300 hover:border-gold disabled:opacity-50">{savingJira ? "..." : "Save"}</button>
+            {team?.jiraProject && <button onClick={fetchJiraIssues} disabled={fetchingJira} className="px-4 py-2 bg-teal text-white font-bold rounded-lg text-sm disabled:opacity-50">{fetchingJira ? "Loading…" : "Fetch open issues"}</button>}
+          </div>
+          {jiraError && <p className="text-sm text-red-300 mb-3">{jiraError}</p>}
+          {jiraIssues.length > 0 && (
+            <div className="space-y-2 mb-3">
+              {jiraIssues.map((i: any) => (
+                <label key={i.key} className="glass rounded-xl p-3 flex items-center gap-3 cursor-pointer text-sm">
+                  <input type="checkbox" checked={jiraSelected.includes(i.key)} onChange={e => setJiraSelected(prev => e.target.checked ? [...prev, i.key] : prev.filter(k => k !== i.key))} />
+                  <span className="font-mono text-teal shrink-0">{i.key}</span>
+                  <span className="flex-1">{i.summary} <span className="text-gray-500">· {i.status}{i.assignee ? ` · ${i.assignee}` : ""}</span></span>
+                </label>
+              ))}
+              <button onClick={importJiraIssues} disabled={importingJira || jiraSelected.length === 0} className="px-4 py-2 bg-gold text-black font-bold rounded-lg text-sm hover:bg-yellow-400 disabled:opacity-50">{importingJira ? "Importing…" : `Import ${jiraSelected.length} as quests`}</button>
+            </div>
+          )}
+        </section>
         <section className="mb-12"><h2 className="text-2xl font-bold mb-4">📋 Past Ceremonies</h2>
           <div className="space-y-4">{ceremonies.length === 0 && <p className="text-gray-400">No ceremonies yet — start your first mission above!</p>}
             {ceremonies.map((c: any) => <a key={c.id} href={ceremonyHref(c)} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block"><span className="font-bold">{ceremonyName(c)}</span><span className="text-gray-400">{c.startedAt ? new Date(c.startedAt).toLocaleDateString() : ""}</span></a>)}
