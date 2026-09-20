@@ -460,6 +460,7 @@ function DashboardInner() {
             <div className="text-sm text-gray-400 mt-1">Estimate stories together, reveal at the same time</div>
           </button>
         </div>
+        </section>
         {badges.length > 0 && (
           <section className="mb-8"><h2 className="text-xl font-bold mb-3">🏅 Badges</h2>
             <div className="flex gap-3 flex-wrap">{badges.map((b: any) => <div key={b.id} title={b.description} className="glass rounded-xl px-4 py-2 text-sm"><span className="font-bold">{b.name}</span> <span className="text-gray-400">· {b.description}</span></div>)}
