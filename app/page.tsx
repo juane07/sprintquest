@@ -221,7 +221,7 @@ export default function Home() {
         {session ? (
           <span>Facilitator: <span className="text-gray-300">{session.user?.name ?? session.user?.email}</span> · <button onClick={() => signOut()} className="text-teal hover:text-white">Sign out</button></span>
         ) : (
-          <span>Facilitator? <button onClick={() => signIn("github")} className="text-teal hover:text-white">Sign in with GitHub</button></span>
+          <span>Facilitator? <button onClick={() => signIn("github")} className="text-teal hover:text-white">GitHub</button> · <button onClick={() => signIn("google")} className="text-teal hover:text-white">Google</button></span>
         )}
       </div>
     </main>
