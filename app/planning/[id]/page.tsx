@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import { getSupabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { POKER_CARDS, pokerStats, suggestPoints } from "@/lib/poker"
+import { levelForXp } from "@/lib/xp"
 import Presence from "@/components/Presence"
 import Navbar from "@/components/Navbar"
 
@@ -82,7 +83,7 @@ export default function PlanningPage({ params }: { params: { id: string } }) {
       const xpEarned = 100 + stories.length * 20
       await supabase.from("Ceremony").update({ status: "completed", endedAt: new Date().toISOString() }).eq("id", params.id)
       const { data: t } = await supabase.from("Team").select("xp").eq("id", ceremony.teamId).single()
-      if (t) await supabase.from("Team").update({ xp: (t.xp ?? 0) + xpEarned }).eq("id", ceremony.teamId)
+      if (t) await supabase.from("Team").update({ xp: (t.xp ?? 0) + xpEarned, level: levelForXp((t.xp ?? 0) + xpEarned) }).eq("id", ceremony.teamId)
       const { data: b } = await supabase.from("Badge").select("id").eq("teamId", ceremony.teamId).eq("name", "Sharp Estimator").limit(1)
       if (!b || b.length === 0) await supabase.from("Badge").insert({ name: "Sharp Estimator", description: "Estimated your first planning session", teamId: ceremony.teamId })
       setReward(xpEarned)

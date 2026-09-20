@@ -2,7 +2,7 @@
 import { Suspense, useState, useEffect } from "react"
 import { getSupabase } from "@/lib/supabase"
 import { useRouter, useSearchParams } from "next/navigation"
-import { MODE_CONFIG } from "@/constants"
+import { MODE_CONFIG, MODE_UNLOCK_LEVEL } from "@/constants"
 import { progressToNext, actionXp } from "@/lib/xp"
 import Navbar from "@/components/Navbar"
 
@@ -179,6 +179,14 @@ function DashboardInner() {
       }
       await awardBadge(supabase, teamId, "Quest Crusher", "Completed your first quest")
       setSprintQuests(prev => prev.map(q => (q.id === quest.id ? { ...q, status: "completed" } : q)))
+      // two-way Jira: move the linked issue to Done (best-effort, XP already awarded)
+      try {
+        const { parseIssueKey } = await import("@/lib/jira")
+        const key = parseIssueKey(quest.title)
+        if (key) {
+          await fetch("/api/jira/complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ issueKey: key }) })
+        }
+      } catch { /* one-way completion stands */ }
     } finally {
       setCompleting(null)
     }
@@ -442,13 +450,17 @@ function DashboardInner() {
         })()}
         <section className="mb-12" id="ceremonies"><h2 className="text-2xl font-bold mb-4">🎮 Start a Ceremony</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
-          {Object.entries(MODE_CONFIG).map(([key, mode]) => (
-            <button key={key} onClick={() => startCeremony(key)} disabled={starting !== null} className="glass rounded-xl p-6 text-left hover:border-gold transition cursor-pointer disabled:opacity-50">
-              <div className="text-3xl mb-2">{mode.name.split(" ")[0]}</div>
-              <div className="text-gray-200 font-bold">{starting === key ? "Starting..." : mode.name}</div>
-              <div className="text-sm text-gray-400 mt-1">{mode.desc}</div>
-            </button>
-          ))}
+          {Object.entries(MODE_CONFIG).map(([key, mode]) => {
+            const req = MODE_UNLOCK_LEVEL[key] ?? 1
+            const locked = level < req
+            return (
+              <button key={key} onClick={() => startCeremony(key)} disabled={starting !== null || locked} title={locked ? `Unlocks at Level ${req}` : mode.desc} className="glass rounded-xl p-6 text-left hover:border-gold transition cursor-pointer disabled:opacity-50">
+                <div className="text-3xl mb-2">{locked ? "🔒" : mode.name.split(" ")[0]}</div>
+                <div className="text-gray-200 font-bold">{starting === key ? "Starting..." : mode.name}</div>
+                <div className="text-sm text-gray-400 mt-1">{locked ? `Unlocks at Level ${req} — earn Team XP to open it` : mode.desc}</div>
+              </button>
+            )
+          })}
           <button onClick={() => startCeremony("REVIEW", "review")} disabled={starting !== null} className="glass rounded-xl p-6 text-left hover:border-gold transition cursor-pointer disabled:opacity-50 border-dashed">
             <div className="text-3xl mb-2">📊</div>
             <div className="text-gray-200 font-bold">{starting === "REVIEW" ? "Starting..." : "📊 Sprint Review"}</div>

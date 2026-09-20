@@ -1,12 +1,14 @@
 import { describe, it, expect } from "vitest"
-import { MODE_CONFIG, DEFAULT_MODE, GAME_MODES, CATEGORIES, XP_PER_LEVEL } from "../constants"
+import { MODE_CONFIG, DEFAULT_MODE, GAME_MODES, CATEGORIES, XP_PER_LEVEL, MODE_UNLOCK_LEVEL } from "../constants"
 
-const EXPECTED_MODES = ["BOSS_BATTLE", "SAILBOAT", "MISSION_CONTROL", "DETECTIVE", "TEAM_BATTLE"]
+const EXPECTED_MODES = ["BOSS_BATTLE", "SAILBOAT", "MISSION_CONTROL", "DETECTIVE", "TEAM_BATTLE", "MAD_SAD_GLAD", "START_STOP_CONTINUE", "FOUR_LS", "LEAN_COFFEE", "PLUS_DELTA"]
 
 describe("game modes", () => {
-  it("defines all 5 MVP modes", () => {
+  it("defines all 10 modes (5 MVP + 5 classics)", () => {
     for (const key of EXPECTED_MODES) {
       expect(MODE_CONFIG[key]).toBeDefined()
+    }
+    for (const key of ["BOSS_BATTLE", "SAILBOAT", "MISSION_CONTROL", "DETECTIVE", "TEAM_BATTLE"]) {
       expect(GAME_MODES).toHaveProperty(key)
     }
   })
@@ -39,5 +41,11 @@ describe("game modes", () => {
   it("keeps economy constants sane", () => {
     expect(XP_PER_LEVEL).toBe(1000)
     expect(CATEGORIES.length).toBeGreaterThan(0)
+  })
+  it("assigns an unlock level to every mode", () => {
+    for (const key of EXPECTED_MODES) {
+      expect(MODE_UNLOCK_LEVEL[key]).toBeGreaterThanOrEqual(1)
+    }
+    expect(MODE_UNLOCK_LEVEL.SAILBOAT).toBe(1)
   })
 })

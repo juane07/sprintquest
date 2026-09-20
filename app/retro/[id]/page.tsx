@@ -4,6 +4,7 @@ import { getSupabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { MODE_CONFIG, DEFAULT_MODE } from "@/constants"
 import { ceremonyReward, streakBonus, levelForXp, actionXp } from "@/lib/xp"
+import { drawWildCard, WildCard } from "@/lib/wildcards"
 import Presence from "@/components/Presence"
 import Navbar from "@/components/Navbar"
 import ShareRecap from "@/components/ShareRecap"
@@ -36,6 +37,8 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   const [aiActions, setAiActions] = useState<{ title: string; why: string; done?: boolean }[]>([])
   const [aiLoading, setAiLoading] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState(ROUND_SECONDS)
+  const [wild, setWild] = useState<WildCard | null>(null)
+  const [drawnWilds, setDrawnWilds] = useState<string[]>([])
   // action-item creation
   const [actionFor, setActionFor] = useState<any>(null)
   const [actionTitle, setActionTitle] = useState("")
@@ -179,7 +182,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
         }
       }
       const after = before + xpEarned + bonus
-      await supabase.from("Team").update({ xp: after }).eq("id", ceremony.teamId)
+      await supabase.from("Team").update({ xp: after, level: levelForXp(after) }).eq("id", ceremony.teamId)
       if (levelForXp(after) > levelForXp(before)) setLeveledUp(true)
       setStreakInfo(streakMsg)
       // first-ceremony badge
@@ -331,6 +334,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
           <div><h1 className="text-3xl font-bold text-gradient">{mode.name}</h1><p className="text-gray-400">Round {Math.min(round, totalRounds)} of {totalRounds}: {currentRound.title}</p></div>
           <div className="flex gap-2 flex-wrap">
             <Presence channel={params.id} />
+            <button onClick={() => { const c = drawWildCard(drawnWilds); setWild(c); setDrawnWilds(prev => [...prev, c.id].slice(-6)) }} className="px-3 py-1 rounded-full text-sm font-bold bg-navy-800 border border-gray-700 text-gray-300 hover:border-gold" title="Draw a surprise event">🎲 Wild</button>
             <span className={`px-4 py-2 rounded-full font-bold ${secondsLeft === 0 ? "bg-red-900/60 text-red-200" : "bg-navy-800 border border-gray-700 text-gray-300"}`}>⏱ {secondsLeft === 0 ? "Time!" : `${mm}:${ss}`}</span>
             <span className="bg-gold/20 text-gold px-4 py-2 rounded-full font-bold">{comments.length} entries</span>
           </div>
@@ -360,6 +364,15 @@ export default function RetroPage({ params }: { params: { id: string } }) {
           </div>
         )}
         <div className="border-l-4 border-teal pl-4 mb-6"><p className="text-lg text-gray-100">{currentRound.prompt}</p></div>
+        {wild && (
+          <div className="glass rounded-xl p-4 mb-6 border-gold/50">
+            <div className="flex justify-between items-center mb-1">
+              <p className="font-bold">{wild.title} <span className="text-xs font-normal text-gray-500">wild card</span></p>
+              <button onClick={() => setWild(null)} className="text-gray-500 hover:text-white text-sm">✕</button>
+            </div>
+            <p className="text-gray-300">{wild.text}</p>
+          </div>
+        )}
         <div className="glass rounded-xl p-6 mb-6">
           <h3 className="font-bold mb-3">Add Entry</h3>
           <select value={category} onChange={(e) => setCategory(e.target.value)} className="p-2 rounded bg-dark border border-gray-600 text-white mb-3">{mode.categories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}</select>

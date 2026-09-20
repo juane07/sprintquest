@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Presence from "@/components/Presence"
 import Navbar from "@/components/Navbar"
 import ShareRecap from "@/components/ShareRecap"
+import { levelForXp } from "@/lib/xp"
 
 const REVIEW_CATS = ["🎤 Demo", "❓ Question", "💬 Feedback"]
 
@@ -117,7 +118,7 @@ export default function ReviewPage({ params }: { params: { id: string } }) {
       const xpEarned = 100 + comments.length * 10
       await supabase.from("Ceremony").update({ status: "completed", endedAt: new Date().toISOString() }).eq("id", params.id)
       const { data: t } = await supabase.from("Team").select("xp").eq("id", ceremony.teamId).single()
-      if (t) await supabase.from("Team").update({ xp: (t.xp ?? 0) + xpEarned }).eq("id", ceremony.teamId)
+      if (t) await supabase.from("Team").update({ xp: (t.xp ?? 0) + xpEarned, level: levelForXp((t.xp ?? 0) + xpEarned) }).eq("id", ceremony.teamId)
       const { data: b } = await supabase.from("Badge").select("id").eq("teamId", ceremony.teamId).eq("name", "Showtime").limit(1)
       if (!b || b.length === 0) await supabase.from("Badge").insert({ name: "Showtime", description: "Ran your first sprint review", teamId: ceremony.teamId })
       setReward(xpEarned)

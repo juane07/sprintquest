@@ -40,10 +40,18 @@ export default function Home() {
   const [busy, setBusy] = useState(false)
   const [demoBusy, setDemoBusy] = useState(false)
   const [myTeams, setMyTeams] = useState<SavedTeam[]>([])
+  const [facilitated, setFacilitated] = useState<SavedTeam[]>([])
   const { data: session } = useSession()
   const router = useRouter()
 
   useEffect(() => { setMyTeams(loadTeams()) }, [])
+
+  useEffect(() => {
+    const email = session?.user?.email
+    if (!email) { setFacilitated([]); return }
+    getSupabase().from("Team").select("id,name,mascot,joinCode").eq("ownerEmail", email).order("createdAt", { ascending: false }).limit(10)
+      .then((res: { data: SavedTeam[] | null }) => { if (res.data) setFacilitated(res.data) })
+  }, [session?.user?.email])
 
   const createTeam = async () => {
     setError("")
@@ -54,7 +62,7 @@ export default function Home() {
       const code = await uniqueJoinCode(supabase)
       const { data, error: e } = await supabase
         .from("Team")
-        .insert({ name: teamName.trim(), mascot, ownerId: "owner-1", joinCode: code })
+        .insert({ name: teamName.trim(), mascot, ownerId: "owner-1", ownerEmail: session?.user?.email ?? null, joinCode: code })
         .select()
         .single()
       if (e) { setError(e.message); return }
@@ -98,7 +106,7 @@ export default function Home() {
       const code = await uniqueJoinCode(supabase)
       const { data: team, error: te } = await supabase
         .from("Team")
-        .insert({ name: "Demo Questers", mascot: MASCOTS[Math.floor(Math.random() * MASCOTS.length)], ownerId: "owner-1", joinCode: code })
+        .insert({ name: "Demo Questers", mascot: MASCOTS[Math.floor(Math.random() * MASCOTS.length)], ownerId: "owner-1", ownerEmail: session?.user?.email ?? null, joinCode: code })
         .select()
         .single()
       if (te || !team) { setError(te?.message ?? "Could not create demo."); return }
@@ -202,6 +210,20 @@ export default function Home() {
       <button onClick={startDemo} disabled={demoBusy} className="mt-4 text-teal hover:text-white transition disabled:opacity-50">
         {demoBusy ? "Preparing your demo..." : "⚡ Just looking? Try an instant demo — no setup"}
       </button>
+      {facilitated.length > 0 && (
+        <div className="mt-6 w-full max-w-md">
+          <p className="text-sm text-gray-400 mb-2 text-center">Teams you facilitate</p>
+          <div className="space-y-2">
+            {facilitated.map(t => (
+              <a key={t.id} href={`/dashboard?team=${t.id}`} className="glass rounded-xl p-3 flex items-center gap-3 hover:border-gold transition block">
+                <span className="text-2xl">{t.mascot}</span>
+                <span className="font-bold">{t.name}</span>
+                <span className="ml-auto font-mono text-teal text-sm">{t.joinCode}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
       {myTeams.length > 0 && (
         <div className="mt-8 w-full max-w-md">
           <p className="text-sm text-gray-400 mb-2 text-center">Your teams on this device</p>

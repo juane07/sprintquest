@@ -21,6 +21,12 @@ export function sanitizeProjectKey(input: string): string | null {
   return /^[A-Z][A-Z0-9]{1,9}$/.test(key) ? key : null
 }
 
+// Quest titles created from Jira start with the issue key ("PDC-123 ...").
+export function parseIssueKey(title: string): string | null {
+  const m = title.match(/^([A-Z][A-Z0-9]+-\d+)/)
+  return m ? m[1] : null
+}
+
 export function jiraFetchInit(): { site: string; headers: Record<string, string> } {
   const site = process.env.JIRA_SITE
   const email = process.env.JIRA_EMAIL
