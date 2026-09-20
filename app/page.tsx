@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { getSupabase } from "@/lib/supabase"
 import { generateJoinCode, normalizeCode } from "@/lib/joinCode"
+import { useSession, signIn, signOut } from "next-auth/react"
 
 const MASCOTS = ["🐉", "🦊", "🚀", "🤖", "🐙"]
 
@@ -39,6 +40,7 @@ export default function Home() {
   const [busy, setBusy] = useState(false)
   const [demoBusy, setDemoBusy] = useState(false)
   const [myTeams, setMyTeams] = useState<SavedTeam[]>([])
+  const { data: session } = useSession()
   const router = useRouter()
 
   useEffect(() => { setMyTeams(loadTeams()) }, [])
@@ -215,6 +217,13 @@ export default function Home() {
         </div>
       )}
       <p className="text-gray-500 mt-6 text-sm">No account needed — join with a team code</p>
+      <div className="mt-3 text-sm text-gray-500">
+        {session ? (
+          <span>Facilitator: <span className="text-gray-300">{session.user?.name ?? session.user?.email}</span> · <button onClick={() => signOut()} className="text-teal hover:text-white">Sign out</button></span>
+        ) : (
+          <span>Facilitator? <button onClick={() => signIn("github")} className="text-teal hover:text-white">Sign in with GitHub</button></span>
+        )}
+      </div>
     </main>
   )
 }

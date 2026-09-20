@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import PwaRegister from "@/components/PwaRegister"
+import AuthProvider from "@/components/AuthProvider"
 
 export const metadata: Metadata = {
   title: "SprintQuest — Gamified Agile Ceremonies",
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-dark text-white"><PwaRegister />{children}</body>
+      <body className="bg-dark text-white"><PwaRegister /><AuthProvider>{children}</AuthProvider></body>
     </html>
   )
 }
