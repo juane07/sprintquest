@@ -4,7 +4,9 @@ import { getSupabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { MODE_CONFIG, DEFAULT_MODE } from "@/constants"
 import { ceremonyReward, streakBonus, levelForXp, actionXp } from "@/lib/xp"
-import { drawWildCard, WildCard } from "@/lib/wildcards"
+import { drawChance, ChanceCard } from "@/lib/deck"
+import { BURST_CAT, BOARD_CAT, SYSTEM_CATS, buildBurst, activeBurst, boardState, rollDice, TRAIL, BURST_META, BurstType } from "@/lib/gamestate"
+import BurstOverlay, { BURST_REWARD } from "@/components/minigames/BurstOverlay"
 import { BOSS_HP, bossHp, isDefeated, ATTACK_EMOJI } from "@/lib/boss"
 import { rankSuspects, majorityThreshold, ACCUSE_EMOJI } from "@/lib/detective"
 import Presence from "@/components/Presence"
@@ -39,8 +41,14 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   const [aiActions, setAiActions] = useState<{ title: string; why: string; done?: boolean }[]>([])
   const [aiLoading, setAiLoading] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState(ROUND_SECONDS)
-  const [wild, setWild] = useState<WildCard | null>(null)
-  const [drawnWilds, setDrawnWilds] = useState<string[]>([])
+  const [chance, setChance] = useState<{ card: ChanceCard; note: string } | null>(null)
+  const [drawnChance, setDrawnChance] = useState<string[]>([])
+  const [shuffleSeed, setShuffleSeed] = useState(0)
+  const [spotlightId, setSpotlightId] = useState<string | null>(null)
+  const [dismissedBursts, setDismissedBursts] = useState<string[]>([])
+  const [lastBurstResult, setLastBurstResult] = useState<string | null>(null)
+  const [trailEvent, setTrailEvent] = useState<string | null>(null)
+  const [gmDismissed, setGmDismissed] = useState(false)
   const [discussing, setDiscussing] = useState<{ id: string; title: string; left: number } | null>(null)
   // action-item creation
   const [actionFor, setActionFor] = useState<any>(null)
@@ -65,6 +73,8 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   const isCoffee = ceremony?.gameMode === "LEAN_COFFEE"
   const totalRounds = mode.rounds.length
   const currentRound = mode.rounds[Math.min(round, totalRounds) - 1]
+  // system comments (bursts, board) never count as entries
+  const visible = comments.filter((c: any) => !SYSTEM_CATS.includes(c.category))
 
   useEffect(() => {
     const supabase = getSupabase()
@@ -89,6 +99,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "Comment", filter: `ceremonyId=eq.${params.id}` }, (payload: any) => setComments(prev => [...prev, payload.new]))
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "Vote", filter: `ceremonyId=eq.${params.id}` }, (payload: any) => setVotes(prev => [...prev, payload.new]))
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "Vote", filter: `ceremonyId=eq.${params.id}` }, (payload: any) => setVotes(prev => prev.filter(v => v.id !== payload.old.id)))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "Comment", filter: `ceremonyId=eq.${params.id}` }, (payload: any) => setComments(prev => prev.map(c => (c.id === payload.new.id ? payload.new : c))))
       .subscribe()
     fetchCeremony()
     fetchComments()
@@ -176,7 +187,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     setFinishing(true)
     try {
       const supabase = getSupabase()
-      const xpEarned = ceremonyReward(comments.length)
+      const xpEarned = ceremonyReward(visible.length)
       await supabase.from("Ceremony").update({ status: "completed", endedAt: new Date().toISOString() }).eq("id", params.id)
       const { data: t } = await supabase.from("Team").select("xp, streak").eq("id", ceremony.teamId).single()
       const before = t?.xp ?? 0
@@ -272,7 +283,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
               {nextQuests.map(q => <div key={q.id} className="flex justify-between text-sm py-1"><span>{q.title} <span className="text-gray-500">· {q.owner}</span></span><span className="text-gold font-bold">+{q.xpValue ?? 50}</span></div>)}
             </div>
           )}
-          <p className="text-sm text-gray-400 mb-6">{comments.length} {comments.length === 1 ? "entry" : "entries"} shared · every voice counts, no leaderboards</p>
+          <p className="text-sm text-gray-400 mb-6">{visible.length} {visible.length === 1 ? "entry" : "entries"} shared · every voice counts, no leaderboards</p>
           <ShareRecap ceremonyId={params.id} xp={reward} />
           <button onClick={() => router.push(`/dashboard?team=${ceremony?.teamId}`)} className="w-full p-3 bg-gold text-black font-bold rounded-lg hover:bg-yellow-400">Back to team dashboard</button>
         </div>
@@ -315,12 +326,83 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     )
   }
 
-  const matched = mode.categories.map(cat => ({ cat, items: comments.filter((c: any) => c.category === cat.name) }))
-  const others = comments.filter((c: any) => !mode.categories.some(cat => cat.name === c.category))
+  // (visible defined above — system comments excluded)
+  const order = (arr: any[]) => (shuffleSeed ? [...arr].sort((a, b) => String(a.id + shuffleSeed).localeCompare(String(b.id + shuffleSeed))) : arr)
+  const matched = mode.categories.map(cat => ({ cat, items: order(visible.filter((c: any) => c.category === cat.name)) }))
+  const others = order(visible.filter((c: any) => !mode.categories.some(cat => cat.name === c.category)))
+  const rawBurst = activeBurst(comments)
+  const burst = rawBurst && !dismissedBursts.includes(rawBurst.comment.id) ? rawBurst : null
+  const board = boardState(comments)
+  const isTrail = ceremony?.gameMode === "QUEST_TRAIL"
+  const gmSuggest = !burst && !gmDismissed && !!ceremony?.createdAt && visible.length < 3 && Date.now() - new Date(ceremony.createdAt).getTime() > 3 * 60 * 1000
+
+  const awardTeamXp = async (amount: number) => {
+    if (!ceremony?.teamId || amount <= 0) return
+    const supabase = getSupabase()
+    const { data: t } = await supabase.from("Team").select("xp").eq("id", ceremony.teamId).single()
+    if (t) await supabase.from("Team").update({ xp: (t.xp ?? 0) + amount }).eq("id", ceremony.teamId)
+  }
+
+  const launchBurst = async (type: BurstType, detail = "") => {
+    const supabase = getSupabase()
+    const payload = buildBurst(type, detail)
+    const { data } = await supabase.from("Comment").insert({ ceremonyId: params.id, content: JSON.stringify(payload), author: "Game Master", anonymous: false, category: BURST_CAT }).select().single()
+    if (data) setComments(prev => [...prev, data])
+  }
+
+  const burstTap = async (action: string) => {
+    if (!burst) return
+    const supabase = getSupabase()
+    const { data } = await supabase.from("Vote").insert({ ceremonyId: params.id, option: `${burst.comment.id}:${action}`, userId: uid }).select().single()
+    if (data) setVotes(prev => [...prev, data])
+  }
+
+  const endBurst = async (result: string) => {
+    if (!burst) return
+    const supabase = getSupabase()
+    const done = { ...burst.payload, status: "done" as const, result }
+    await supabase.from("Comment").update({ content: JSON.stringify(done) }).eq("id", burst.comment.id)
+    setComments(prev => prev.map(c => (c.id === burst.comment.id ? { ...c, content: JSON.stringify(done) } : c)))
+    setLastBurstResult(result)
+    await awardTeamXp(BURST_REWARD[burst.payload.type] ?? 10)
+  }
+
+  const fmtClock = (secs: number) => `${secs < 0 ? "-" : "+"}${Math.floor(Math.abs(secs) / 60)}:${String(Math.abs(secs) % 60).padStart(2, "0")}`
+
+  const applyChance = async () => {
+    const card = drawChance(drawnChance)
+    setDrawnChance(prev => [...prev, card.id].slice(-7))
+    let note = ""
+    if (card.effect.kind === "xp" && card.effect.amount) { await awardTeamXp(card.effect.amount); note = `+${card.effect.amount} team XP banked` }
+    else if (card.effect.kind === "dice") { const d = 1 + Math.floor(Math.random() * 6); await awardTeamXp(d * 5); note = `Rolled ${d} → +${d * 5} team XP` }
+    else if (card.effect.kind === "timer" && card.effect.amount) { setSecondsLeft(s => Math.max(0, s + (card.effect.amount as number))); note = `${fmtClock(card.effect.amount)} on the clock` }
+    else if (card.effect.kind === "anon") { setAnonymous(true); note = "Anonymous locked ON — next entry goes incognito" }
+    else if (card.effect.kind === "poll") { await launchBurst("poll"); note = "Poll launched below — vote together" }
+    else if (card.effect.kind === "shuffle") { setShuffleSeed(1 + Math.floor(Math.random() * 999)); note = "Board order shuffled — fresh eyes" }
+    else if (card.effect.kind === "spotlight") { const last = visible[visible.length - 1]; if (last) setSpotlightId(last.id); note = last ? "Latest entry spotlighted — read it, then react" : "Post an entry first, then spotlight it" }
+    setChance({ card, note })
+  }
+
+  const rollTrail = async () => {
+    if (board.pos >= TRAIL.length - 1) return
+    const d = rollDice()
+    const np = Math.min(board.pos + d, TRAIL.length - 1)
+    const tile = TRAIL[np]
+    const msg = `🎲 ${d} → ${tile.icon} ${tile.label}`
+    const supabase = getSupabase()
+    const { data } = await supabase.from("Comment").insert({ ceremonyId: params.id, content: JSON.stringify({ kind: "board", pos: np, log: [...board.log, msg].slice(-8) }), author: "Game Master", anonymous: false, category: BOARD_CAT }).select().single()
+    if (data) setComments(prev => [...prev, data])
+    if (tile.kind === "xp" || tile.kind === "star") { await awardTeamXp(tile.amount ?? 10); setTrailEvent(`${tile.icon} +${tile.amount ?? 10} team XP banked`) }
+    else if (tile.kind === "chance") { await applyChance(); setTrailEvent("🎲 The trail draws a chance card for you") }
+    else if (tile.kind === "burst") { const types: BurstType[] = ["snail", "whack", "tug", "memory"]; await launchBurst(types[Math.floor(Math.random() * types.length)]); setTrailEvent("🎮 The trail throws a minigame at the team") }
+    else if (tile.kind === "boss") setTrailEvent("👹 Boss ambush! Post the blocker as an entry, then turn it into an action item.")
+    else if (tile.kind === "finish") setTrailEvent("🏁 Finish line! Then lock it in below.")
+    else setTrailEvent(null)
+  }
   const activeHint = mode.categories.find(c => c.name === category)?.hint ?? ""
 
   const commentCard = (c: any) => (
-    <div key={c.id} className="glass rounded-xl p-4">
+    <div key={c.id} className={`glass rounded-xl p-4 ${spotlightId === c.id ? "border-gold" : ""}`}>
       <div className="text-sm text-gray-400 mb-1">{c.anonymous ? "Anonymous" : c.author}</div>
       <div className="mb-2">{c.content}</div>
       {isBoss && c.category === "👹 Boss" && (() => {
@@ -371,9 +453,9 @@ export default function RetroPage({ params }: { params: { id: string } }) {
           <div><h1 className="text-3xl font-bold text-gradient">{mode.name}</h1><p className="text-gray-400">Round {Math.min(round, totalRounds)} of {totalRounds}: {currentRound.title}</p></div>
           <div className="flex gap-2 flex-wrap">
             <Presence channel={params.id} />
-            <button onClick={() => { const c = drawWildCard(drawnWilds); setWild(c); setDrawnWilds(prev => [...prev, c.id].slice(-6)) }} className="px-3 py-1 rounded-full text-sm font-bold bg-navy-800 border border-gray-700 text-gray-300 hover:border-gold" title="Draw a surprise event">🎲 Wild</button>
+            <button onClick={applyChance} className="px-3 py-1 rounded-full text-sm font-bold bg-navy-800 border border-gray-700 text-gray-300 hover:border-gold" title="Draw a chance card with a real effect">🎲 Chance</button>
             <span className={`px-4 py-2 rounded-full font-bold ${secondsLeft === 0 ? "bg-red-900/60 text-red-200" : "bg-navy-800 border border-gray-700 text-gray-300"}`}>⏱ {secondsLeft === 0 ? "Time!" : `${mm}:${ss}`}</span>
-            <span className="bg-gold/20 text-gold px-4 py-2 rounded-full font-bold">{comments.length} entries</span>
+            <span className="bg-gold/20 text-gold px-4 py-2 rounded-full font-bold">{visible.length} entries</span>
           </div>
         </div>
         {round === 1 && <p className="text-gray-300 mb-4 glass rounded-xl p-4">{mode.intro}</p>}
@@ -401,13 +483,14 @@ export default function RetroPage({ params }: { params: { id: string } }) {
           </div>
         )}
         <div className="border-l-4 border-teal pl-4 mb-6"><p className="text-lg text-gray-100">{currentRound.prompt}</p></div>
-        {wild && (
+        {chance && (
           <div className="glass rounded-xl p-4 mb-6 border-gold/50">
             <div className="flex justify-between items-center mb-1">
-              <p className="font-bold">{wild.title} <span className="text-xs font-normal text-gray-500">wild card</span></p>
-              <button onClick={() => setWild(null)} className="text-gray-500 hover:text-white text-sm">✕</button>
+              <p className="font-bold">{chance.card.title} <span className="text-xs font-normal text-gray-500">chance card</span></p>
+              <button onClick={() => setChance(null)} className="text-gray-500 hover:text-white text-sm">✕</button>
             </div>
-            <p className="text-gray-300">{wild.text}</p>
+            <p className="text-gray-300">{chance.card.text}</p>
+            {chance.note && <p className="text-teal text-sm font-bold mt-1">→ {chance.note}</p>}
           </div>
         )}
         {discussing && (
@@ -419,6 +502,53 @@ export default function RetroPage({ params }: { params: { id: string } }) {
             <div className="flex gap-2 mt-2">
               <button onClick={() => setDiscussing(d => (d ? { ...d, left: d.left + 120 } : d))} className="text-xs px-3 py-1 rounded-full border border-gray-600 hover:border-gold">+2:00</button>
               <button onClick={() => setDiscussing(null)} className="text-xs px-3 py-1 rounded-full border border-gray-600 hover:border-gold">Next topic →</button>
+            </div>
+          </div>
+        )}
+        {isTrail && (
+          <div className="glass rounded-xl p-5 mb-6">
+            <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
+              <p className="font-bold">🗺️ Quest Trail <span className="text-xs font-normal text-gray-500">the team moves one token together</span></p>
+              <button onClick={rollTrail} disabled={board.pos >= TRAIL.length - 1} className="px-4 py-2 bg-gold text-black font-bold rounded-lg hover:bg-yellow-400 disabled:opacity-40">🎲 Roll for the team</button>
+            </div>
+            <div className="flex gap-1 mb-3 flex-wrap">
+              {TRAIL.map((t, i) => (
+                <div key={i} className={`w-10 h-10 rounded-lg border flex items-center justify-center text-xl relative ${i === board.pos ? "border-gold bg-gold/20 scale-110" : i < board.pos ? "border-teal/50 bg-teal/10" : "border-gray-700 bg-dark"}`} title={t.label}>
+                  {t.icon}{i === board.pos && <span className="absolute -top-2 -right-1 text-sm">🔷</span>}
+                </div>
+              ))}
+            </div>
+            {trailEvent && <p className="text-sm text-gold mb-2">{trailEvent}</p>}
+            {board.log.length > 0 && <div className="text-xs text-gray-400 space-y-0.5">{board.log.slice(-4).map((l, i) => <p key={i}>{l}</p>)}</div>}
+          </div>
+        )}
+        {!burst && (
+          <div className="glass rounded-xl p-4 mb-6">
+            <p className="font-bold text-sm mb-2">🎮 Launch a minigame burst <span className="font-normal text-gray-500">60–120s of team play · optional, never blocks posting</span></p>
+            <div className="flex gap-2 flex-wrap">
+              {(Object.keys(BURST_META) as BurstType[]).map(t => (
+                <button key={t} onClick={() => launchBurst(t)} className="text-xs px-3 py-1 rounded-full border border-gray-600 hover:border-gold" title={BURST_META[t].desc}>{BURST_META[t].title}</button>
+              ))}
+            </div>
+          </div>
+        )}
+        {burst && <BurstOverlay burst={burst} votes={votes} uid={uid} entries={visible.map((c: any) => String(c.content)).slice(-12)} onAction={burstTap} onEnd={endBurst} onDismiss={() => setDismissedBursts(prev => [...prev, burst.comment.id])} />}
+        {lastBurstResult && (
+          <div className="glass rounded-xl p-4 mb-6 border-teal/50">
+            <div className="flex justify-between items-center">
+              <p className="font-bold text-sm">🎉 {lastBurstResult}</p>
+              <button onClick={() => setLastBurstResult(null)} className="text-gray-500 hover:text-white text-sm">✕</button>
+            </div>
+          </div>
+        )}
+        {gmSuggest && (
+          <div className="glass rounded-xl p-4 mb-6 border-teal/50">
+            <div className="flex justify-between items-center flex-wrap gap-2">
+              <p className="text-sm">💡 <b>Game Master:</b> the room is quiet — warm up with a burst?</p>
+              <div className="flex gap-2">
+                <button onClick={() => launchBurst("snail")} className="text-xs px-3 py-1 rounded-full bg-teal text-white font-bold">🐢 Snail Race</button>
+                <button onClick={() => setGmDismissed(true)} className="text-xs text-gray-500 hover:text-white">not now</button>
+              </div>
             </div>
           </div>
         )}

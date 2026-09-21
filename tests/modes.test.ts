@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { MODE_CONFIG, DEFAULT_MODE, GAME_MODES, CATEGORIES, XP_PER_LEVEL, MODE_UNLOCK_LEVEL } from "../constants"
 
-const EXPECTED_MODES = ["BOSS_BATTLE", "SAILBOAT", "MISSION_CONTROL", "DETECTIVE", "TEAM_BATTLE", "MAD_SAD_GLAD", "START_STOP_CONTINUE", "FOUR_LS", "LEAN_COFFEE", "PLUS_DELTA", "BUG_BASH"]
+const EXPECTED_MODES = ["BOSS_BATTLE", "SAILBOAT", "MISSION_CONTROL", "DETECTIVE", "TEAM_BATTLE", "MAD_SAD_GLAD", "START_STOP_CONTINUE", "FOUR_LS", "LEAN_COFFEE", "PLUS_DELTA", "BUG_BASH", "QUEST_TRAIL"]
 
 describe("game modes", () => {
   it("defines all 10 modes (5 MVP + 5 classics)", () => {

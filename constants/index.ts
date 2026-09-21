@@ -242,6 +242,25 @@ export const MODE_CONFIG: Record<string, ModeConfig> = {
     victoryTitle: "Inbox Zero... ish!",
     victoryEmoji: "🧹",
   },
+  QUEST_TRAIL: {
+    name: "🗺️ Quest Trail",
+    desc: "Mario-party board: roll, move, survive events together",
+    intro: "The team moves ONE token together. Roll the die, land on events — bursts, chance cards, boss ambushes — and reach the finish line.",
+    rounds: [
+      { title: "Roll & move", prompt: "Roll for the team. Land on tiles, post entries about what you pass." },
+      { title: "Survive events", prompt: "Bursts and chance cards strike. Play them, then keep rolling." },
+      { title: "Boss stretch", prompt: "Final tiles: ambushes and stars. Post blockers and milestones." },
+      { title: "Finish line", prompt: "Reach 🏁, review the trail log, lock it in." },
+    ],
+    categories: [
+      { name: "📍 Milestone", hint: "Something reached on the trail" },
+      { name: "🚧 Blocker", hint: "Something blocking the path" },
+      { name: "💡 Idea", hint: "A shortcut worth trying" },
+    ],
+    voteTitle: "Which milestone mattered most?",
+    victoryTitle: "Trail Complete!",
+    victoryEmoji: "🏁",
+  },
 }
 
 // Team level required to unlock each retro mode. Level comes from Team XP.
@@ -257,6 +276,7 @@ export const MODE_UNLOCK_LEVEL: Record<string, number> = {
   TEAM_BATTLE: 3,
   FOUR_LS: 3,
   LEAN_COFFEE: 3,
+  QUEST_TRAIL: 3,
 }
 
 export const DEFAULT_MODE: ModeConfig = {
