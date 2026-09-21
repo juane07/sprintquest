@@ -12,11 +12,6 @@ export interface CeremonySummary {
   actions: SuggestedAction[]
 }
 
-export interface TeamInsights {
-  recurring: string[]
-  suggestion: string
-}
-
 export function truncateEntries(text: string, max = 6000): string {
   return text.length > max ? text.slice(0, max) + "\n[truncated]" : text
 }
@@ -32,20 +27,6 @@ export function buildSummaryPrompt(
   const lines = entries.map((e) => `[${e.category}] ${e.author}: ${e.content}`).join("\n")
   const user = `Retrospective mode: ${modeName}\nEntries:\n${lines}`
   return { system, user }
-}
-
-export function buildInsightsPrompt(
-  ceremonies: { mode: string; date: string; entries: { category: string; content: string }[] }[]
-): { system: string; user: string } {
-  const system =
-    "You are an Agile coach analyzing retrospectives across sprints. " +
-    "Find issues that recur. Reply with STRICT JSON only: " +
-    "{\"recurring\": [\"issue seen in 2+ retros\"], \"suggestion\": \"one concrete next step\"}. " +
-    "Empty recurring array if nothing repeats. No blame, teams only."
-  const body = ceremonies
-    .map((c) => `## ${c.date} (${c.mode})\n${c.entries.map((e) => `[${e.category}] ${e.content}`).join("\n")}`)
-    .join("\n\n")
-  return { system, user: body }
 }
 
 export function extractJson<T>(text: string): T | null {

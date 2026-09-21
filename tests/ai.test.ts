@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { buildSummaryPrompt, buildInsightsPrompt, extractJson, truncateEntries } from "../lib/ai"
+import { buildSummaryPrompt, extractJson, truncateEntries } from "../lib/ai"
 
 describe("extractJson", () => {
   it("parses plain JSON", () => {
@@ -34,15 +34,5 @@ describe("buildSummaryPrompt", () => {
     expect(system).toContain("STRICT JSON")
     expect(user).toContain("SAILBOAT")
     expect(user).toContain("Shipped early")
-  })
-})
-
-describe("buildInsightsPrompt", () => {
-  it("includes ceremonies and entries", () => {
-    const { system, user } = buildInsightsPrompt([
-      { mode: "SAILBOAT", date: "2026-01-01", entries: [{ category: "⚓ Anchor", content: "Slow CI" }] },
-    ])
-    expect(system).toContain("STRICT JSON")
-    expect(user).toContain("Slow CI")
   })
 })

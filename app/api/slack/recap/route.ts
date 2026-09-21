@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     const { data: team } = await supabase.from("Team").select("name").eq("id", ceremony.teamId).single()
     const { count: entries } = await supabase.from("Comment").select("id", { count: "exact", head: true }).eq("ceremonyId", ceremonyId)
     const { count: openActions } = await supabase.from("Action").select("id", { count: "exact", head: true }).eq("ceremonyId", ceremonyId).neq("status", "completed")
-    const label = ceremony.type === "review" ? "📊 Sprint Review" : ceremony.type === "planning" ? "🃏 Planning Poker" : ((MODE_CONFIG as any)[ceremony.gameMode]?.name ?? "Retro")
+    const label = ((MODE_CONFIG as any)[ceremony.gameMode]?.name ?? "Retro")
     await postToSlack(buildCeremonyRecap({
       teamName: team?.name ?? "Team",
       label,

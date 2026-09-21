@@ -66,8 +66,6 @@ model Ceremony {
   comments   Comment[]
   votes      Vote[]
   actions    Action[]
-  reviewQuestions ReviewQuestion[]
-  planningStories PlanningStory[]
 }
 
 model Comment {
@@ -128,17 +126,6 @@ model Badge {
   earnedAt    DateTime @default(now())
 }
 
-model ReviewQuestion {
-  id         String   @id @default(dbgenerated("gen_random_uuid()::text"))
-  prompt     String
-  options    String[]
-  correctIdx Int?
-  status     String   @default("open")
-  ceremonyId String
-  ceremony   Ceremony @relation(fields: [ceremonyId], references: [id])
-  createdAt  DateTime @default(now())
-}
-
 model DailyPulse {
   id        String   @id @default(dbgenerated("gen_random_uuid()::text"))
   sprintId  String
@@ -148,14 +135,4 @@ model DailyPulse {
   today     String
   blockers  String
   createdAt DateTime @default(now())
-}
-
-model PlanningStory {
-  id         String   @id @default(dbgenerated("gen_random_uuid()::text"))
-  title      String
-  points     Int?
-  status     String   @default("voting")
-  ceremonyId String
-  ceremony   Ceremony @relation(fields: [ceremonyId], references: [id])
-  createdAt  DateTime @default(now())
 }

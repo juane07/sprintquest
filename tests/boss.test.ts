@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { BOSS_HP, ATTACK_DMG, bossHp, isDefeated, attacksToKill } from "../lib/boss"
+import { BOSS_HP, ATTACK_DMG, bossHp, isDefeated } from "../lib/boss"
 
 describe("bossHp", () => {
   it("starts full and drops per attack", () => {
@@ -15,9 +15,10 @@ describe("bossHp", () => {
 describe("isDefeated", () => {
   it("dies at zero HP", () => {
     expect(isDefeated(0)).toBe(false)
-    expect(isDefeated(attacksToKill())).toBe(true)
+    expect(isDefeated(4)).toBe(true)
   })
   it("is killable by a unanimous small team", () => {
-    expect(attacksToKill()).toBeLessThanOrEqual(4)
+    // tuning invariant: 4 attacks x 25 dmg = 100 HP
+    expect(BOSS_HP / ATTACK_DMG).toBeLessThanOrEqual(4)
   })
 })

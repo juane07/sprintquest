@@ -1,6 +1,6 @@
 # SprintQuest — Gamified Agile Ceremonies
 
-Turn every Sprint Review and Retrospective into a game. Earn Team XP, level up, unlock quests and badges.
+Turn every Retrospective into a game. Earn Team XP, level up, unlock quests and badges.
 
 ## Quick Start
 
@@ -36,15 +36,8 @@ NEXTAUTH_SECRET=your-secret
 - 🚀 Mission Control — Mission-based retro
 - 🕵️ Detective — Investigate what happened (⚖️ accusations + case board)
 - ⚔️ Team Battle — Team vs team dynamics
-- 😡 Mad/Sad/Glad · 🚦 Start/Stop/Continue · 📝 4Ls · ☕ Lean Coffee (timed discussions) · ⚖️ Plus/Delta
-- 🐞 Bug Bash — Hunt bugs together, vote the nastiest
-- 🗺️ Quest Trail — Mario-party board: roll, move one team token, survive events
 
-## Party layer (all cooperative, team XP only)
-
-- 🎲 Chance deck — 8 cards with real effects (XP, timer warp, polls, shuffle, spotlight)
-- 🎮 Minigame bursts (all corruption-free by design: games use their own votes, never spend 👍) — 🐢 Snail Race (only seconded entries move it), 🔨 Whack-a-bug (review marks, no 👍 spent), 🎯 Tug of War (🪢 game votes, winner proposed as action — a human assigns owner), 🎁 Memory Chests, ⚡ Instant Poll (posts only if the team opts in, max 2 per ceremony)
-- Bursts ride on Comment/Vote rows (no schema changes); facilitator launches, GM suggests when the room is quiet
+Parked post-MVP (see git history): classic formats (Mad/Sad/Glad, Start/Stop/Continue, 4Ls, Lean Coffee, Plus/Delta), Bug Bash, Quest Trail board, chance deck, minigame bursts, Planning Poker, Sprint Review page, cross-sprint AI insights. They return only if interviews validate the pain they serve.
 
 ## Database Schema
 
@@ -71,7 +64,7 @@ Gamified Retrospective loop complete: team creation + mascots, 5 differentiated
 game modes, 6-letter join codes (no account), timed rounds with facilitator
 prompts, anonymous entries, live emoji reactions, entries → action items
 (owner + due date + XP), previous-retro follow-up review, streaks, badges,
-level-ups, Team XP. `npm test` (19 unit tests) green.
+level-ups, Team XP. `npm test` (44 unit tests) green.
 
 Security note: anon key has SELECT/INSERT/UPDATE, DELETE only on votes.
 Enable RLS with real auth before onboarding external teams.

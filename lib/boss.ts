@@ -11,7 +11,3 @@ export function bossHp(attackCount: number): number {
 export function isDefeated(attackCount: number): boolean {
   return bossHp(attackCount) <= 0
 }
-
-export function attacksToKill(): number {
-  return Math.ceil(BOSS_HP / ATTACK_DMG)
-}

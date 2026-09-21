@@ -2,7 +2,7 @@
 import { Suspense, useState, useEffect } from "react"
 import { getSupabase } from "@/lib/supabase"
 import { useRouter, useSearchParams } from "next/navigation"
-import { MODE_CONFIG, MODE_UNLOCK_LEVEL } from "@/constants"
+import { MODE_CONFIG } from "@/constants"
 import { progressToNext, actionXp } from "@/lib/xp"
 import Navbar from "@/components/Navbar"
 
@@ -21,9 +21,6 @@ function DashboardInner() {
   const [activeSprint, setActiveSprint] = useState<any>(null)
   const [sprintQuests, setSprintQuests] = useState<any[]>([])
   const [recentComments, setRecentComments] = useState<any[]>([])
-  const [aiInsights, setAiInsights] = useState<{ recurring: string[]; suggestion: string } | null>(null)
-  const [aiLoading, setAiLoading] = useState(false)
-  const [aiError, setAiError] = useState("")
   const [qTitle, setQTitle] = useState("")
   const [qDesc, setQDesc] = useState("")
   const [qXp, setQxp] = useState("300")
@@ -90,7 +87,7 @@ function DashboardInner() {
     fetchData()
   }, [teamId])
 
-  const startCeremony = async (gameMode: string, type = "retro") => {
+  const startCeremony = async (gameMode: string) => {
     if (!teamId) return
     setStarting(gameMode)
     setError("")
@@ -114,11 +111,11 @@ function DashboardInner() {
       }
       const { data, error: ce } = await supabase
         .from("Ceremony")
-        .insert({ type, gameMode, teamId, sprintId, status: "active" })
+        .insert({ type: "retro", gameMode, teamId, sprintId, status: "active" })
         .select()
         .single()
       if (ce || !data) { setError(ce?.message ?? "Could not start ceremony."); return }
-      router.push(type === "review" ? `/review/${data.id}` : `/retro/${data.id}`)
+      router.push(`/retro/${data.id}`)
     } catch (e: any) {
       setError(e?.message ?? "Could not start ceremony.")
     } finally {
@@ -189,22 +186,6 @@ function DashboardInner() {
       } catch { /* one-way completion stands */ }
     } finally {
       setCompleting(null)
-    }
-  }
-
-  const requestAiInsights = async () => {
-    if (!teamId || aiLoading) return
-    setAiLoading(true)
-    setAiError("")
-    try {
-      const res = await fetch("/api/insights", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ teamId }) })
-      const j = await res.json()
-      if (!res.ok) { setAiError(j.error ?? "AI insights failed"); return }
-      setAiInsights({ recurring: j.recurring ?? [], suggestion: j.suggestion ?? "" })
-    } catch (e: any) {
-      setAiError(e?.message ?? "AI insights failed")
-    } finally {
-      setAiLoading(false)
     }
   }
 
@@ -331,8 +312,8 @@ function DashboardInner() {
     }
   }
 
-  const ceremonyHref = (c: any) => c.type === "review" ? `/review/${c.id}` : c.type === "planning" ? `/planning/${c.id}` : `/retro/${c.id}`
-  const ceremonyName = (c: any) => c.type === "review" ? "📊 Sprint Review" : c.type === "planning" ? "🃏 Planning Poker" : ((MODE_CONFIG as any)[c.gameMode]?.name ?? c.gameMode)
+  const ceremonyHref = (c: any) => `/retro/${c.id}`
+  const ceremonyName = (c: any) => ((MODE_CONFIG as any)[c.gameMode]?.name ?? c.gameMode)
 
   const [reminding, setReminding] = useState(false)
   const [remindMsg, setRemindMsg] = useState("")
@@ -428,50 +409,20 @@ function DashboardInner() {
               <h2 className="text-xl font-bold mb-1">🧠 Game Master</h2>
               <p className="text-xs text-gray-500 mb-3">Rule-based insights from your team data (AI facilitation comes later).</p>
               <ul className="space-y-2 text-gray-300">{tips.map((t, i) => <li key={i}>• {t}</li>)}</ul>
-              <div className="mt-4 pt-3 border-t border-gray-700">
-                {!aiInsights && (
-                  <button onClick={requestAiInsights} disabled={aiLoading} className="text-sm px-3 py-1.5 rounded-lg bg-gold/20 text-gold font-bold hover:bg-gold hover:text-black disabled:opacity-50">
-                    {aiLoading ? "Consulting the AI…" : "✨ Detect cross-sprint patterns (AI)"}
-                  </button>
-                )}
-                {aiError && <p className="text-sm text-red-300 mt-2">{aiError}</p>}
-                {aiInsights && (
-                  <div className="text-sm mt-1">
-                    {aiInsights.recurring.length > 0 ? (
-                      <><p className="font-bold text-gray-200 mb-1">🔁 Recurring across sprints:</p>
-                      <ul className="space-y-1 text-gray-300 mb-2">{aiInsights.recurring.map((r, i) => <li key={i}>• {r}</li>)}</ul></>
-                    ) : <p className="text-gray-400 mb-2">No repeating issues detected — clean record. 🎉</p>}
-                    {aiInsights.suggestion && <p className="text-teal">💡 {aiInsights.suggestion}</p>}
-                  </div>
-                )}
-              </div>
             </div>
           )
         })()}
         <section className="mb-12" id="ceremonies"><h2 className="text-2xl font-bold mb-4">🎮 Start a Ceremony</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
           {Object.entries(MODE_CONFIG).map(([key, mode]) => {
-            const req = MODE_UNLOCK_LEVEL[key] ?? 1
-            const locked = level < req
             return (
-              <button key={key} onClick={() => startCeremony(key)} disabled={starting !== null || locked} title={locked ? `Unlocks at Level ${req}` : mode.desc} className="glass rounded-xl p-6 text-left hover:border-gold transition cursor-pointer disabled:opacity-50">
-                <div className="text-3xl mb-2">{locked ? "🔒" : mode.name.split(" ")[0]}</div>
+              <button key={key} onClick={() => startCeremony(key)} disabled={starting !== null} title={mode.desc} className="glass rounded-xl p-6 text-left hover:border-gold transition cursor-pointer disabled:opacity-50">
+                <div className="text-3xl mb-2">{mode.name.split(" ")[0]}</div>
                 <div className="text-gray-200 font-bold">{starting === key ? "Starting..." : mode.name}</div>
-                <div className="text-sm text-gray-400 mt-1">{locked ? `Unlocks at Level ${req} — earn Team XP to open it` : mode.desc}</div>
-                {!locked && <div className="text-xs text-teal mt-1">🎲 Chance cards + 🎮 minigame bursts included</div>}
+                <div className="text-sm text-gray-400 mt-1">{mode.desc}</div>
               </button>
             )
           })}
-          <button onClick={() => startCeremony("REVIEW", "review")} disabled={starting !== null} className="glass rounded-xl p-6 text-left hover:border-gold transition cursor-pointer disabled:opacity-50 border-dashed">
-            <div className="text-3xl mb-2">📊</div>
-            <div className="text-gray-200 font-bold">{starting === "REVIEW" ? "Starting..." : "📊 Sprint Review"}</div>
-            <div className="text-sm text-gray-400 mt-1">Demo the increment, quiz stakeholders, gather feedback</div>
-          </button>
-          <button onClick={() => startCeremony("PLANNING", "planning")} disabled={starting !== null} className="glass rounded-xl p-6 text-left hover:border-gold transition cursor-pointer disabled:opacity-50 border-dashed">
-            <div className="text-3xl mb-2">🃏</div>
-            <div className="text-gray-200 font-bold">{starting === "PLANNING" ? "Starting..." : "🃏 Planning Poker"}</div>
-            <div className="text-sm text-gray-400 mt-1">Estimate stories together, reveal at the same time</div>
-          </button>
         </div>
         </section>
         {badges.length > 0 && (
@@ -577,7 +528,7 @@ function DashboardInner() {
         </section>
         <section className="mb-12"><h2 className="text-2xl font-bold mb-4">📋 Past Ceremonies</h2>
           <div className="space-y-4">{ceremonies.length === 0 && <p className="text-gray-400">No ceremonies yet — start your first mission above!</p>}
-            {ceremonies.map((c: any) => <a key={c.id} href={ceremonyHref(c)} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block gap-2"><span className="font-bold">{ceremonyName(c)}</span>{c.status !== "completed" ? <span className="text-xs text-teal">🟢 live — post, vote & launch 🎮 bursts →</span> : <span className="text-xs text-gray-500">Completed ✓ · view record</span>}</a>)}
+            {ceremonies.map((c: any) => <a key={c.id} href={ceremonyHref(c)} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block gap-2"><span className="font-bold">{ceremonyName(c)}</span>{c.status !== "completed" ? <span className="text-xs text-teal">🟢 live — post & vote →</span> : <span className="text-xs text-gray-500">Completed ✓ · view record</span>}</a>)}
           </div>
         </section>
       </div>

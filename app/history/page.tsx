@@ -90,8 +90,8 @@ function HistoryInner() {
           <div className="space-y-3">
             {ceremonies.length === 0 && <p className="text-gray-400">No ceremonies yet.</p>}
             {ceremonies.map((c: any) => (
-              <a key={c.id} href={c.type === "review" ? `/review/${c.id}` : c.type === "planning" ? `/planning/${c.id}` : `/retro/${c.id}`} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block">
-                <span className="font-bold">{c.type === "review" ? "📊 Sprint Review" : c.type === "planning" ? "🃏 Planning Poker" : ((MODE_CONFIG as any)[c.gameMode]?.name ?? c.gameMode)}</span>
+              <a key={c.id} href={`/retro/${c.id}`} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block">
+                <span className="font-bold">{((MODE_CONFIG as any)[c.gameMode]?.name ?? c.gameMode)}</span>
                 <span className="flex gap-3 items-center text-sm">
                   <span className={c.status === "completed" ? "text-teal" : "text-gold"}>{c.status === "completed" ? "✓ done" : "● live"}</span>
                   <span className="text-gray-400">{c.startedAt ? new Date(c.startedAt).toLocaleDateString() : ""}</span>

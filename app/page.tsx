@@ -274,12 +274,10 @@ export default function Home() {
       </section>
 
       <section className="max-w-6xl mx-auto px-8 py-8">
-        <h2 className="text-3xl font-bold text-center mb-2">The whole sprint, not just retro</h2>
-        <p className="text-gray-400 text-center mb-10 max-w-2xl mx-auto">Most retro tools stop at sticky notes. SprintQuest covers the full Scrum loop.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🃏</div><h3 className="font-bold mb-1">Planning Poker</h3><p className="text-sm text-gray-400">Estimate stories together, reveal simultaneously, lock points.</p></div>
+        <h2 className="text-3xl font-bold text-center mb-2">More than sticky notes</h2>
+        <p className="text-gray-400 text-center mb-10 max-w-2xl mx-auto">Most retro tools stop at sticky notes. SprintQuest turns the retro into a game — and makes sure actions survive it.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">☀️</div><h3 className="font-bold mb-1">Daily Pulse</h3><p className="text-sm text-gray-400">Async standup — yesterday, today, blockers — with XP per check-in.</p></div>
-          <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">📊</div><h3 className="font-bold mb-1">Sprint Review</h3><p className="text-sm text-gray-400">Demo wall, stakeholder quiz with live results, applause, feedback.</p></div>
           <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🎯</div><h3 className="font-bold mb-1">Quests & Actions</h3><p className="text-sm text-gray-400">Jira issues become quests. Retro entries become owned actions with XP.</p></div>
         </div>
       </section>
