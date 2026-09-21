@@ -1,7 +1,7 @@
 // Detective mechanics: accusations per suspect, ranked case board.
 export const ACCUSE_EMOJI = "⚖️"
 
-export interface SuspectRank {
+interface SuspectRank {
   id: string
   content: string
   accusations: number

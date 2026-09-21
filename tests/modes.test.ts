@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest"
 import { MODE_CONFIG, DEFAULT_MODE, XP_PER_LEVEL } from "../constants"
 
-const EXPECTED_MODES = ["BOSS_BATTLE", "SAILBOAT", "MISSION_CONTROL", "DETECTIVE", "TEAM_BATTLE"]
+const EXPECTED_MODES = ["BOSS_BATTLE", "SAILBOAT", "DETECTIVE"]
 
 describe("game modes", () => {
-  it("defines exactly the 5 MVP modes", () => {
+  it("defines exactly the 3 core modes", () => {
     expect(Object.keys(MODE_CONFIG).sort()).toEqual([...EXPECTED_MODES].sort())
   })
   it("gives every mode 4 rounds with title and prompt", () => {

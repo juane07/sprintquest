@@ -18,26 +18,7 @@ function DashboardInner() {
   const [ceremonies, setCeremonies] = useState<any[]>([])
   const [actions, setActions] = useState<any[]>([])
   const [badges, setBadges] = useState<any[]>([])
-  const [activeSprint, setActiveSprint] = useState<any>(null)
-  const [sprintQuests, setSprintQuests] = useState<any[]>([])
   const [recentComments, setRecentComments] = useState<any[]>([])
-  const [qTitle, setQTitle] = useState("")
-  const [qDesc, setQDesc] = useState("")
-  const [qXp, setQxp] = useState("300")
-  const [savingQuest, setSavingQuest] = useState(false)
-  const [pulses, setPulses] = useState<any[]>([])
-  const [pAuthor, setPAuthor] = useState("")
-  const [pYesterday, setPYesterday] = useState("")
-  const [pToday, setPToday] = useState("")
-  const [pBlockers, setPBlockers] = useState("")
-  const [savingPulse, setSavingPulse] = useState(false)
-  const [jiraProject, setJiraProject] = useState("")
-  const [savingJira, setSavingJira] = useState(false)
-  const [jiraIssues, setJiraIssues] = useState<any[]>([])
-  const [jiraSelected, setJiraSelected] = useState<string[]>([])
-  const [fetchingJira, setFetchingJira] = useState(false)
-  const [importingJira, setImportingJira] = useState(false)
-  const [jiraError, setJiraError] = useState("")
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState<string | null>(null)
   const [completing, setCompleting] = useState<string | null>(null)
@@ -55,7 +36,6 @@ function DashboardInner() {
         const { data: t, error: te } = await supabase.from("Team").select("*").eq("id", teamId).single()
         if (te || !t) { setError("Team not found."); return }
         setTeam(t)
-        if (t.jiraProject) setJiraProject(t.jiraProject)
         const { data: c } = await supabase.from("Ceremony").select("*").eq("teamId", teamId).order("startedAt", { ascending: false })
         if (c) {
           setCeremonies(c)
@@ -70,14 +50,6 @@ function DashboardInner() {
         }
         const { data: b } = await supabase.from("Badge").select("*").eq("teamId", teamId).order("earnedAt", { ascending: false })
         if (b) setBadges(b)
-        const { data: sp } = await supabase.from("Sprint").select("*").eq("teamId", teamId).eq("status", "active").order("number", { ascending: false }).limit(1).single()
-        if (sp) {
-          setActiveSprint(sp)
-          const { data: sq } = await supabase.from("Quest").select("*").eq("sprintId", sp.id).order("createdAt")
-          if (sq) setSprintQuests(sq)
-          const { data: pu } = await supabase.from("DailyPulse").select("*").eq("sprintId", sp.id).order("createdAt", { ascending: false }).limit(50)
-          if (pu) setPulses(pu)
-        }
       } catch (e: any) {
         setError(e?.message ?? "Failed to load team.")
       } finally {
@@ -93,7 +65,6 @@ function DashboardInner() {
     setError("")
     try {
       const supabase = getSupabase()
-      // get-or-create an active sprint for this team (Ceremony requires sprintId)
       let sprintId: string | null = null
       const { data: existing } = await supabase.from("Sprint").select("id").eq("teamId", teamId).eq("status", "active").order("number", { ascending: false }).limit(1).single()
       if (existing) {
@@ -144,193 +115,25 @@ function DashboardInner() {
     }
   }
 
-  const createQuest = async () => {
-    if (!teamId || !activeSprint || !qTitle.trim()) return
-    setSavingQuest(true)
-    try {
-      const supabase = getSupabase()
-      const { data, error } = await supabase.from("Quest").insert({
-        title: qTitle.trim(),
-        description: qDesc.trim() || "Sprint quest",
-        xpValue: Math.max(10, parseInt(qXp, 10) || 300),
-        sprintId: activeSprint.id,
-      }).select().single()
-      if (!error && data) { setSprintQuests(prev => [...prev, data]); setQTitle(""); setQDesc(""); setQxp("300") }
-      else if (error) setError(error.message)
-    } finally {
-      setSavingQuest(false)
-    }
-  }
-
-  const completeQuest = async (quest: any) => {
-    if (!teamId || completing) return
-    setCompleting(quest.id)
-    try {
-      const supabase = getSupabase()
-      await supabase.from("Quest").update({ status: "completed", completedAt: new Date().toISOString() }).eq("id", quest.id)
-      const { data: t } = await supabase.from("Team").select("xp").eq("id", teamId).single()
-      const gain = quest.xpValue ?? 300
-      if (t) {
-        await supabase.from("Team").update({ xp: (t.xp ?? 0) + gain }).eq("id", teamId)
-        setTeam({ ...team, xp: (t.xp ?? 0) + gain })
-      }
-      await awardBadge(supabase, teamId, "Quest Crusher", "Completed your first quest")
-      setSprintQuests(prev => prev.map(q => (q.id === quest.id ? { ...q, status: "completed" } : q)))
-      // two-way Jira: move the linked issue to Done (best-effort, XP already awarded)
-      try {
-        const { parseIssueKey } = await import("@/lib/jira")
-        const key = parseIssueKey(quest.title)
-        if (key) {
-          await fetch("/api/jira/complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ issueKey: key }) })
-        }
-      } catch { /* one-way completion stands */ }
-    } finally {
-      setCompleting(null)
-    }
-  }
-
   const gameMasterTips = () => {
     const tips: string[] = []
-    if (ceremonies.length === 0) return ["Run your first retro — Sailboat is a great warm-up. The team will get it in minutes."]
+    if (ceremonies.length === 0) return ["Tu primera retro → Sailboat es el warm-up perfecto. Lo entenderán en 2 minutos."]
     const open = actions.filter(a => a.status !== "completed").length
     const used = new Set(ceremonies.map((c: any) => c.gameMode))
     const unused = Object.keys(MODE_CONFIG).filter(k => !used.has(k))
-    if (open >= 5) tips.push(`You have ${open} open actions piling up — run a 🔥 Boss Battle to fight the biggest one first.`)
-    else if (unused.length > 0) tips.push(`Try a fresh format next: ${(MODE_CONFIG as any)[unused[0]]?.name ?? unused[0]} — variety keeps retros sharp.`)
+    if (open >= 5) tips.push(`Tienes ${open} acciones abiertas — prueba un 🔥 Boss Battle para priorizar la más crítica.`)
+    else if (unused.length > 0) tips.push(`Prueba un formato nuevo: ${(MODE_CONFIG as any)[unused[0]]?.name ?? unused[0]} — variar mantiene la retro fresca.`)
     if (recentComments.length > 0) {
       const counts: Record<string, number> = {}
       recentComments.forEach((c: any) => { counts[c.category] = (counts[c.category] ?? 0) + 1 })
       const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
-      if (top && top[1] >= 3) tips.push(`Recurring theme: "${top[0]}" came up ${top[1]} times recently — worth a dedicated action item.`)
+      if (top && top[1] >= 3) tips.push(`Tema recurrente: "${top[0]}" apareció ${top[1]} veces — merece un action item.`)
     }
-    if (actions.length > 0) {
-      const rate = Math.round((actions.filter(a => a.status === "completed").length / actions.length) * 100)
-      if (rate < 50) tips.push(`Action completion is at ${rate}% — consider fewer, smaller commitments per retro.`)
-      else if (rate === 100 && actions.length >= 3) tips.push(`Flawless ${rate}% action completion — this team delivers. Protect the streak. 🔥`)
-    }
-    const times = ceremonies.map((c: any) => new Date(c.startedAt).getTime()).filter(Boolean).sort((a: number, b: number) => b - a)
-    if (times.length > 0) {
-      const days = Math.floor((Date.now() - times[0]) / 86400000)
-      if (days >= 14) tips.push(`It's been ${days} days since your last ceremony — momentum fades. Schedule the next one.`)
-    }
-    return tips.slice(0, 3)
-  }
-
-  const saveJiraProject = async () => {
-    if (!teamId) return
-    const { sanitizeProjectKey } = await import("@/lib/jira")
-    const key = sanitizeProjectKey(jiraProject)
-    if (!key) { setJiraError("Invalid project key (e.g. PDC)"); return }
-    setSavingJira(true)
-    try {
-      const supabase = getSupabase()
-      const { error } = await supabase.from("Team").update({ jiraProject: key }).eq("id", teamId)
-      if (error) { setJiraError(error.message); return }
-      setJiraProject(key)
-      setTeam({ ...team, jiraProject: key })
-      setJiraError("")
-    } finally {
-      setSavingJira(false)
-    }
-  }
-
-  const fetchJiraIssues = async () => {
-    if (!teamId) return
-    setFetchingJira(true)
-    setJiraError("")
-    try {
-      const res = await fetch("/api/jira/issues", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ teamId }) })
-      const j = await res.json()
-      if (!res.ok) { setJiraError(j.error ?? "Jira fetch failed"); return }
-      setJiraIssues(j.issues ?? [])
-      setJiraSelected((j.issues ?? []).map((i: any) => i.key))
-    } catch (e: any) {
-      setJiraError(e?.message ?? "Jira fetch failed")
-    } finally {
-      setFetchingJira(false)
-    }
-  }
-
-  const importJiraIssues = async () => {
-    if (!teamId || jiraSelected.length === 0) return
-    setImportingJira(true)
-    try {
-      const supabase = getSupabase()
-      let sprintId = activeSprint?.id ?? null
-      if (!sprintId) {
-        const { data: created } = await supabase.from("Sprint").insert({ number: 1, theme: "Sprint 1", teamId, status: "active" }).select().single()
-        if (created) { sprintId = created.id; setActiveSprint(created) }
-      }
-      if (!sprintId) { setJiraError("Could not create a sprint"); return }
-      const existing = new Set(sprintQuests.map(q => q.title))
-      const fresh = jiraIssues.filter(i => jiraSelected.includes(i.key) && !existing.has(`${i.key} ${i.summary}`))
-      for (const i of fresh) {
-        const { data } = await supabase.from("Quest").insert({
-          title: `${i.key} ${i.summary}`,
-          description: `${i.type} · ${i.status}${i.assignee ? ` · ${i.assignee}` : ""} · ${i.url}`,
-          xpValue: 300,
-          sprintId,
-        }).select().single()
-        if (data) setSprintQuests(prev => [...prev, data])
-      }
-      setJiraIssues(prev => prev.filter(i => !jiraSelected.includes(i.key)))
-      setJiraSelected([])
-    } finally {
-      setImportingJira(false)
-    }
-  }
-
-  const submitPulse = async () => {
-    if (!teamId || !activeSprint || !pAuthor.trim() || !pToday.trim()) return
-    const today = new Date().toDateString()
-    if (pulses.some(p => p.author.toLowerCase() === pAuthor.trim().toLowerCase() && new Date(p.createdAt).toDateString() === today)) {
-      setError("You already checked in today — see you tomorrow! ☀️")
-      return
-    }
-    setSavingPulse(true)
-    try {
-      const supabase = getSupabase()
-      const { data, error: e } = await supabase.from("DailyPulse").insert({
-        sprintId: activeSprint.id,
-        author: pAuthor.trim(),
-        yesterday: pYesterday.trim() || "—",
-        today: pToday.trim(),
-        blockers: pBlockers.trim() || "None 🎉",
-      }).select().single()
-      if (e) { setError(e.message); return }
-      if (data) {
-        setPulses(prev => [data, ...prev])
-        const { data: t } = await supabase.from("Team").select("xp").eq("id", teamId).single()
-        if (t) {
-          await supabase.from("Team").update({ xp: (t.xp ?? 0) + 10 }).eq("id", teamId)
-          setTeam({ ...team, xp: (t.xp ?? 0) + 10 })
-        }
-        setPYesterday(""); setPToday(""); setPBlockers("")
-      }
-    } finally {
-      setSavingPulse(false)
-    }
+    return tips.slice(0, 2)
   }
 
   const ceremonyHref = (c: any) => `/retro/${c.id}`
   const ceremonyName = (c: any) => ((MODE_CONFIG as any)[c.gameMode]?.name ?? c.gameMode)
-
-  const [reminding, setReminding] = useState(false)
-  const [remindMsg, setRemindMsg] = useState("")
-  const remindOnSlack = async () => {
-    if (!teamId || reminding) return
-    setReminding(true)
-    setRemindMsg("")
-    try {
-      const res = await fetch("/api/slack/remind", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ teamId }) })
-      const j = await res.json()
-      setRemindMsg(res.ok ? `📣 Posted ${j.count} open actions to Slack!` : (j.error ?? "Slack post failed"))
-    } catch {
-      setRemindMsg("Slack post failed")
-    } finally {
-      setReminding(false)
-    }
-  }
 
   const copyCode = async () => {
     const code = team?.joinCode ?? ""
@@ -363,14 +166,14 @@ function DashboardInner() {
       <main className="min-h-screen p-8">
       <div className="max-w-6xl mx-auto">
         <a href="/" className="text-sm text-gray-400 hover:text-teal transition">← Home</a>
-        {teamId && <a href={`/history?team=${teamId}`} className="ml-4 text-sm text-gray-400 hover:text-teal transition">📜 Team history</a>}
+        {teamId && <a href={`/history?team=${teamId}`} className="ml-4 text-sm text-gray-400 hover:text-teal transition">📜 History</a>}
         <div className="flex items-center gap-6 mb-6 mt-2">
           <div className="text-6xl">{team.mascot}</div>
           <div>
             <h1 className="text-4xl font-bold text-gradient">{team.name}</h1>
             <div className="flex gap-2 mt-1 flex-wrap items-center">
               <span className="bg-gold/20 text-gold px-4 py-1 rounded-full font-bold">Level {level}</span>
-              {(team.streak ?? 0) > 0 && <span className="bg-teal/20 text-teal px-4 py-1 rounded-full font-bold">🔥 {team.streak}-sprint streak</span>}
+              {(team.streak ?? 0) > 0 && <span className="bg-teal/20 text-teal px-4 py-1 rounded-full font-bold">🔥 {team.streak}-streak</span>}
             </div>
           </div>
         </div>
@@ -384,20 +187,14 @@ function DashboardInner() {
           </div>
         </div>
         {error && <div className="bg-red-900/60 text-red-200 p-3 rounded mb-4 text-sm">{error}</div>}
-        <nav className="flex gap-2 flex-wrap mb-8 text-sm">
-          <a href="#ceremonies" className="px-3 py-1.5 rounded-full border border-gray-700 text-gray-300 hover:border-gold">🎮 Ceremonies</a>
-          <a href="#actions" className="px-3 py-1.5 rounded-full border border-gray-700 text-gray-300 hover:border-gold">⚔️ Actions</a>
-          <a href="#quests" className="px-3 py-1.5 rounded-full border border-gray-700 text-gray-300 hover:border-gold">🎯 Quests</a>
-          <a href="#jira" className="px-3 py-1.5 rounded-full border border-gray-700 text-gray-300 hover:border-gold">🔗 Jira</a>
-          <a href="#pulse" className="px-3 py-1.5 rounded-full border border-gray-700 text-gray-300 hover:border-gold">☀️ Pulse</a>
-        </nav>
+
         {ceremonies.length === 0 && (
           <div className="glass rounded-xl p-6 mb-8">
-            <h2 className="text-xl font-bold mb-3">🧭 Your first quest in 3 steps</h2>
+            <h2 className="text-xl font-bold mb-3">🧭 Tu primera quest en 3 pasos</h2>
             <ol className="space-y-2 text-gray-300">
-              <li><span className="font-bold text-gold">1.</span> Invite your team — share code <span className="font-mono text-teal font-bold">{team.joinCode}</span> (they join here, no account needed)</li>
-              <li><span className="font-bold text-gold">2.</span> Pick a game mode below and start your first ceremony</li>
-              <li><span className="font-bold text-gold">3.</span> Press Finish at the end to earn Team XP 🎉</li>
+              <li><span className="font-bold text-gold">1.</span> Invita — comparte <span className="font-mono text-teal font-bold">{team.joinCode}</span> (sin cuenta, en el móvil)</li>
+              <li><span className="font-bold text-gold">2.</span> Elige un modo y empieza</li>
+              <li><span className="font-bold text-gold">3.</span> Termina → gana Team XP 🎉</li>
             </ol>
           </div>
         )}
@@ -407,13 +204,14 @@ function DashboardInner() {
           return (
             <div className="glass rounded-xl p-6 mb-8">
               <h2 className="text-xl font-bold mb-1">🧠 Game Master</h2>
-              <p className="text-xs text-gray-500 mb-3">Rule-based insights from your team data (AI facilitation comes later).</p>
               <ul className="space-y-2 text-gray-300">{tips.map((t, i) => <li key={i}>• {t}</li>)}</ul>
             </div>
           )
         })()}
-        <section className="mb-12" id="ceremonies"><h2 className="text-2xl font-bold mb-4">🎮 Start a Ceremony</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
+
+        <section className="mb-12" id="ceremonies"><h2 className="text-2xl font-bold mb-4">🎮 Elige tu retro</h2>
+        <p className="text-sm text-gray-400 mb-4">3 modos, cada uno con 4 rondas guiadas. Empieza por Sailboat.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
           {Object.entries(MODE_CONFIG).map(([key, mode]) => {
             return (
               <button key={key} onClick={() => startCeremony(key)} disabled={starting !== null} title={mode.desc} className="glass rounded-xl p-6 text-left hover:border-gold transition cursor-pointer disabled:opacity-50">
@@ -436,8 +234,8 @@ function DashboardInner() {
           const done = actions.filter(a => a.status === "completed")
           if (actions.length === 0) return null
           return (
-            <section className="mb-12" id="actions"><div className="flex items-center gap-3 mb-4 flex-wrap"><h2 className="text-2xl font-bold">⚔️ Action Items ({open.length} open)</h2><button onClick={remindOnSlack} disabled={reminding || open.length === 0} className="text-xs px-3 py-1.5 rounded-lg border border-gray-600 hover:border-gold text-gray-300 disabled:opacity-50">{reminding ? "Posting…" : "📣 Slack reminder"}</button></div>{remindMsg && <p className="text-sm text-teal mb-3">{remindMsg}</p>}
-              <p className="text-sm text-gray-400 mb-3">Commitments from your retros. Completing one earns its XP immediately.</p>
+            <section className="mb-12" id="actions"><h2 className="text-2xl font-bold mb-4">⚔️ Action Items ({open.length} abiertos)</h2>
+              <p className="text-sm text-gray-400 mb-3">Compromisos de tus retros. Completar da XP inmediato.</p>
               <div className="space-y-3">
                 {open.map((a: any) => (
                   <div key={a.id} className="glass rounded-xl p-4 flex items-center gap-3">
@@ -456,79 +254,9 @@ function DashboardInner() {
             </section>
           )
         })()}
-        {activeSprint && (
-          <section className="mb-12" id="quests"><h2 className="text-2xl font-bold mb-1">🎯 Sprint {activeSprint.number} Quests</h2>
-            <p className="text-sm text-gray-400 mb-3">Big team commitments for this sprint. Finish one to claim its XP.</p>
-            <div className="space-y-3 mb-4">
-              {sprintQuests.filter(q => q.status !== "completed").map((q: any) => (
-                <div key={q.id} className="glass rounded-xl p-4 flex items-center gap-3">
-                  <button onClick={() => completeQuest(q)} disabled={completing !== null} className="w-6 h-6 rounded border border-gray-500 hover:border-gold shrink-0 disabled:opacity-50" title="Complete quest" />
-                  <div><div className="font-bold">{q.title}</div><div className="text-xs text-gray-500">{q.description}</div></div>
-                  <span className="ml-auto text-gold font-bold shrink-0">+{q.xpValue ?? 300} XP</span>
-                </div>
-              ))}
-              {sprintQuests.filter(q => q.status === "completed").map((q: any) => (
-                <div key={q.id} className="rounded-xl p-4 flex items-center gap-3 border border-gray-800 opacity-60">
-                  <span className="text-teal font-bold">✓</span>
-                  <div className="line-through text-gray-400">{q.title}</div>
-                </div>
-              ))}
-              {sprintQuests.length === 0 && <p className="text-gray-500 text-sm">No quests yet — plan the first one below.</p>}
-            </div>
-            <div className="glass rounded-xl p-4 flex gap-2 flex-wrap">
-              <input type="text" placeholder="Quest title (e.g. Zero flaky tests)" value={qTitle} onChange={e => setQTitle(e.target.value)} className="flex-1 min-w-[200px] p-2 rounded-lg bg-dark border border-gray-600 text-white placeholder-gray-500 text-sm" />
-              <input type="text" placeholder="Description" value={qDesc} onChange={e => setQDesc(e.target.value)} className="flex-1 min-w-[200px] p-2 rounded-lg bg-dark border border-gray-600 text-white placeholder-gray-500 text-sm" />
-              <input type="number" min="10" value={qXp} onChange={e => setQxp(e.target.value)} className="w-24 p-2 rounded-lg bg-dark border border-gray-600 text-white text-sm" title="XP value" />
-              <button onClick={createQuest} disabled={savingQuest || !qTitle.trim()} className="px-4 py-2 bg-gold text-black font-bold rounded-lg text-sm hover:bg-yellow-400 disabled:opacity-50">{savingQuest ? "..." : "+ Add quest"}</button>
-            </div>
-          </section>
-        )}
-        {activeSprint && (
-          <section className="mb-12" id="pulse"><h2 className="text-2xl font-bold mb-1">☀️ Daily Pulse</h2>
-            <p className="text-sm text-gray-400 mb-3">Async standup for sprint {activeSprint.number}. Check in once a day, earn +10 XP.</p>
-            <div className="glass rounded-xl p-4 mb-4 grid grid-cols-1 md:grid-cols-2 gap-2">
-              <input type="text" placeholder="Your name" value={pAuthor} onChange={e => setPAuthor(e.target.value)} className="p-2 rounded-lg bg-dark border border-gray-600 text-white placeholder-gray-500 text-sm" />
-              <input type="text" placeholder="Blockers? (or None 🎉)" value={pBlockers} onChange={e => setPBlockers(e.target.value)} className="p-2 rounded-lg bg-dark border border-gray-600 text-white placeholder-gray-500 text-sm" />
-              <input type="text" placeholder="Yesterday I…" value={pYesterday} onChange={e => setPYesterday(e.target.value)} className="p-2 rounded-lg bg-dark border border-gray-600 text-white placeholder-gray-500 text-sm" />
-              <input type="text" placeholder="Today I will…" value={pToday} onChange={e => setPToday(e.target.value)} className="p-2 rounded-lg bg-dark border border-gray-600 text-white placeholder-gray-500 text-sm" />
-              <button onClick={submitPulse} disabled={savingPulse || !pAuthor.trim() || !pToday.trim()} className="md:col-span-2 p-2 bg-teal text-white font-bold rounded-lg text-sm disabled:opacity-50">{savingPulse ? "Checking in..." : "Check in +10 XP"}</button>
-            </div>
-            <div className="space-y-2">
-              {pulses.filter(p => new Date(p.createdAt).toDateString() === new Date().toDateString()).map((p: any) => (
-                <div key={p.id} className="glass rounded-xl p-3 text-sm">
-                  <span className="font-bold">{p.author}</span>
-                  <span className="text-gray-400"> · ✅ {p.yesterday} → 🎯 {p.today}</span>
-                  {p.blockers && !p.blockers.startsWith("None") && <span className="text-red-300"> · 🚧 {p.blockers}</span>}
-                </div>
-              ))}
-              {pulses.filter(p => new Date(p.createdAt).toDateString() === new Date().toDateString()).length === 0 && <p className="text-gray-500 text-sm">No check-ins today yet — be the first.</p>}
-            </div>
-          </section>
-        )}
-        <section className="mb-12" id="jira"><h2 className="text-2xl font-bold mb-1">🔗 Jira</h2>
-          <p className="text-sm text-gray-400 mb-3">Link a Jira project and import open sprint issues as quests (+300 XP each).</p>
-          <div className="glass rounded-xl p-4 mb-3 flex gap-2 flex-wrap">
-            <input type="text" placeholder="Project key (e.g. PDC)" value={jiraProject} onChange={e => setJiraProject(e.target.value.toUpperCase())} maxLength={10} className="w-40 p-2 rounded-lg bg-dark border border-gray-600 text-white placeholder-gray-500 text-sm font-mono" />
-            <button onClick={saveJiraProject} disabled={savingJira} className="px-4 py-2 border border-gray-600 rounded-lg text-sm text-gray-300 hover:border-gold disabled:opacity-50">{savingJira ? "..." : "Save"}</button>
-            {team?.jiraProject && <button onClick={fetchJiraIssues} disabled={fetchingJira} className="px-4 py-2 bg-teal text-white font-bold rounded-lg text-sm disabled:opacity-50">{fetchingJira ? "Loading…" : "Fetch open issues"}</button>}
-          </div>
-          {jiraError && <p className="text-sm text-red-300 mb-3">{jiraError}</p>}
-          {jiraIssues.length > 0 && (
-            <div className="space-y-2 mb-3">
-              {jiraIssues.map((i: any) => (
-                <label key={i.key} className="glass rounded-xl p-3 flex items-center gap-3 cursor-pointer text-sm">
-                  <input type="checkbox" checked={jiraSelected.includes(i.key)} onChange={e => setJiraSelected(prev => e.target.checked ? [...prev, i.key] : prev.filter(k => k !== i.key))} />
-                  <span className="font-mono text-teal shrink-0">{i.key}</span>
-                  <span className="flex-1">{i.summary} <span className="text-gray-500">· {i.status}{i.assignee ? ` · ${i.assignee}` : ""}</span></span>
-                </label>
-              ))}
-              <button onClick={importJiraIssues} disabled={importingJira || jiraSelected.length === 0} className="px-4 py-2 bg-gold text-black font-bold rounded-lg text-sm hover:bg-yellow-400 disabled:opacity-50">{importingJira ? "Importing…" : `Import ${jiraSelected.length} as quests`}</button>
-            </div>
-          )}
-        </section>
-        <section className="mb-12"><h2 className="text-2xl font-bold mb-4">📋 Past Ceremonies</h2>
-          <div className="space-y-4">{ceremonies.length === 0 && <p className="text-gray-400">No ceremonies yet — start your first mission above!</p>}
-            {ceremonies.map((c: any) => <a key={c.id} href={ceremonyHref(c)} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block gap-2"><span className="font-bold">{ceremonyName(c)}</span>{c.status !== "completed" ? <span className="text-xs text-teal">🟢 live — post & vote →</span> : <span className="text-xs text-gray-500">Completed ✓ · view record</span>}</a>)}
+        <section className="mb-12"><h2 className="text-2xl font-bold mb-4">📋 Ceremonias pasadas</h2>
+          <div className="space-y-4">{ceremonies.length === 0 && <p className="text-gray-400">Aún no hay ceremonias — ¡empieza la primera arriba!</p>}
+            {ceremonies.map((c: any) => <a key={c.id} href={ceremonyHref(c)} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block gap-2"><span className="font-bold">{ceremonyName(c)}</span>{c.status !== "completed" ? <span className="text-xs text-teal">🟢 live →</span> : <span className="text-xs text-gray-500">Completed ✓</span>}</a>)}
           </div>
         </section>
       </div>

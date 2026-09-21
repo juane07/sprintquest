@@ -1,7 +1,7 @@
 // Jira helpers. Credentials live only in server env (JIRA_SITE/EMAIL/TOKEN)
 // and are never sent to the browser — all calls go through /api/jira/*.
 
-export interface JiraIssue {
+interface JiraIssue {
   key: string
   summary: string
   status: string

@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
 
-export interface NavTeam {
+interface NavTeam {
   id: string
   name?: string
   mascot?: string

@@ -1,6 +1,6 @@
 // Server-only AI helpers (GROQ_API_KEY must never reach the browser —
 // this module is imported exclusively by API routes).
-export const GROQ_MODELS = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]
+const GROQ_MODELS = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]
 
 export interface SuggestedAction {
   title: string

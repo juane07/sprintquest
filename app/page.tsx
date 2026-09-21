@@ -250,45 +250,16 @@ export default function Home() {
       </div>
       </div>
 
-      <section className="max-w-6xl mx-auto px-8 py-16">
-        <h2 className="text-3xl font-bold text-center mb-2">Retros your team will actually enjoy</h2>
-        <p className="text-gray-400 text-center mb-10 max-w-2xl mx-auto">SprintQuest turns Agile ceremonies into team games. No boring video-call rituals — timed rounds, live reactions, votes, action items, and Team XP that persists sprint after sprint.</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="glass rounded-xl p-6"><div className="text-3xl mb-2">👥</div><h3 className="font-bold mb-1">1. Invite with a code</h3><p className="text-sm text-gray-400">Create a team, share the 6-letter code. Players join in seconds — no accounts, no installs, works on phones.</p></div>
-          <div className="glass rounded-xl p-6"><div className="text-3xl mb-2">🎮</div><h3 className="font-bold mb-1">2. Play the ceremony</h3><p className="text-sm text-gray-400">Pick a game mode. Guided rounds with prompts, anonymous entries, live reactions, a timer, and voting.</p></div>
-          <div className="glass rounded-xl p-6"><div className="text-3xl mb-2">🏆</div><h3 className="font-bold mb-1">3. Improve every sprint</h3><p className="text-sm text-gray-400">Entries become action items with owners. Next retro opens reviewing them. Completed work earns Team XP, streaks and badges.</p></div>
-        </div>
-      </section>
-
       <section className="max-w-6xl mx-auto px-8 py-8">
-        <h2 className="text-3xl font-bold text-center mb-2">10 game modes, zero repetition</h2>
-        <p className="text-gray-400 text-center mb-10">Gamified originals plus the classics your Scrum Master already knows. Higher team levels unlock more modes.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <h2 className="text-3xl font-bold text-center mb-2">3 modos · 1 mecánica</h2>
+        <p className="text-gray-400 text-center mb-10">MVP ultra simple — elige y juega. Sin Jira, sin Pulse, sin ruido.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {Object.values(MODE_CONFIG).map(m => (
             <div key={m.name} className="glass rounded-xl p-5">
               <div className="font-bold mb-1">{m.name}</div>
               <div className="text-sm text-gray-400">{m.desc}</div>
             </div>
           ))}
-        </div>
-      </section>
-
-      <section className="max-w-6xl mx-auto px-8 py-8">
-        <h2 className="text-3xl font-bold text-center mb-2">More than sticky notes</h2>
-        <p className="text-gray-400 text-center mb-10 max-w-2xl mx-auto">Most retro tools stop at sticky notes. SprintQuest turns the retro into a game — and makes sure actions survive it.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">☀️</div><h3 className="font-bold mb-1">Daily Pulse</h3><p className="text-sm text-gray-400">Async standup — yesterday, today, blockers — with XP per check-in.</p></div>
-          <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🎯</div><h3 className="font-bold mb-1">Quests & Actions</h3><p className="text-sm text-gray-400">Jira issues become quests. Retro entries become owned actions with XP.</p></div>
-        </div>
-      </section>
-
-      <section className="max-w-4xl mx-auto px-8 py-8">
-        <h2 className="text-3xl font-bold text-center mb-8">Questions your coworkers will ask</h2>
-        <div className="space-y-3">
-          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Do players need an account?</h3><p className="text-sm text-gray-400">No. They open the link, enter the 6-letter team code, and play — on any device. Only facilitators optionally sign in with GitHub or Google.</p></div>
-          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Does it replace Jira?</h3><p className="text-sm text-gray-400">No, it sits on top of it. Import open sprint issues as quests with one click; completing a quest can move the Jira issue to Done.</p></div>
-          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Is it surveillance disguised as a game?</h3><p className="text-sm text-gray-400">No. There is only Team XP — never individual rankings. Entries can be anonymous, and votes stay within the ceremony.</p></div>
-          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">What does it cost?</h3><p className="text-sm text-gray-400">The project runs permanently on free tiers. AI summaries use a free Groq key; nothing here generates infrastructure bills.</p></div>
         </div>
       </section>
 

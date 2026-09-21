@@ -1,7 +1,7 @@
 export const XP_PER_LEVEL = 1000
 
-export interface ModeCategory { name: string; hint: string }
-export interface ModeRound { title: string; prompt: string }
+interface ModeCategory { name: string; hint: string }
+interface ModeRound { title: string; prompt: string }
 export interface ModeConfig {
   name: string
   desc: string
@@ -53,29 +53,10 @@ export const MODE_CONFIG: Record<string, ModeConfig> = {
     victoryTitle: "Course Set!",
     victoryEmoji: "⛵",
   },
-  MISSION_CONTROL: {
-    name: "🚀 Mission Control",
-    desc: "Mission-based retro",
-    intro: "Debrief the mission. What was nominal, what was an anomaly, what do we correct?",
-    rounds: [
-      { title: "Launch recap", prompt: "What went according to plan this sprint?" },
-      { title: "Anomaly hunt", prompt: "What surprised us — good or bad? Stick to facts." },
-      { title: "Triage", prompt: "Which anomaly is mission-critical? Vote with the team." },
-      { title: "Lock corrections", prompt: "What exact correction do we commit to next sprint?" },
-    ],
-    categories: [
-      { name: "✅ Nominal", hint: "Went to plan" },
-      { name: "⚠️ Anomaly", hint: "Unexpected event" },
-      { name: "🔧 Correction", hint: "Fix we commit to" },
-    ],
-    voteTitle: "Which anomaly is mission-critical?",
-    victoryTitle: "Mission Debriefed!",
-    victoryEmoji: "🛰️",
-  },
   DETECTIVE: {
     name: "🕵️ Detective",
-    desc: "Investigate what happened",
-    intro: "Something happened this sprint. Gather evidence, name suspects, deliver the verdict.",
+    desc: "Investiga qué pasó de verdad",
+    intro: "Algo pasó este sprint. Reúne evidencia, nombra sospechosos, dicta el veredicto.",
     rounds: [
       { title: "Gather evidence", prompt: "Facts only. What happened, when, what was the impact?" },
       { title: "Name suspects", prompt: "What do you think caused it? Hypotheses welcome." },
@@ -90,25 +71,6 @@ export const MODE_CONFIG: Record<string, ModeConfig> = {
     voteTitle: "What really happened? Vote the root cause.",
     victoryTitle: "Case Closed!",
     victoryEmoji: "🔍",
-  },
-  TEAM_BATTLE: {
-    name: "⚔️ Team Battle",
-    desc: "Team vs team dynamics",
-    intro: "Split into squads, celebrate loud, then agree on one rematch goal. GG for everyone.",
-    rounds: [
-      { title: "Shoutouts", prompt: "Celebrate a win — yours or another squad's. Loud is good." },
-      { title: "Assists", prompt: "Who helped you this sprint? Give them credit." },
-      { title: "Play of the game", prompt: "Vote the single best moment of the sprint." },
-      { title: "Call the rematch", prompt: "One thing both squads improve together next sprint." },
-    ],
-    categories: [
-      { name: "🏆 Win", hint: "Something great that happened" },
-      { name: "🤝 Assist", hint: "Help you received" },
-      { name: "🎯 Rematch", hint: "What we improve together" },
-    ],
-    voteTitle: "What was the play of the game?",
-    victoryTitle: "Game Over — GG!",
-    victoryEmoji: "🏟️",
   },
 }
 

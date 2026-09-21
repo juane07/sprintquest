@@ -1,7 +1,7 @@
 // Slack helpers. The webhook URL lives only in server env (SLACK_WEBHOOK_URL)
 // and is never sent to the browser — all posts go through /api/slack/*.
 
-export interface ActionDigest {
+interface ActionDigest {
   title: string
   owner: string
   dueDate: string | null

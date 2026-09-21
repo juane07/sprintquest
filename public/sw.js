@@ -1,5 +1,5 @@
 /* SprintQuest service worker: cache app shell + static assets, never block live data. */
-const STATIC_CACHE = "sq-static-v1"
+const STATIC_CACHE = "sq-static-v2"
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
