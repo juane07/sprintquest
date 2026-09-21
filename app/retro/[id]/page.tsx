@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { MODE_CONFIG, DEFAULT_MODE } from "@/constants"
 import { ceremonyReward, streakBonus, levelForXp, actionXp } from "@/lib/xp"
 import { drawChance, ChanceCard } from "@/lib/deck"
-import { BURST_CAT, BOARD_CAT, SYSTEM_CATS, buildBurst, activeBurst, boardState, rollDice, TRAIL, BURST_META, BurstType } from "@/lib/gamestate"
+import { BURST_CAT, BOARD_CAT, SYSTEM_CATS, buildBurst, activeBurst, boardState, rollDice, TRAIL, BURST_META, topContenders, BurstType } from "@/lib/gamestate"
 import BurstOverlay, { BURST_REWARD } from "@/components/minigames/BurstOverlay"
 import { BOSS_HP, bossHp, isDefeated, ATTACK_EMOJI } from "@/lib/boss"
 import { rankSuspects, majorityThreshold, ACCUSE_EMOJI } from "@/lib/detective"
@@ -49,6 +49,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   const [lastBurstResult, setLastBurstResult] = useState<string | null>(null)
   const [trailEvent, setTrailEvent] = useState<string | null>(null)
   const [gmDismissed, setGmDismissed] = useState(false)
+  const [burstNote, setBurstNote] = useState<string | null>(null)
   const [discussing, setDiscussing] = useState<{ id: string; title: string; left: number } | null>(null)
   // action-item creation
   const [actionFor, setActionFor] = useState<any>(null)
@@ -178,7 +179,10 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   }
 
   const nextStep = () => {
-    if (round < totalRounds) setRound(round + 1)
+    if (round < totalRounds) {
+      setRound(round + 1)
+      if (visible.length < 3) setGmDismissed(false)
+    }
     else setVoting(true)
   }
 
@@ -343,9 +347,28 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     if (t) await supabase.from("Team").update({ xp: (t.xp ?? 0) + amount }).eq("id", ceremony.teamId)
   }
 
-  const launchBurst = async (type: BurstType, detail = "") => {
+  const launchBurst = async (type: BurstType) => {
+    setBurstNote(null)
+    let detail = ""
+    let target: number | undefined
+    if (type === "snail") {
+      detail = JSON.stringify({ base: visible.length })
+      target = 30
+    } else if (type === "whack") {
+      const bugs = visible.slice(-12).map((c: any) => c.id)
+      if (bugs.length === 0) { setBurstNote("Post some entries first — whack needs bugs to squash 🐞"); return }
+      const base: Record<string, number> = {}
+      bugs.forEach((id: string) => { base[id] = reactionCount(id, "👍") })
+      detail = JSON.stringify({ bugs, base })
+    } else if (type === "tug") {
+      const score = (id: string) => reactionCount(id, "👍") + reactionCount(id, "❤️") + reactionCount(id, "🔥")
+      const top = topContenders(visible, score, 2)
+      if (top.length < 2) { setBurstNote("Need at least 2 entries for a face-off — post first, then pull 🪢"); return }
+      detail = JSON.stringify({ a: top[0], b: top[1] })
+      target = 5
+    }
     const supabase = getSupabase()
-    const payload = buildBurst(type, detail)
+    const payload = buildBurst(type, detail, target)
     const { data } = await supabase.from("Comment").insert({ ceremonyId: params.id, content: JSON.stringify(payload), author: "Game Master", anonymous: false, category: BURST_CAT }).select().single()
     if (data) setComments(prev => [...prev, data])
   }
@@ -357,7 +380,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     if (data) setVotes(prev => [...prev, data])
   }
 
-  const endBurst = async (result: string) => {
+  const endBurst = async (result: string, actionEntryId?: string) => {
     if (!burst) return
     const supabase = getSupabase()
     const done = { ...burst.payload, status: "done" as const, result }
@@ -365,6 +388,18 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     setComments(prev => prev.map(c => (c.id === burst.comment.id ? { ...c, content: JSON.stringify(done) } : c)))
     setLastBurstResult(result)
     await awardTeamXp(BURST_REWARD[burst.payload.type] ?? 10)
+    if (actionEntryId) {
+      const entry = visible.find((c: any) => c.id === actionEntryId)
+      if (entry) { setActionFor(entry); setActionTitle(entry.content.slice(0, 80)); setActionOwner(""); setActionDue("") }
+    }
+  }
+
+  const postBurstEntry = async (text: string) => {
+    const supabase = getSupabase()
+    const cat = mode.categories[0]?.name ?? ""
+    if (!cat) return
+    const { data } = await supabase.from("Comment").insert({ ceremonyId: params.id, content: text, author: "Game Master", anonymous: false, category: cat }).select().single()
+    if (data) setComments(prev => [...prev, data])
   }
 
   const fmtClock = (secs: number) => `${secs < 0 ? "-" : "+"}${Math.floor(Math.abs(secs) / 60)}:${String(Math.abs(secs) % 60).padStart(2, "0")}`
@@ -392,10 +427,10 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     const supabase = getSupabase()
     const { data } = await supabase.from("Comment").insert({ ceremonyId: params.id, content: JSON.stringify({ kind: "board", pos: np, log: [...board.log, msg].slice(-8) }), author: "Game Master", anonymous: false, category: BOARD_CAT }).select().single()
     if (data) setComments(prev => [...prev, data])
-    if (tile.kind === "xp" || tile.kind === "star") { await awardTeamXp(tile.amount ?? 10); setTrailEvent(`${tile.icon} +${tile.amount ?? 10} team XP banked`) }
+    if (tile.kind === "xp" || tile.kind === "star") { await awardTeamXp(tile.amount ?? 10); if (tile.kind === "star") setCategory("📍 Milestone"); setTrailEvent(`${tile.icon} +${tile.amount ?? 10} team XP banked${tile.kind === "star" ? " — composer set to 📍 Milestone, post it" : ""}`) }
     else if (tile.kind === "chance") { await applyChance(); setTrailEvent("🎲 The trail draws a chance card for you") }
     else if (tile.kind === "burst") { const types: BurstType[] = ["snail", "whack", "tug", "memory"]; await launchBurst(types[Math.floor(Math.random() * types.length)]); setTrailEvent("🎮 The trail throws a minigame at the team") }
-    else if (tile.kind === "boss") setTrailEvent("👹 Boss ambush! Post the blocker as an entry, then turn it into an action item.")
+    else if (tile.kind === "boss") { setCategory("🚧 Blocker"); setTrailEvent("👹 Boss ambush! Composer set to 🚧 Blocker — post it, then turn it into an action item.") }
     else if (tile.kind === "finish") setTrailEvent("🏁 Finish line! Then lock it in below.")
     else setTrailEvent(null)
   }
@@ -530,9 +565,10 @@ export default function RetroPage({ params }: { params: { id: string } }) {
                 <button key={t} onClick={() => launchBurst(t)} className="text-xs px-3 py-1 rounded-full border border-gray-600 hover:border-gold" title={BURST_META[t].desc}>{BURST_META[t].title}</button>
               ))}
             </div>
+            {burstNote && <p className="text-xs text-gold mt-2">{burstNote}</p>}
           </div>
         )}
-        {burst && <BurstOverlay burst={burst} votes={votes} uid={uid} entries={visible.map((c: any) => String(c.content)).slice(-12)} onAction={burstTap} onEnd={endBurst} onDismiss={() => setDismissedBursts(prev => [...prev, burst.comment.id])} />}
+        {burst && <BurstOverlay burst={burst} votes={votes} uid={uid} entries={visible.map((c: any) => ({ id: c.id, content: String(c.content) })).slice(-12)} reactionCount={reactionCount} onAction={burstTap} onSquash={(id) => toggleReaction(id, "👍")} onPull={(id) => toggleReaction(id, "👍")} onPostEntry={postBurstEntry} onEnd={endBurst} onDismiss={() => setDismissedBursts(prev => [...prev, burst.comment.id])} />}
         {lastBurstResult && (
           <div className="glass rounded-xl p-4 mb-6 border-teal/50">
             <div className="flex justify-between items-center">

@@ -1,52 +1,52 @@
 // Presentational minigame boards. All cooperative: progress is always TEAM progress,
 // never an individual leaderboard.
-export function SnailGame({ progress, target, tappers, onTap }: { progress: number; target: number; tappers: number; onTap: () => void }) {
+export function SnailGame({ progress, target, entries, onTap }: { progress: number; target: number; entries: number; onTap: () => void }) {
   return (
     <div>
-      <div className="flex justify-between text-xs text-gray-400 mb-1"><span>🐢 team snail</span><span>{tappers} tapping · {progress}/{target}</span></div>
+      <div className="flex justify-between text-xs text-gray-400 mb-1"><span>🐢 team snail · {entries} entries posted</span><span>{progress}/{target}</span></div>
       <div className="h-6 rounded-full bg-dark border border-gray-700 mb-1 relative overflow-hidden">
         <div className="h-full bg-teal transition-all" style={{ width: `${Math.min(100, (progress / target) * 100)}%` }} />
         <span className="absolute left-2 top-0 text-sm">🐢</span>
       </div>
-      <p className="text-xs text-gray-500 mb-3">The bar drains every second — only sustained tapping by everyone wins.</p>
+      <p className="text-xs text-gray-500 mb-3">Each entry moves the snail 5 steps. Taps sustain it — the bar drains every second.</p>
       <button onClick={onTap} className="w-full p-4 bg-teal text-white text-xl font-bold rounded-lg active:scale-95">TAP 🐢</button>
     </div>
   )
 }
 
-export function WhackGame({ squashed, target, seed, onTap }: { squashed: number; target: number; seed: number; onTap: (cell: number) => void }) {
-  // deterministic bug placement from seed + progress: the grid feels alive on every tap
-  const bugs = new Set<number>()
-  let s = (seed * 31 + squashed * 101) | 0
-  const rnd = () => { s = (Math.imul(s ^ (s >>> 15), 1 | s) + 0x6d2b79f5) | 0; return Math.abs(s) % 12 }
-  while (bugs.size < 5) bugs.add(rnd())
+export function WhackGame({ bugs, squashed, onTap }: { bugs: { id: string; label: string }[]; squashed: string[]; onTap: (id: string) => void }) {
   return (
     <div>
-      <div className="flex justify-between text-xs text-gray-400 mb-2"><span>🔨 bugs squashed together</span><span>{squashed}/{target}</span></div>
-      <div className="grid grid-cols-4 gap-2 mb-3">
-        {Array.from({ length: 12 }, (_, i) => (
-          <button key={i} onClick={() => bugs.has(i) && onTap(i)} className={`aspect-square rounded-lg text-3xl border ${bugs.has(i) ? "border-red-500 bg-red-900/30 hover:scale-105" : "border-gray-800 bg-dark/50"}`}>
-            {bugs.has(i) ? "🐞" : ""}
-          </button>
-        ))}
+      <div className="flex justify-between text-xs text-gray-400 mb-2"><span>🔨 squash every entry with 👍</span><span>{squashed.length}/{bugs.length} confirmed</span></div>
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        {bugs.map((b) => {
+          const done = squashed.includes(b.id)
+          return (
+            <button key={b.id} onClick={() => !done && onTap(b.id)} className={`text-left p-2 rounded-lg text-xs border ${done ? "border-teal bg-teal/10 line-through text-gray-500" : "border-red-500/60 bg-red-900/20 hover:scale-[1.02] text-gray-200"}`}>
+              {done ? "✅ " : "🐞 "}{b.label.slice(0, 60)}
+            </button>
+          )
+        })}
       </div>
-      <p className="text-xs text-gray-500">Tap the bugs — every squash counts for the whole team.</p>
+      <p className="text-xs text-gray-500">Squashing = a real 👍 on that entry. When all are squashed, the board is prioritized.</p>
     </div>
   )
 }
 
-export function TugGame({ a, b, target, myTeam, onPull }: { a: number; b: number; target: number; myTeam: "A" | "B"; onPull: () => void }) {
+export function TugGame({ a, b, labelA, labelB, target, onPull }: { a: number; b: number; labelA: string; labelB: string; target: number; onPull: (side: "A" | "B") => void }) {
   const total = Math.max(1, a + b)
   const pctA = (a / total) * 100
   return (
     <div>
-      <div className="flex justify-between text-xs text-gray-400 mb-1"><span>🟩 Team Sprout (you: {myTeam})</span><span>🟪 Team Comet</span></div>
+      <div className="grid grid-cols-2 gap-2 mb-2">
+        <button onClick={() => onPull("A")} className="text-left p-2 rounded-lg border border-green-700 bg-green-900/20 hover:border-green-500 text-xs"><span className="font-bold text-green-300">🟩 Pull ({a})</span><br />{labelA.slice(0, 70)}</button>
+        <button onClick={() => onPull("B")} className="text-left p-2 rounded-lg border border-purple-700 bg-purple-900/20 hover:border-purple-500 text-xs"><span className="font-bold text-purple-300">🟪 Pull ({b})</span><br />{labelB.slice(0, 70)}</button>
+      </div>
       <div className="h-6 rounded-full bg-purple-900/60 border border-gray-700 mb-1 relative overflow-hidden">
         <div className="h-full bg-green-600 transition-all" style={{ width: `${pctA}%` }} />
         <span className="absolute left-1/2 -translate-x-1/2 top-0">🪢</span>
       </div>
-      <p className="text-xs text-gray-500 mb-3 text-center">{a} vs {b} · first side to {target} with the lead wins — prize shared by all.</p>
-      <button onClick={onPull} className="w-full p-4 bg-gold text-black text-xl font-bold rounded-lg active:scale-95">PULL 🪢</button>
+      <p className="text-xs text-gray-500 text-center">First side to {target} 👍 with the lead wins — and becomes an action item.</p>
     </div>
   )
 }

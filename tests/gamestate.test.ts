@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
 import {
   buildBurst, parseBurst, activeBurst, burstVotes, distinctTappers,
-  snailProgress, teamOf, tugScore, memoryPairs, memoryRevealed, memoryDone,
+  snailSteps, SNAIL_STEPS_PER_ENTRY, topContenders, teamOf, tugScore, memoryPairs, memoryRevealed, memoryDone,
   flipAction, rollDice, parseBoard, boardState, TRAIL, BURST_CAT, BOARD_CAT,
 } from "../lib/gamestate"
 
@@ -37,13 +37,29 @@ describe("taps", () => {
   })
 })
 
-describe("snailProgress", () => {
-  it("decays 1 tap per second", () => {
-    expect(snailProgress(10, 3, 60)).toBe(7)
+describe("snailSteps", () => {
+  it("entries move 5 steps, taps sustain, 1/sec drains", () => {
+    expect(snailSteps(2, 0, 0, 30)).toBe(2 * SNAIL_STEPS_PER_ENTRY)
+    expect(snailSteps(2, 10, 3, 30)).toBe(2 * SNAIL_STEPS_PER_ENTRY + 10 - 3)
   })
   it("clamps at 0 and target", () => {
-    expect(snailProgress(2, 10, 60)).toBe(0)
-    expect(snailProgress(999, 0, 60)).toBe(60)
+    expect(snailSteps(0, 2, 10, 30)).toBe(0)
+    expect(snailSteps(99, 99, 0, 30)).toBe(30)
+  })
+})
+
+describe("topContenders", () => {
+  it("returns top-N ids by score", () => {
+    const items = [{ id: "a" }, { id: "b" }, { id: "c" }]
+    const score = (id: string) => ({ a: 1, b: 5, c: 3 }[id] ?? 0)
+    expect(topContenders(items, score, 2)).toEqual(["b", "c"])
+  })
+})
+
+describe("buildBurst target override", () => {
+  it("accepts a custom target", () => {
+    expect(buildBurst("tug", "", 5).target).toBe(5)
+    expect(buildBurst("tug").target).toBe(5)
   })
 })
 

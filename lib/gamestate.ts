@@ -20,18 +20,18 @@ export interface BurstPayload {
 }
 
 export const BURST_META: Record<BurstType, { title: string; desc: string; target: number }> = {
-  snail: { title: "🐢 Snail Race", desc: "Tap together — the bar drains 1/sec, only sustained tapping wins.", target: 60 },
-  whack: { title: "🔨 Whack-a-bug", desc: "Squash bugs together until the team target.", target: 30 },
-  tug: { title: "🎯 Tug of War", desc: "Auto-split in two teams. First side to the target pulls wins — prize is shared.", target: 25 },
+  snail: { title: "🐢 Snail Race", desc: "Each entry moves the snail 5 steps, taps sustain it, the bar drains 1/sec.", target: 30 },
+  whack: { title: "🔨 Whack-a-bug", desc: "Every bug IS a real entry — squash (👍) them all together to prioritize.", target: 0 },
+  tug: { title: "🎯 Tug of War", desc: "The top-2 entries face off. Pull (👍) for one side — the winner becomes an action.", target: 5 },
   memory: { title: "🎁 Memory Chests", desc: "Flip chests together, match every pair.", target: 0 },
-  poll: { title: "⚡ Instant Poll", desc: "One fast question, three answers, reveal together.", target: 0 },
+  poll: { title: "⚡ Instant Poll", desc: "One fast question, three answers — the result posts itself as an entry.", target: 0 },
 }
 
-export function buildBurst(type: BurstType, detail = ""): BurstPayload {
+export function buildBurst(type: BurstType, detail = "", target?: number): BurstPayload {
   return {
     kind: "burst",
     type,
-    target: BURST_META[type].target,
+    target: target ?? BURST_META[type].target,
     status: "active",
     startedAt: Date.now(),
     seed: Math.floor(Math.random() * 1e9),
@@ -69,11 +69,17 @@ export function distinctTappers(vs: any[]): number {
   return new Set(vs.map((v) => v.userId)).size
 }
 
-// --- snail: linear decay, deterministic for all clients ---
+// --- snail: entries move 5 steps, taps sustain, 1 step/sec drains. Deterministic. ---
 export const SNAIL_DECAY_PER_SEC = 1
+export const SNAIL_STEPS_PER_ENTRY = 5
 
-export function snailProgress(taps: number, elapsedSec: number, target: number): number {
-  return Math.min(target, Math.max(0, taps - Math.floor(Math.max(0, elapsedSec)) * SNAIL_DECAY_PER_SEC))
+export function snailSteps(newEntries: number, taps: number, elapsedSec: number, target: number): number {
+  return Math.min(target, Math.max(0, newEntries * SNAIL_STEPS_PER_ENTRY + taps - Math.floor(Math.max(0, elapsedSec)) * SNAIL_DECAY_PER_SEC))
+}
+
+// --- top-N entries by score (for tug-of-war face-offs) ---
+export function topContenders<T extends { id: string }>(items: T[], score: (id: string) => number, n = 2): string[] {
+  return [...items].sort((a, b) => score(b.id) - score(a.id)).slice(0, n).map((i) => i.id)
 }
 
 // --- tug of war: deterministic team split, no individual records ---
