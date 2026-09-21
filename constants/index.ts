@@ -53,25 +53,7 @@ export const MODE_CONFIG: Record<string, ModeConfig> = {
     victoryTitle: "Course Set!",
     victoryEmoji: "⛵",
   },
-  DETECTIVE: {
-    name: "🕵️ Detective",
-    desc: "Investiga qué pasó de verdad",
-    intro: "Algo pasó este sprint. Reúne evidencia, nombra sospechosos, dicta el veredicto.",
-    rounds: [
-      { title: "Gather evidence", prompt: "Facts only. What happened, when, what was the impact?" },
-      { title: "Name suspects", prompt: "What do you think caused it? Hypotheses welcome." },
-      { title: "Interrogate", prompt: "Vote: what really was the root cause?" },
-      { title: "Deliver the verdict", prompt: "Case closed when there's an action. What's the verdict?" },
-    ],
-    categories: [
-      { name: "🔎 Evidence", hint: "Facts and data" },
-      { name: "❓ Suspect", hint: "Possible cause" },
-      { name: "⚖️ Verdict", hint: "Conclusion + action" },
-    ],
-    voteTitle: "What really happened? Vote the root cause.",
-    victoryTitle: "Case Closed!",
-    victoryEmoji: "🔍",
-  },
+
 }
 
 export const DEFAULT_MODE: ModeConfig = {

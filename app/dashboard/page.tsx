@@ -210,8 +210,8 @@ function DashboardInner() {
         })()}
 
         <section className="mb-12" id="ceremonies"><h2 className="text-2xl font-bold mb-4">🎮 Elige tu retro</h2>
-        <p className="text-sm text-gray-400 mb-4">3 modos, cada uno con 4 rondas guiadas. Empieza por Sailboat.</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
+        <p className="text-sm text-gray-400 mb-4">2 modos, 4 rondas cada uno. Sailboat para empezar, Boss para priorizar.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12 max-w-3xl">
           {Object.entries(MODE_CONFIG).map(([key, mode]) => {
             return (
               <button key={key} onClick={() => startCeremony(key)} disabled={starting !== null} title={mode.desc} className="glass rounded-xl p-6 text-left hover:border-gold transition cursor-pointer disabled:opacity-50">

@@ -1,9 +1,9 @@
 /* SprintQuest service worker: cache app shell + static assets, never block live data. */
-const STATIC_CACHE = "sq-static-v2"
+const STATIC_CACHE = "sq-static-v3"
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => cache.addAll(["/", "/icons/icon-192.png", "/icons/icon-512.png"])).then(() => self.skipWaiting())
+    caches.open(STATIC_CACHE).then((cache) => cache.addAll(["/icons/icon-192.png", "/icons/icon-512.png"])).then(() => self.skipWaiting())
   )
 })
 

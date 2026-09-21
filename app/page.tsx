@@ -251,9 +251,9 @@ export default function Home() {
       </div>
 
       <section className="max-w-6xl mx-auto px-8 py-8">
-        <h2 className="text-3xl font-bold text-center mb-2">3 modos · 1 mecánica</h2>
-        <p className="text-gray-400 text-center mb-10">MVP ultra simple — elige y juega. Sin Jira, sin Pulse, sin ruido.</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <h2 className="text-3xl font-bold text-center mb-2">2 modos · 1 mecánica</h2>
+        <p className="text-gray-400 text-center mb-10">MVP mínimo — sin parálisis. El resto llega después.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
           {Object.values(MODE_CONFIG).map(m => (
             <div key={m.name} className="glass rounded-xl p-5">
               <div className="font-bold mb-1">{m.name}</div>
