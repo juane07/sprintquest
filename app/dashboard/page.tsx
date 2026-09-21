@@ -458,6 +458,7 @@ function DashboardInner() {
                 <div className="text-3xl mb-2">{locked ? "🔒" : mode.name.split(" ")[0]}</div>
                 <div className="text-gray-200 font-bold">{starting === key ? "Starting..." : mode.name}</div>
                 <div className="text-sm text-gray-400 mt-1">{locked ? `Unlocks at Level ${req} — earn Team XP to open it` : mode.desc}</div>
+                {!locked && <div className="text-xs text-teal mt-1">🎲 Chance cards + 🎮 minigame bursts included</div>}
               </button>
             )
           })}
@@ -576,7 +577,7 @@ function DashboardInner() {
         </section>
         <section className="mb-12"><h2 className="text-2xl font-bold mb-4">📋 Past Ceremonies</h2>
           <div className="space-y-4">{ceremonies.length === 0 && <p className="text-gray-400">No ceremonies yet — start your first mission above!</p>}
-            {ceremonies.map((c: any) => <a key={c.id} href={ceremonyHref(c)} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block"><span className="font-bold">{ceremonyName(c)}</span><span className="text-gray-400">{c.startedAt ? new Date(c.startedAt).toLocaleDateString() : ""}</span></a>)}
+            {ceremonies.map((c: any) => <a key={c.id} href={ceremonyHref(c)} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block gap-2"><span className="font-bold">{ceremonyName(c)}</span>{c.status !== "completed" ? <span className="text-xs text-teal">🟢 live — post, vote & launch 🎮 bursts →</span> : <span className="text-xs text-gray-500">Completed ✓ · view record</span>}</a>)}
           </div>
         </section>
       </div>

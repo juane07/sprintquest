@@ -50,6 +50,11 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   const [trailEvent, setTrailEvent] = useState<string | null>(null)
   const [gmDismissed, setGmDismissed] = useState(false)
   const [burstNote, setBurstNote] = useState<string | null>(null)
+  const [coachShow, setCoachShow] = useState(false)
+  useEffect(() => {
+    try { if (!window.localStorage.getItem("sq_coach_seen")) setCoachShow(true) } catch { /* private mode */ }
+  }, [])
+  const dismissCoach = () => { try { window.localStorage.setItem("sq_coach_seen", "1") } catch { /* ignore */ }; setCoachShow(false) }
   const lastTapRef = useRef(0)
   const [discussing, setDiscussing] = useState<{ id: string; title: string; left: number } | null>(null)
   // action-item creation
@@ -523,10 +528,25 @@ export default function RetroPage({ params }: { params: { id: string } }) {
           <div className="flex gap-2 flex-wrap">
             <Presence channel={params.id} />
             <button onClick={applyChance} className="px-3 py-1 rounded-full text-sm font-bold bg-navy-800 border border-gray-700 text-gray-300 hover:border-gold" title="Draw a chance card with a real effect">🎲 Chance</button>
+            <a href="#bursts" className="px-3 py-1 rounded-full text-sm font-bold bg-navy-800 border border-gray-700 text-gray-300 hover:border-gold" title="Jump to the minigame bursts">🎮 Bursts</a>
             <span className={`px-4 py-2 rounded-full font-bold ${secondsLeft === 0 ? "bg-red-900/60 text-red-200" : "bg-navy-800 border border-gray-700 text-gray-300"}`}>⏱ {secondsLeft === 0 ? "Time!" : `${mm}:${ss}`}</span>
             <span className="bg-gold/20 text-gold px-4 py-2 rounded-full font-bold">{visible.length} entries</span>
           </div>
         </div>
+        {coachShow && (
+          <div className="glass rounded-xl p-4 mb-4 border-teal/50">
+            <div className="flex justify-between items-center mb-2">
+              <p className="font-bold">👋 First time here? 60-second tour</p>
+              <button onClick={dismissCoach} className="text-xs text-gray-500 hover:text-white">Got it ✕</button>
+            </div>
+            <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
+              <li><b>Post entries</b> below — one idea per entry, anonymous if you like.</li>
+              <li><b>React</b> to others — seconded entries move the team forward.</li>
+              <li><b>Play</b> — <a href="#bursts" className="text-teal">🎮 bursts</a> and 🎲 chance cards turn posting & voting into team games.</li>
+              <li><b>Finish</b> — lock in, earn Team XP, open actions become next sprint&apos;s quests.</li>
+            </ol>
+          </div>
+        )}
         {round === 1 && <p className="text-gray-300 mb-4 glass rounded-xl p-4">{mode.intro}</p>}
         {round === 1 && ceremony?.summary && (
           <div className="glass rounded-xl p-4 mb-4">
@@ -592,11 +612,15 @@ export default function RetroPage({ params }: { params: { id: string } }) {
           </div>
         )}
         {!burst && (
-          <div className="glass rounded-xl p-4 mb-6">
-            <p className="font-bold text-sm mb-2">🎮 Launch a minigame burst <span className="font-normal text-gray-500">60–120s of team play · optional, never blocks posting</span></p>
-            <div className="flex gap-2 flex-wrap">
+          <div id="bursts" className="glass rounded-xl p-4 mb-6 scroll-mt-4">
+            <p className="font-bold text-sm mb-1">🎮 Launch a minigame burst</p>
+            <p className="text-xs text-gray-500 mb-3">60–120s of team play · optional, never blocks posting · every game moves the ceremony</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {(Object.keys(BURST_META) as BurstType[]).map(t => (
-                <button key={t} onClick={() => launchBurst(t)} className="text-xs px-3 py-1 rounded-full border border-gray-600 hover:border-gold" title={BURST_META[t].desc}>{BURST_META[t].title}</button>
+                <button key={t} onClick={() => launchBurst(t)} className="text-left p-3 rounded-lg border border-gray-700 hover:border-gold transition">
+                  <div className="font-bold text-sm">{BURST_META[t].title}</div>
+                  <div className="text-xs text-gray-400">{BURST_META[t].desc}</div>
+                </button>
               ))}
             </div>
             {burstNote && <p className="text-xs text-gold mt-2">{burstNote}</p>}
