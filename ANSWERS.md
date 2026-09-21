@@ -2,14 +2,21 @@
 
 ## Phase 1: Problem & User (Domains 1-5)
 
+> **Evidence ledger (2026-09-21):** per AGENTS.md rule, every claim below is tagged.
+> - `ASSUMED` = no interview evidence yet; validation = 5 Scrum Master interviews (Q: last retro's action items? biggest facilitation frustration? what did you try and drop?).
+> - `PARTIALLY VERIFIED` = study named but URL not archived in repo — archive URL or downgrade to ASSUMED.
+> - Scope: Q1.2, Q1.3, Q1.6, Q2.1, Q2.2, Q2.5, Q2.6, Q2.7, Q3.11, Q4.8, Q4.9.
+
 ### Domain 1: Vision & Purpose
 **Q1.1 Product in one sentence:**
 A platform that turns Sprint Reviews and Retrospectives into a gamified experience with XP, quests, badges, and team progression — making Continuous Improvement feel like a game, not a chore.
 
 **Q1.2 Problem:**
+*Status: ASSUMED (stats cited without archived URLs; no interview evidence yet).*
 Teams treat retrospectives and sprint reviews as boring, unproductive rituals. Research shows 44% of action items are never completed, only 35% of teams consistently complete retro actions, stakeholders often don't attend sprint reviews, and teams revisit the same problems sprint after sprint.
 
 **Q1.3 Why it matters:**
+*Status: ASSUMED (figures cited without archived URLs).*
 86% of software development uses Agile. Teams spend ~2 hours/sprint on retros. When ceremonies produce no follow-through, teams lose engagement and Agile becomes pure overhead.
 
 **Q1.4 3-year vision:**
@@ -19,6 +26,7 @@ Become the platform teams use to run every ceremony — from planning to retro �
 Not a retro board, not a productivity tracker, not a project management tool, not an individual leaderboard.
 
 **Q1.6 "It worked" looks like:**
+*Status: ASSUMED target (the >80% rate is a goal we set, not an observed baseline).*
 Teams look forward to retros, action items completed at >80% rate (vs current ~40%), stakeholders actively participate, teams show measurable improvement over consecutive sprints.
 
 **Q1.7 Principles we won't sacrifice:**
@@ -26,7 +34,8 @@ Team XP only (no individual leaderboards), privacy-first, low-friction onboardin
 
 ### Domain 2: Problem
 **Q2.1 What exactly is the problem?**
-Multiple verified overlapping problems:
+*Status: PARTIALLY VERIFIED — studies named but URLs not archived; the leap "gamification fixes this" is ASSUMED.*
+Multiple claimed overlapping problems:
 - Action items die: 44% never completed (ResearchGate 2025), only 35% consistently completed (Scrum Alliance 2023)
 - Retros become checkbox exercises: same formats sprint after sprint (Kaizenko 2025)
 - Stakeholders don't attend sprint reviews (Scrum.org documented challenge)
@@ -35,7 +44,7 @@ Multiple verified overlapping problems:
 - Same problems recur without resolution
 
 **Q2.2 Evidence:**
-VERIFIED: 44% action item completion, 40-50% retro completion (Easy Agile), stakeholder disengagement (Scrum.org), only ~19% use objective data in retros (arXiv 2025).
+PARTIALLY VERIFIED (citations named, URLs missing — archive them or downgrade to ASSUMED): 44% action item completion, 40-50% retro completion (Easy Agile), stakeholder disengagement (Scrum.org), only ~19% use objective data in retros (arXiv 2025).
 
 **Q2.3 Frequency:**
 Every sprint (2 weeks). Every ceremony, every team, every sprint.
@@ -44,12 +53,15 @@ Every sprint (2 weeks). Every ceremony, every team, every sprint.
 Scrum Masters, Agile Coaches, Product Owners, Developers, QA, Stakeholders, Engineering Managers.
 
 **Q2.5 Cost:**
+*Status: mixed — Gallup engagement stats cited (URL missing); the causal chain "poor retros → disengagement → turnover" is ASSUMED, not shown by the cited source.*
 VERIFIED: Top 20% engaged teams have 41% less absenteeism, 59% less turnover (Gallup). Poor retros = disengaged teams = turnover.
 
 **Q2.6 If unsolved:**
+*Status: ASSUMED (prediction, no churn/exit evidence).*
 Teams abandon Agile ceremonies as rituals. Retros become "zombie meetings."
 
 **Q2.7 Big enough?**
+*Status: market size is VERIFIED-cited (URLs missing); note market size is NOT problem evidence — it says money moves here, not that anyone will switch to us.*
 VERIFIED: Enterprise Agile transformation market: $41.2B (2024) → $48.75B (2025) → $96.28B by 2029 (CAGR 18.5%). Agile tools market: $5.7B (2020) → $9.2B (2024).
 
 ### Domain 3: User
@@ -84,6 +96,7 @@ Initially English and Spanish. Expand internationally later.
 Jira, Confluence, Miro, Mural, Slack, Teams, Zoom. Retro tools: EasyRetro, GoRetro, TeamRetro.
 
 **Q3.11 Per user type:**
+*Status: ASSUMED — personas inferred, zero interviews on file. If real SMs don't voice these pains unprompted, rewrite.*
 - Scrum Master: Can't get teams engaged, actions don't get done, retros feel repetitive
 - Agile Coach: Can't scale engagement across multiple teams, lacks improvement tracking
 - Developer: Feels retros are a waste of time, no ownership of actions, no visible progress
@@ -113,9 +126,11 @@ Wasting time, repeating conversations, discomfort, surveillance, meetings ending
 Organizing a retro that produces actions. Setting up a sprint review stakeholders actually attend.
 
 **Q4.8 Frustrations:**
+*Status: ASSUMED — this list is the hypothesis the 5 interviews must test, not a finding.*
 Actions never done, same problems recurring, meetings feel like a chore, stakeholders not showing up, "retro fatigue."
 
 **Q4.9 What makes them switch:**
+*Status: ASSUMED — "2-3 sprints" threshold invented; interviews must ask what actually triggered their last tool switch.*
 If current tools don't produce measurable improvement in 2-3 sprints. If a tool makes retros actually fun and productive.
 
 ### Domain 5: Target Audience & Niche
