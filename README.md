@@ -31,11 +31,20 @@ NEXTAUTH_SECRET=your-secret
 
 ## Game Modes
 
-- 🔥 Boss Battle — Identify and defeat the biggest problem
+- 🔥 Boss Battle — Identify and defeat the biggest problem (real HP bars, 🗡️ attacks)
 - 🏝️ Sailboat — Wind in sails vs anchor holding back
 - 🚀 Mission Control — Mission-based retro
-- 🕵️ Detective — Investigate what happened
+- 🕵️ Detective — Investigate what happened (⚖️ accusations + case board)
 - ⚔️ Team Battle — Team vs team dynamics
+- 😡 Mad/Sad/Glad · 🚦 Start/Stop/Continue · 📝 4Ls · ☕ Lean Coffee (timed discussions) · ⚖️ Plus/Delta
+- 🐞 Bug Bash — Hunt bugs together, vote the nastiest
+- 🗺️ Quest Trail — Mario-party board: roll, move one team token, survive events
+
+## Party layer (all cooperative, team XP only)
+
+- 🎲 Chance deck — 8 cards with real effects (XP, timer warp, polls, shuffle, spotlight)
+- 🎮 Minigame bursts — 🐢 Snail Race (decaying bar), 🔨 Whack-a-bug, 🎯 Tug of War (auto-teams), 🎁 Memory Chests, ⚡ Instant Poll
+- Bursts ride on Comment/Vote rows (no schema changes); facilitator launches, GM suggests when the room is quiet
 
 ## Database Schema
 
