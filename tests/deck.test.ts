@@ -18,6 +18,16 @@ describe("chance deck", () => {
   })
 })
 
+describe("anti-grief", () => {
+  it("no card takes more than 30s from the team", () => {
+    for (const c of CHANCE_DECK) {
+      if (c.effect.kind === "timer" && (c.effect.amount ?? 0) < 0) {
+        expect(c.effect.amount).toBeGreaterThanOrEqual(-30)
+      }
+    }
+  })
+})
+
 describe("poll questions", () => {
   it("every question has 3 options", () => {
     expect(POLL_QUESTIONS.length).toBeGreaterThan(0)

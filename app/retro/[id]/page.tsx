@@ -1,11 +1,11 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { getSupabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { MODE_CONFIG, DEFAULT_MODE } from "@/constants"
 import { ceremonyReward, streakBonus, levelForXp, actionXp } from "@/lib/xp"
 import { drawChance, ChanceCard } from "@/lib/deck"
-import { BURST_CAT, BOARD_CAT, SYSTEM_CATS, buildBurst, activeBurst, boardState, rollDice, TRAIL, BURST_META, topContenders, BurstType } from "@/lib/gamestate"
+import { BURST_CAT, BOARD_CAT, SYSTEM_CATS, buildBurst, parseBurst, activeBurst, boardState, rollDice, TRAIL, BURST_META, topContenders, BurstType } from "@/lib/gamestate"
 import BurstOverlay, { BURST_REWARD } from "@/components/minigames/BurstOverlay"
 import { BOSS_HP, bossHp, isDefeated, ATTACK_EMOJI } from "@/lib/boss"
 import { rankSuspects, majorityThreshold, ACCUSE_EMOJI } from "@/lib/detective"
@@ -50,6 +50,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   const [trailEvent, setTrailEvent] = useState<string | null>(null)
   const [gmDismissed, setGmDismissed] = useState(false)
   const [burstNote, setBurstNote] = useState<string | null>(null)
+  const lastTapRef = useRef(0)
   const [discussing, setDiscussing] = useState<{ id: string; title: string; left: number } | null>(null)
   // action-item creation
   const [actionFor, setActionFor] = useState<any>(null)
@@ -347,25 +348,28 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     if (t) await supabase.from("Team").update({ xp: (t.xp ?? 0) + amount }).eq("id", ceremony.teamId)
   }
 
+  const secondedCount = () => visible.filter((c: any) => REACTION_EMOJIS.some(e => reactionCount(c.id, e) > 0)).length
+
   const launchBurst = async (type: BurstType) => {
     setBurstNote(null)
     let detail = ""
     let target: number | undefined
     if (type === "snail") {
-      detail = JSON.stringify({ base: visible.length })
+      detail = JSON.stringify({ base: secondedCount() })
       target = 30
     } else if (type === "whack") {
       const bugs = visible.slice(-12).map((c: any) => c.id)
       if (bugs.length === 0) { setBurstNote("Post some entries first — whack needs bugs to squash 🐞"); return }
-      const base: Record<string, number> = {}
-      bugs.forEach((id: string) => { base[id] = reactionCount(id, "👍") })
-      detail = JSON.stringify({ bugs, base })
+      detail = JSON.stringify({ bugs })
     } else if (type === "tug") {
       const score = (id: string) => reactionCount(id, "👍") + reactionCount(id, "❤️") + reactionCount(id, "🔥")
       const top = topContenders(visible, score, 2)
       if (top.length < 2) { setBurstNote("Need at least 2 entries for a face-off — post first, then pull 🪢"); return }
       detail = JSON.stringify({ a: top[0], b: top[1] })
       target = 5
+    } else if (type === "poll") {
+      const polls = comments.filter((c: any) => c.category === BURST_CAT && parseBurst(c.content)?.type === "poll").length
+      if (polls >= 2) { setBurstNote("Two polls per ceremony is plenty — back to the board 🗳️"); return }
     }
     const supabase = getSupabase()
     const payload = buildBurst(type, detail, target)
@@ -373,10 +377,39 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     if (data) setComments(prev => [...prev, data])
   }
 
+  // repeatable taps (throttled) for sustain mechanics
   const burstTap = async (action: string) => {
     if (!burst) return
+    const now = Date.now()
+    if (now - lastTapRef.current < 800) return
+    lastTapRef.current = now
     const supabase = getSupabase()
     const { data } = await supabase.from("Vote").insert({ ceremonyId: params.id, option: `${burst.comment.id}:${action}`, userId: uid }).select().single()
+    if (data) setVotes(prev => [...prev, data])
+  }
+  // single-choice game votes (one person, one vote, movable)
+  const burstChoice = async (prefix: string, value: string) => {
+    if (!burst) return
+    const supabase = getSupabase()
+    const want = `${burst.comment.id}:${prefix}:${value}`
+    const mine = votes.find(v => typeof v.option === "string" && v.option.startsWith(`${burst.comment.id}:${prefix}:`) && v.userId === uid)
+    if (mine && mine.option === want) return
+    if (mine) {
+      await supabase.from("Vote").delete().eq("id", mine.id)
+      setVotes(prev => prev.filter(v => v.id !== mine.id))
+    }
+    const { data } = await supabase.from("Vote").insert({ ceremonyId: params.id, option: want, userId: uid }).select().single()
+    if (data) setVotes(prev => [...prev, data])
+  }
+  const onPull = (side: "A" | "B") => burstChoice("pull", side)
+  const onPollVote = (i: number) => burstChoice("poll", String(i))
+  // review marks: one per person per entry (no spam, no 👍 spent)
+  const onSquash = async (entryId: string) => {
+    if (!burst) return
+    const opt = `${burst.comment.id}:squash:${entryId}`
+    if (votes.some(v => v.option === opt && v.userId === uid)) return
+    const supabase = getSupabase()
+    const { data } = await supabase.from("Vote").insert({ ceremonyId: params.id, option: opt, userId: uid }).select().single()
     if (data) setVotes(prev => [...prev, data])
   }
 
@@ -408,6 +441,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     const card = drawChance(drawnChance)
     setDrawnChance(prev => [...prev, card.id].slice(-7))
     let note = ""
+    if ((card.effect.kind === "xp" || card.effect.kind === "dice") && visible.length === 0) { setChance({ card, note: "Post an entry first — no free XP for an empty room" }); return }
     if (card.effect.kind === "xp" && card.effect.amount) { await awardTeamXp(card.effect.amount); note = `+${card.effect.amount} team XP banked` }
     else if (card.effect.kind === "dice") { const d = 1 + Math.floor(Math.random() * 6); await awardTeamXp(d * 5); note = `Rolled ${d} → +${d * 5} team XP` }
     else if (card.effect.kind === "timer" && card.effect.amount) { setSecondsLeft(s => Math.max(0, s + (card.effect.amount as number))); note = `${fmtClock(card.effect.amount)} on the clock` }
@@ -568,7 +602,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
             {burstNote && <p className="text-xs text-gold mt-2">{burstNote}</p>}
           </div>
         )}
-        {burst && <BurstOverlay burst={burst} votes={votes} uid={uid} entries={visible.map((c: any) => ({ id: c.id, content: String(c.content) })).slice(-12)} reactionCount={reactionCount} onAction={burstTap} onSquash={(id) => toggleReaction(id, "👍")} onPull={(id) => toggleReaction(id, "👍")} onPostEntry={postBurstEntry} onEnd={endBurst} onDismiss={() => setDismissedBursts(prev => [...prev, burst.comment.id])} />}
+        {burst && <BurstOverlay burst={burst} votes={votes} uid={uid} entries={visible.map((c: any) => ({ id: c.id, content: String(c.content) })).slice(-12)} onAction={burstTap} onSquash={onSquash} onPull={onPull} onPoll={onPollVote} onPostEntry={postBurstEntry} onEnd={endBurst} onDismiss={() => setDismissedBursts(prev => [...prev, burst.comment.id])} />}
         {lastBurstResult && (
           <div className="glass rounded-xl p-4 mb-6 border-teal/50">
             <div className="flex justify-between items-center">

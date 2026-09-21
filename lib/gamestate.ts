@@ -20,9 +20,9 @@ export interface BurstPayload {
 }
 
 export const BURST_META: Record<BurstType, { title: string; desc: string; target: number }> = {
-  snail: { title: "🐢 Snail Race", desc: "Each entry moves the snail 5 steps, taps sustain it, the bar drains 1/sec.", target: 30 },
-  whack: { title: "🔨 Whack-a-bug", desc: "Every bug IS a real entry — squash (👍) them all together to prioritize.", target: 0 },
-  tug: { title: "🎯 Tug of War", desc: "The top-2 entries face off. Pull (👍) for one side — the winner becomes an action.", target: 5 },
+  snail: { title: "🐢 Snail Race", desc: "Only seconded entries (with a reaction) move it 5 steps. Taps sustain, bar drains 1/sec.", target: 30 },
+  whack: { title: "🔨 Whack-a-bug", desc: "Every bug IS a real entry — the team marks each reviewed (👁). No 👍 spent.", target: 0 },
+  tug: { title: "🎯 Tug of War", desc: "The top-2 entries face off with 🪢 pulls (game votes, not 👍). Winner is proposed as an action.", target: 5 },
   memory: { title: "🎁 Memory Chests", desc: "Flip chests together, match every pair.", target: 0 },
   poll: { title: "⚡ Instant Poll", desc: "One fast question, three answers — the result posts itself as an entry.", target: 0 },
 }

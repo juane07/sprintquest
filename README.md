@@ -43,7 +43,7 @@ NEXTAUTH_SECRET=your-secret
 ## Party layer (all cooperative, team XP only)
 
 - 🎲 Chance deck — 8 cards with real effects (XP, timer warp, polls, shuffle, spotlight)
-- 🎮 Minigame bursts — 🐢 Snail Race (entries move it), 🔨 Whack-a-bug (squash = 👍 = prioritize), 🎯 Tug of War (top-2 face off, winner becomes an action), 🎁 Memory Chests, ⚡ Instant Poll (result posts itself as an entry)
+- 🎮 Minigame bursts (all corruption-free by design: games use their own votes, never spend 👍) — 🐢 Snail Race (only seconded entries move it), 🔨 Whack-a-bug (review marks, no 👍 spent), 🎯 Tug of War (🪢 game votes, winner proposed as action — a human assigns owner), 🎁 Memory Chests, ⚡ Instant Poll (posts only if the team opts in, max 2 per ceremony)
 - Bursts ride on Comment/Vote rows (no schema changes); facilitator launches, GM suggests when the room is quiet
 
 ## Database Schema
