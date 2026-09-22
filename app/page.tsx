@@ -266,7 +266,7 @@ export default function Home() {
       <footer className="border-t border-gray-800 mt-8">
         <div className="max-w-6xl mx-auto px-8 py-6 flex justify-between items-center text-sm text-gray-500 flex-wrap gap-2">
           <span><span className="text-gradient font-bold">SprintQuest</span> — Continuous Improvement as a game.</span>
-          <span>Team XP only · No surveillance · Free forever</span>
+          <span>Learning system · Neuroscience-aligned · Free forever</span>
         </div>
       </footer>
     </main>

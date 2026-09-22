@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "SprintQuest — Gamified Agile Ceremonies",
     short_name: "SprintQuest",
-    description: "Turn every sprint into a mission. Team XP, quests, badges.",
+    description: "Turn every sprint into a learning experience grounded in neuroscience.",
     start_url: "/",
     display: "standalone",
     background_color: "#0f0f23",

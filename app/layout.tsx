@@ -5,7 +5,7 @@ import AuthProvider from "@/components/AuthProvider"
 
 export const metadata: Metadata = {
   title: "SprintQuest — Gamified Agile Ceremonies",
-  description: "Convert your Sprint Reviews and Retrospectives into a game. Earn Team XP, level up, unlock quests.",
+  description: "Convert your Sprint Reviews and Retrospectives into a learning game grounded in neuroscience. Engagement metrics, spaced retrieval, structured reflection.",
   themeColor: "#0f0f23",
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "SprintQuest" },
 }

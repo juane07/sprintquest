@@ -75,7 +75,7 @@ function HistoryInner() {
         </div>
         <div className="flex items-center gap-4 mb-8">
           <div className="text-5xl">{team.mascot}</div>
-          <div><h1 className="text-3xl font-bold text-gradient">{team.name} — History</h1><p className="text-gray-400">Level {team.level ?? 1} · {team.xp ?? 0} Team XP</p></div>
+          <div><h1 className="text-3xl font-bold text-gradient">{team.name} — History</h1><p className="text-gray-400">Level {team.level ?? 1} · Engagement level {team.xp ?? 0}</p></div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-10">
           {stats.map(s => (
