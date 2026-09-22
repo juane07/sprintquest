@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { buildSummaryPrompt, extractJson, truncateEntries } from "../lib/ai"
+import { buildFacilitatorPrompt, extractJson, truncateEntries } from "../lib/ai"
 
 describe("extractJson", () => {
   it("parses plain JSON", () => {
@@ -28,11 +28,13 @@ describe("truncateEntries", () => {
   })
 })
 
-describe("buildSummaryPrompt", () => {
+describe("buildFacilitatorPrompt", () => {
   it("includes mode and entries", () => {
-    const { system, user } = buildSummaryPrompt("SAILBOAT", [{ category: "🌬️ Wind", content: "Shipped early", author: "Sam" }])
+    const { system, user } = buildFacilitatorPrompt("SAILBOAT", [{ category: "🌬️ Wind", content: "Shipped early", author: "Sam" }])
     expect(system).toContain("STRICT JSON")
     expect(user).toContain("SAILBOAT")
     expect(user).toContain("Shipped early")
+    expect(system).toContain("engagement metrics")
+    expect(system).toContain("rewards or prizes")
   })
 })

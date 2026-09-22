@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getSupabase } from "@/lib/supabase"
-import { buildSummaryPrompt, callGroq, extractJson, truncateEntries, CeremonySummary } from "@/lib/ai"
+import { buildFacilitatorPrompt, callGroq, extractJson, truncateEntries, CeremonySummary } from "@/lib/ai"
 
 export async function POST(req: Request) {
   try {
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
       .order("createdAt")
       .limit(100)
     if (!comments || comments.length === 0) return NextResponse.json({ error: "no entries to summarize" }, { status: 400 })
-    const { system, user } = buildSummaryPrompt(
+    const { system, user } = buildFacilitatorPrompt(
       ceremony.gameMode,
       comments.map((c: any) => ({ category: c.category, content: truncateEntries(c.content, 400), author: c.anonymous ? "Anonymous" : c.author }))
     )

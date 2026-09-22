@@ -1,6 +1,16 @@
-# SprintQuest — Gamified Agile Ceremonies
+# SprintQuest — Learning-Science-Informed Agile Ceremonies
 
-Turn every Retrospective into a game. Earn Team XP, level up, unlock quests and badges.
+Turn every Retrospective into a learning experience. Grounded in neuroscience and evidence-based learning science.
+
+## Core Philosophy
+
+Unlike "another retro board" with XP stickers, SprintQuest is a **team learning system** where every ceremony builds collective intelligence. Every design decision is validated against neuroscience:
+
+- **Overjustification effect prevention** — XP is informational (fitness-tracker style), never a reward
+- **Spaced retrieval practice** — Every retro starts with recall of past commitments
+- **Psychological safety first** — Anonymous sharing, safety check-ins, no social comparison
+- **Team flow optimization** — Adaptive pacing, no artificial time pressure
+- **Structured reflection** — Metacognitive prompts at each round, not just entry generation
 
 ## Quick Start
 
@@ -26,8 +36,18 @@ NEXTAUTH_SECRET=your-secret
 
 - **Next.js 14** — App Router, TypeScript, Tailwind CSS
 - **Supabase** — PostgreSQL, Realtime (comments, reactions), Storage
-- **Prisma** — database schema management (`db push` is source of truth for defaults)
+- **Prisma** — database schema management (`db push` is source of truth)
 - **Vitest** — unit tests (`npm test`)
+
+## Learning Science Features
+
+1. **Spaced Retrieval Warm-Up** — Recall prompts adapt based on sprint number (early/mid/deep)
+2. **Structured Reflection** — Guided metacognitive prompts between rounds (metacognitive, elaborative, evaluative, exploratory)
+3. **Psychological Safety Check-In** — Anonymous 1-5 safety scale before ceremonies
+4. **AI Learning Facilitator** — Real-time pattern detection and probing questions (not post-hoc summaries)
+5. **Adaptive Pacing** — Timer suggestions adjust based on entry activity, not artificial countdowns
+6. **Peer Recognition** — Cooperative shout-outs (no ranking, no comparison)
+7. **Engagement Level** — Informational metric, never framed as a reward
 
 ## Game Modes
 
@@ -37,18 +57,19 @@ NEXTAUTH_SECRET=your-secret
 - 🕵️ Detective — Investigate what happened (⚖️ accusations + case board)
 - ⚔️ Team Battle — Team vs team dynamics
 
-Parked post-MVP (see git history): classic formats (Mad/Sad/Glad, Start/Stop/Continue, 4Ls, Lean Coffee, Plus/Delta), Bug Bash, Quest Trail board, chance deck, minigame bursts, Planning Poker, Sprint Review page, cross-sprint AI insights. They return only if interviews validate the pain they serve.
-
 ## Database Schema
 
-- **Team** — Squad with mascot, level, XP, streak
+- **Team** — Squad with mascot, engagement level, streak
 - **Sprint** — Sprint within a team
 - **Ceremony** — Retro session with game mode
+- **RetrievalSession** — Spaced recall history
+- **Reflection** — Structured reflection responses
+- **ShoutOut** — Peer recognition (cooperative, no ranking)
 - **Quest** — Mission earned after ceremonies
 - **Action** — Concrete steps from retro
 - **Comment** — Team member entries
 - **Vote** — Voting on issues
-- **Badge** — Achievement unlocks
+- **Badge** — Mastery-based achievement unlocks
 
 ## $0 Cost Stack
 
@@ -56,15 +77,18 @@ All free-tier verified:
 - Next.js hosting: Vercel (100GB bandwidth free)
 - Database: Supabase (500MB Postgres free)
 - Real-time: Supabase Realtime (built-in)
-- AI: OpenCode built-in models (free)
+- AI: Groq LLM (free tier)
 
-## Project Status (MVP v1 — done)
+## Project Status
 
-Gamified Retrospective loop complete: team creation + mascots, 5 differentiated
-game modes, 6-letter join codes (no account), timed rounds with facilitator
-prompts, anonymous entries, live emoji reactions, entries → action items
-(owner + due date + XP), previous-retro follow-up review, streaks, badges,
-level-ups, Team XP. `npm test` (44 unit tests) green.
+Neuroscience-aligned redesign complete:
+- Phase 1: XP reframed as engagement metrics ✅
+- Phase 2: Spaced retrieval warm-up ✅
+- Phase 3: Structured reflection phases ✅
+- Phase 4: Psychological safety check-in ✅
+- Phase 5: AI real-time facilitation ✅
+- Phase 6: Mastery-based badges ✅
+- Phase 7: Adaptive pacing logic ✅
+- Phase 8: Social recognition (shout-outs) ✅
 
-Security note: anon key has SELECT/INSERT/UPDATE, DELETE only on votes.
-Enable RLS with real auth before onboarding external teams.
+Security note: anon key has SELECT/INSERT/UPDATE, DELETE only on votes. Enable RLS with real auth before onboarding external teams.

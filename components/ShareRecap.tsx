@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
 
-export default function ShareRecap({ ceremonyId, xp }: { ceremonyId: string; xp: number }) {
+export default function ShareRecap({ ceremonyId, xp }: { ceremonyId: string; xp?: number }) {
   const [state, setState] = useState<"idle" | "posting" | "posted" | "error">("idle")
   const share = async () => {
     setState("posting")

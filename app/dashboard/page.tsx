@@ -3,7 +3,7 @@ import { Suspense, useState, useEffect } from "react"
 import { getSupabase } from "@/lib/supabase"
 import { useRouter, useSearchParams } from "next/navigation"
 import { MODE_CONFIG } from "@/constants"
-import { progressToNext, actionXp } from "@/lib/xp"
+import { progressToNext, actionValue, engagementLabel, levelLabel } from "@/lib/xp"
 import Navbar from "@/components/Navbar"
 
 async function awardBadge(supabase: any, teamId: string, name: string, description: string) {
@@ -67,24 +67,15 @@ function DashboardInner() {
       const supabase = getSupabase()
       let sprintId: string | null = null
       const { data: existing } = await supabase.from("Sprint").select("id").eq("teamId", teamId).eq("status", "active").order("number", { ascending: false }).limit(1).single()
-      if (existing) {
-        sprintId = existing.id
-      } else {
+      if (existing) { sprintId = existing.id }
+      else {
         const { data: maxSprint } = await supabase.from("Sprint").select("number").eq("teamId", teamId).order("number", { ascending: false }).limit(1).single()
         const nextNumber = (maxSprint?.number ?? 0) + 1
-        const { data: created, error: se } = await supabase
-          .from("Sprint")
-          .insert({ number: nextNumber, theme: `Sprint ${nextNumber}`, teamId, status: "active" })
-          .select()
-          .single()
+        const { data: created, error: se } = await supabase.from("Sprint").insert({ number: nextNumber, theme: `Sprint ${nextNumber}`, teamId, status: "active" }).select().single()
         if (se || !created) { setError(se?.message ?? "Could not create sprint."); return }
         sprintId = created.id
       }
-      const { data, error: ce } = await supabase
-        .from("Ceremony")
-        .insert({ type: "retro", gameMode, teamId, sprintId, status: "active" })
-        .select()
-        .single()
+      const { data, error: ce } = await supabase.from("Ceremony").insert({ type: "retro", gameMode, teamId, sprintId, status: "active" }).select().single()
       if (ce || !data) { setError(ce?.message ?? "Could not start ceremony."); return }
       router.push(`/retro/${data.id}`)
     } catch (e: any) {
@@ -101,12 +92,12 @@ function DashboardInner() {
       const supabase = getSupabase()
       await supabase.from("Action").update({ status: "completed", completedAt: new Date().toISOString() }).eq("id", action.id)
       const { data: t } = await supabase.from("Team").select("xp").eq("id", teamId).single()
-      const gain = actionXp(action.xpValue)
+      const gain = actionValue(action.xpValue)
       if (t) {
         await supabase.from("Team").update({ xp: (t.xp ?? 0) + gain }).eq("id", teamId)
         setTeam({ ...team, xp: (t.xp ?? 0) + gain })
       }
-      await awardBadge(supabase, teamId, "Closer", "Completed your first action item")
+      await awardBadge(supabase, teamId, "Action Completer", "Completed action items consistently")
       setActions(prev => prev.map(a => (a.id === action.id ? { ...a, status: "completed" } : a)))
       const { data: b } = await supabase.from("Badge").select("*").eq("teamId", teamId).order("earnedAt", { ascending: false })
       if (b) setBadges(b)
@@ -138,9 +129,7 @@ function DashboardInner() {
   const copyCode = async () => {
     const code = team?.joinCode ?? ""
     if (!code) return
-    try {
-      await navigator.clipboard.writeText(code)
-    } catch {
+    try { await navigator.clipboard.writeText(code) } catch {
       const ta = document.createElement("textarea")
       ta.value = code
       document.body.appendChild(ta)
@@ -172,13 +161,13 @@ function DashboardInner() {
           <div>
             <h1 className="text-4xl font-bold text-gradient">{team.name}</h1>
             <div className="flex gap-2 mt-1 flex-wrap items-center">
-              <span className="bg-gold/20 text-gold px-4 py-1 rounded-full font-bold">Level {level}</span>
-              {(team.streak ?? 0) > 0 && <span className="bg-teal/20 text-teal px-4 py-1 rounded-full font-bold">🔥 {team.streak}-streak</span>}
+              <span className="bg-gold/20 text-gold px-4 py-1 rounded-full font-bold">{levelLabel(level)}</span>
+              {(team.streak ?? 0) > 0 && <span className="bg-teal/20 text-teal px-4 py-1 rounded-full font-bold">🔥 {team.streak}-sprint consistency</span>}
             </div>
           </div>
         </div>
         <div className="glass rounded-xl p-4 mb-8">
-          <div className="flex justify-between text-sm text-gray-400 mb-2"><span>Team XP: {xp}</span><span>{progress}% to Level {level + 1}</span></div>
+          <div className="flex justify-between text-sm text-gray-400 mb-2"><span>Engagement level: {engagementLabel(xp)} ({xp})</span><span>{progress}% to next milestone</span></div>
           <div className="h-3 rounded-full bg-dark border border-gray-700"><div className="h-full rounded-full bg-gold transition-all" style={{ width: `${progress}%` }} /></div>
           <div className="flex items-center gap-3 mt-3 flex-wrap">
             <span className="text-xs text-gray-500">Invite code:</span>
@@ -190,11 +179,11 @@ function DashboardInner() {
 
         {ceremonies.length === 0 && (
           <div className="glass rounded-xl p-6 mb-8">
-            <h2 className="text-xl font-bold mb-3">🧭 Tu primera quest en 3 pasos</h2>
+            <h2 className="text-xl font-bold mb-3">🧭 Tu primera retro en 3 pasos</h2>
             <ol className="space-y-2 text-gray-300">
               <li><span className="font-bold text-gold">1.</span> Invita — comparte <span className="font-mono text-teal font-bold">{team.joinCode}</span> (sin cuenta, en el móvil)</li>
               <li><span className="font-bold text-gold">2.</span> Elige un modo y empieza</li>
-              <li><span className="font-bold text-gold">3.</span> Termina → gana Team XP 🎉</li>
+              <li><span className="font-bold text-gold">3.</span> Termina → comparte tu nivel de engagement</li>
             </ol>
           </div>
         )}
@@ -224,7 +213,7 @@ function DashboardInner() {
         </div>
         </section>
         {badges.length > 0 && (
-          <section className="mb-8"><h2 className="text-xl font-bold mb-3">🏅 Badges</h2>
+          <section className="mb-8"><h2 className="text-xl font-bold mb-3">🏅 Badges de Maestría</h2>
             <div className="flex gap-3 flex-wrap">{badges.map((b: any) => <div key={b.id} title={b.description} className="glass rounded-xl px-4 py-2 text-sm"><span className="font-bold">{b.name}</span> <span className="text-gray-400">· {b.description}</span></div>)}
             </div>
           </section>
@@ -235,13 +224,13 @@ function DashboardInner() {
           if (actions.length === 0) return null
           return (
             <section className="mb-12" id="actions"><h2 className="text-2xl font-bold mb-4">⚔️ Action Items ({open.length} abiertos)</h2>
-              <p className="text-sm text-gray-400 mb-3">Compromisos de tus retros. Completar da XP inmediato.</p>
+              <p className="text-sm text-gray-400 mb-3">Compromisos de tus retros. Completar los rastrea en tu nivel de engagement.</p>
               <div className="space-y-3">
                 {open.map((a: any) => (
                   <div key={a.id} className="glass rounded-xl p-4 flex items-center gap-3">
                     <button onClick={() => completeAction(a)} disabled={completing !== null} className="w-6 h-6 rounded border border-gray-500 hover:border-gold shrink-0 disabled:opacity-50" title="Mark done">{completing === a.id ? "..." : ""}</button>
                     <div><div className="font-bold">{a.title}</div><div className="text-xs text-gray-500">{a.owner}{a.dueDate ? ` · due ${new Date(a.dueDate).toLocaleDateString()}` : ""}</div></div>
-                    <span className="ml-auto text-gold font-bold shrink-0">+{a.xpValue ?? 50} XP</span>
+                    <span className="ml-auto text-gray-400 font-bold shrink-0">Tracked</span>
                   </div>
                 ))}
                 {done.slice(0, 5).map((a: any) => (

@@ -1,5 +1,58 @@
 export const XP_PER_LEVEL = 1000
 
+// Reflection prompt types for structured metacognitive phases
+export type ReflectionType = "metacognitive" | "elaborative" | "evaluative" | "exploratory"
+
+export interface ReflectionPrompt {
+  question: string
+  type: ReflectionType
+}
+
+export interface RetrievalPrompt {
+  prompt: string
+  type: "early" | "mid" | "deep"
+}
+
+// Spaced retrieval prompts — adapts based on sprint number
+// Grounded in Dunlosky et al. (2013): retrieval practice > re-reading
+export const RETRIEVAL_PROMPTS: Record<string, RetrievalPrompt[]> = {
+  early: [
+    { prompt: "What did your team commit to in the last sprint? Did you follow through?", type: "early" },
+    { prompt: "Recall one thing your team accomplished last sprint. What made it work?", type: "early" },
+  ],
+  mid: [
+    { prompt: "What patterns do you notice across your team's recent sprints?", type: "mid" },
+    { prompt: "What was the biggest lesson from 2 sprints ago? Does it still apply?", type: "mid" },
+  ],
+  deep: [
+    { prompt: "What did your team learn 3 sprints ago that still applies today?", type: "deep" },
+    { prompt: "What pattern has your team been unable to break? What would it take?", type: "deep" },
+  ],
+}
+
+// Structured reflection prompts per game mode — grounded in Tannenbaum & Cerasoli (2013)
+export const REFLECTION_PROMPTS: Record<string, ReflectionPrompt[]> = {
+  BOSS_BATTLE: [
+    { question: "What surprised us about the bosses we identified?", type: "metacognitive" as const },
+    { question: "Why do you think this problem keeps recurring?", type: "elaborative" as const },
+    { question: "How confident are we that our chosen fight is the right one?", type: "evaluative" as const },
+    { question: "What would we try if we had to approach this differently?", type: "exploratory" as const },
+  ],
+  SAILBOAT: [
+    { question: "What did we underestimate about what pushes us forward?", type: "metacognitive" as const },
+    { question: "Why do you think these anchors are holding us back?", type: "elaborative" as const },
+    { question: "How accurately did we predict the rocks ahead?", type: "evaluative" as const },
+    { question: "What would our island look like if we zoomed out 3 sprints?", type: "exploratory" as const },
+  ],
+}
+
+export const DEFAULT_REFLECTION_PROMPTS: ReflectionPrompt[] = [
+  { question: "What's the most surprising insight from this round?", type: "metacognitive" },
+  { question: "Why do you think this pattern emerged?", type: "elaborative" },
+  { question: "How well did we capture what actually happened?", type: "evaluative" },
+  { question: "What would we question if we looked at this from the outside?", type: "exploratory" },
+]
+
 interface ModeCategory { name: string; hint: string }
 interface ModeRound { title: string; prompt: string }
 export interface ModeConfig {

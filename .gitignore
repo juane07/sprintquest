@@ -20,3 +20,4 @@ supabase
 .vercel
 .next
 .env.production
+tsconfig.tsbuildinfo

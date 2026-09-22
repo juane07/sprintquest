@@ -1,20 +1,75 @@
 # SprintQuest — AGENTS.md
 
+**Project language: English (for now)**
+
 ## What is this project
 
-SprintQuest is a gamified Agile ceremony platform that converts Sprint Reviews and Retrospectives into game-like experiences with XP, quests, badges, levels, and team progression. Market positioning: **"Continuous Improvement as a game."**
+SprintQuest is a **learning-science-informed gamified Agile ceremony platform** that converts Sprint Reviews and Retrospectives into experiences optimized for team learning and continuous improvement. Uses Team XP, levels, badges, quests, and streaks — all grounded in neuroscience and self-determination theory.
 
-**Core loop:** Sprint Planning → Daily → Review → Retro → Quests → Next Sprint → Level Up
+**Core loop:** Sprint Planning → Daily → Review → **Reflect** → Retro → Quests → Next Sprint → Level Up
 
-**Positioning:** Not "another retro board" — it's a "Duolingo/Kahoot for Scrum teams." Every sprint is a season/mission. Teams earn Team XP, level up, unlock badges and quests. Differentiated from EasyRetro, GoRetro, TeamRetro, Spreo, TeleRetro by making the entire Scrum cycle a game, not just adding emojis to a retro board.
+**Positioning:** Not "another retro board" — a **team learning system** where every ceremony builds collective intelligence. Differentiated from EasyRetro, GoRetro, TeamRetro by making the entire Scrum cycle a *learning game*, not just adding emojis to a retro board.
+
+## Neuroscience & Learning Science Foundation (permanent)
+
+All product decisions must be evaluated against these evidence-based principles:
+
+### 1. Self-Determination Theory (Deci & Ryan)
+- **Autonomy**: Users must feel choice, not control. XP must be *informational*, never *controlling*. Forced gamification undermines intrinsic motivation.
+- **Competence**: Badges and rewards must signal *mastery*, not mere participation. Meta-analyses show participation-based badges have minimal impact (Hedges' g = 0.277).
+- **Relatedness**: Team-based cooperation produces higher social relatedness than competition. Psychological safety is the prerequisite.
+
+### 2. Overjustification Effect (Deci, Koestner & Ryan, 1999; Murayama et al., 2010)
+- **CRITICAL RULE**: Extrinsic rewards (XP, badges) must NEVER be the primary reason to participate. If XP feels like a *reward*, it undermines the *learning* motivation.
+- **Implementation**: Frame all rewards as *informational metrics* (like a fitness tracker shows steps) — not as prizes. Never say "you earned X XP." Say "your team's engagement level is X."
+- **Neural basis**: Reward removal decreases ventral striatum/SN/VTA activity (Murayama et al., 2010, PNAS).
+
+### 3. Retrieval Practice & Spaced Learning (Dunlosky et al., 2013; Nature Reviews Psychology, 2022)
+- Retrieval practice is among the MOST effective learning strategies — more powerful than re-reading.
+- **Implementation**: Every new retro begins with spaced retrieval prompts: "What did your team commit to last sprint? Did it work?" At 3-sprint intervals: "What did you learn about X?"
+- **Neural basis**: Spaced learning increases ventromedial prefrontal cortex pattern similarity during retrieval (Zou et al., 2025).
+
+### 4. Psychological Safety as the Engine of Performance (Edmondson, 1999; Frazier et al., 2017)
+- Psychological safety is the "engine" — not the "fuel" — of team performance. It enables team learning behavior.
+- **Implementation**: Anonymous sharing by default, safety check-ins, facilitation that ensures all voices are heard. No individual leaderboards (which trigger social comparison and activate the anterior insula/dACC — the brain's loss-detection areas).
+
+### 5. Team Flow (Shehata et al., 2021, eNeuro)
+- Team flow is a unique brain state with enhanced interbrain synchrony in the left middle temporal cortex.
+- **Requirements**: Common purpose, complementary skills, clear goals, mutual accountability.
+- **Implementation**: Features should foster collective absorption — not artificial time pressure that creates anxiety.
+
+### 6. Team Reflexivity (Tannenbaum & Cerasoli, 2013; Gucciardi et al., 2025)
+- Team reflexivity has a medium effect on performance (g = 0.549) but REQUIRES structured facilitation.
+- **Four conditions**: (1) Active learning from past, (2) Learning prioritized over evaluation, (3) Contextualized to specific events, (4) Input from multiple sources.
+- **Implementation**: Structured reflection phases with guided prompts, not just entry generation.
+
+### 7. Cooperation vs Competition (iScience, 2024)
+- Cooperation and competition produce **comparable performance**.
+- **BUT**: Competition significantly increases perceived stress and autonomic activation that persists over time.
+- **Implementation**: Always cooperative framing. Never pit teams against each other.
+
+### 8. Social Comparison (Kedia et al., 2014; Garcia & Tor, 2020)
+- Social comparison activates ventral striatum, vmPFC, anterior insula, dACC.
+- **Upward comparison** activates loss-related brain areas (AI, dACC).
+- **Implementation**: Avoid any visible comparison between teams/individuals. Team XP is informational only.
+
+### 9. Desirable Difficulty (Bjork, 1994)
+- Learning is enhanced by effortful retrieval, not passive review.
+- **Implementation**: Include brief reflection quizzes, elaborative interrogation ("Why did this happen?"), and spaced recall challenges.
+
+### 10. Gamification Meta-Analysis Findings (Sailer & Homner, 2020; Zeng et al., 2024)
+- Overall gamification effect on intrinsic motivation is small (g = 0.257) — **design matters enormously**.
+- Gamification positively affects autonomy (g = 0.638) and relatedness (g = 1.776) but minimally affects competence (g = 0.277).
+- **Key insight**: Poorly designed gamification can be *harmful*. Every game element must be justified by evidence.
 
 ## Key product principles
 
-- **COSTO $0 — INNEGOCIABLE** — el proyecto debe funcionar con $0/mes, PERMANENTEMENTE. Cada dependencia, herramienta y servicio DEBE ser open source o tener tier gratuito verificado. NUNCA asumir que algo es gratis sin verificar el precio actual en la página oficial del proveedor. NO se paga NADA, bajo ninguna circunstancia, ni siquiera cuando el proyecto crezca. Si un servicio agota su tier gratuito, se busca una ALTERNATIVA GRATUITA, no se paga. El dominio puede ser un subdominio gratuito (sprintquest.vercel.app, netlify.app, etc.) o eventualmente un dominio .com si el usuario decide pagarlo POR SEPARADO de la infraestructura — pero eso es su decisión personal, no un gasto del proyecto. NINGÚN servicio de pago se usa jamás sin aprobación explícita del usuario, y aun así, la regla es: buscar alternativa gratuita primero, siempre.
-- **Team XP only** — never individual productivity leaderboards. Gamification must be cooperative, not competitive between individuals.
+- **$0 COST — NON-NEGOTIABLE** — the project must run on $0/month, PERMANENTLY. Every dependency, tool, and service MUST be open source or have a verified free tier. NEVER assume something is free without checking the current price on the provider's official page. NO money is spent, under any circumstances, not even when the project grows. If a service exhausts its free tier, a FREE ALTERNATIVE is sought — no payment is made. The domain can be a free subdomain (sprintquest.vercel.app, netlify.app, etc.) or eventually a .com domain if the user decides to pay for it SEPARATELY from the infrastructure — but that is their personal decision, not a project expense. NO paid service is ever used without the user's explicit approval, and even then, the rule is: seek a free alternative first, always.
+- **Team XP only — informational, not controlling** — XP is a *learning dashboard metric* (like a fitness tracker), never a *reward*. Never frame participation as "earning" XP. Frame it as "your team's engagement level."
+- **No individual leaderboards** — social comparison activates loss-detection brain areas (anterior insula, dACC). Never compare individuals or teams publicly.
 - **Low-friction onboarding** — participants join via a code (`join.sprintquest.com/ABC123`) without creating an account.
 - **Sits on top of existing tools** (Jira, GitHub, Linear, Slack) — does not replace them.
-- **AI as Game Master / Scrum Master** — facilitates, suggests, groups, detects patterns; never makes decisions automatically.
+- **AI as Learning Facilitator** — facilitates, suggests, groups, detects patterns; never makes decisions automatically. AI is a *scaffolding tool* for metacognitive reflection, not a summary machine.
 - **Privacy-first** — team data belongs to the team; managers must not be able to use data against employees.
 - **NO PAID DEPENDENCY BY DEFAULT — EVER** — every service must have a free tier that can handle the projected load at ANY scale the project reaches. If a paid tier becomes necessary, STOP. Find a free alternative. Do NOT pay. This is a non-negotiable constraint, not a preference.
 
@@ -25,15 +80,21 @@ SprintQuest is a gamified Agile ceremony platform that converts Sprint Reviews a
 - Do NOT make gamification feel like surveillance.
 - Do NOT build features for all Scrum ceremonies at once — start with Gamified Retrospective MVP only.
 - Do NOT optimize for lesson completion, streaks, XP, screen time, or content consumption (per Fluently-style principles about not gamifying the wrong things).
+- Do NOT make extrinsic rewards the primary motivator — this triggers the overjustification effect (Deci et al., 1999).
+- Do NOT use artificial time pressure as a primary game mechanic — this creates anxiety, not flow (Csikszentmihalyi, 1975; iScience, 2024).
+- Do NOT add social comparison features between teams — this activates loss-detection neural circuits.
+- Do NOT design badges as participation rewards — they must signal *mastery* (Sailer et al., 2017).
 
 ## MVP scope
 
-MVP v1 = **Gamified Retrospective** only:
+MVP v1 = **Learning-Optimized Gamified Retrospective** only:
 1. Create team (name, mascot from 🐉🦊🚀🤖🐙)
 2. Create retro (choose game mode: Boss Battle, Sailboat, Mission Control, Detective, Team Battle)
 3. Participants join via code (`join.sprintquest.com/ABC123`)
-4. Game session rounds (timed, voting, anonymous options)
-5. Results: Team XP, badge unlock, next quest
+4. **Spaced retrieval warm-up** (review past commitments with recall prompts)
+5. Game session rounds (adaptive pacing, timed OR free-form)
+6. **Structured reflection phase** (guided metacognitive prompts)
+7. Results: Team engagement level (informational), reflection summary, next quests
 
 Game modes (from market research):
 - 🔥 Boss Battle — identify and defeat the biggest problem
@@ -46,12 +107,16 @@ Game modes (from market research):
 
 Beyond retro, the platform covers the full Agile cycle:
 - Sprint Planning → quests/missions tied to Jira tickets
-- Daily → XP for participation
+- Daily → engagement metrics (informational, not rewards)
 - Sprint Review → challenges for stakeholders (quizzes, demos as challenges)
-- Retro → the core gamified ceremony
+- Retro → the core learning-optimized ceremony
+  - Spaced retrieval warm-up
+  - Structured reflection with metacognitive prompts
+  - AI real-time facilitation (pattern detection, probing questions)
+  - Psychological safety check-in
 - Progression: Team Level 1 → Level 2 → ... → Improvement Streak → Level Up
-- Badges: Improvement Machine, Bug Hunters, Collaboration, Continuous Delivery, Goal Keepers
-- AI Game Master detects patterns, suggests challenges, groups comments, flags recurring issues
+- Badges: **Mastery-based** (Pattern Spotter, Bridge Builder, Deep Thinker, not participation-based)
+- AI Learning Facilitator: real-time pattern detection, guided reflection, retrospection scaffolding
 
 ## Competitive landscape
 
@@ -79,7 +144,7 @@ Do NOT attempt to answer all 750 questions at once. Work phase by phase.
 Every answer, claim, or suggestion generated during this project must follow these rules:
 
 1. **Ground everything in external sources** — factual claims about competitors, market data, or technical feasibility must cite specific URLs, documentation, or research. Verify with web search before accepting.
-2. **Mark every statement** as `VERIFIED` (with source), `ASSAMED` (with rationale), or `UNANSWERED` (don't guess). Never leave a claim unattributed.
+2. **Mark every statement** as `VERIFIED` (with source), `ASSUMED` (with rationale), or `UNANSWERED` (don't guess). Never leave a claim unattributed.
 3. **Never ask the AI to invent product decisions** — provide actual context (team skills, budget, timeline) and ask it to reason *from those constraints*. Hallucinations happen when the AI fills blank spaces.
 4. **AI is a framework, not an oracle** — it structures, organizes, and challenges assumptions; you supply the ground truth. Every substantive answer comes from the team, not the AI.
 5. **Cross-validate against existing research** — feed verified research back as context rather than asking the AI to re-discover it. More real data = less room for fabrication.
@@ -167,55 +232,63 @@ When a free tier limit is reached, the ONLY acceptable responses are:
 ### Critical rule:
 **Never deploy code that could generate charges without the user's explicit knowledge and approval.** Always warn before using any service with potential cost implications.
 
-### Costo $0 — Regla de oro:
-Si una solución no tiene alternativa gratuita verificada, NO se implementa así. Se busca otra solución, se reduce el scope, o se usa una opción diferente. El proyecto se adapta a las limitaciones gratuitas, no al revés.
+### $0 Cost — Golden Rule:
+If a solution has no verified free alternative, it is NOT implemented. Another solution is sought, the scope is reduced, or a different option is used. The project adapts to the free tier limitations, not the other way around.
 
 ## Decision Authority
 
-**Todas las decisiones sobre el proyecto las toma el AI.** El usuario NO necesita tomar decisiones técnicas, de producto, de arquitectura, de diseño ni de roadmap. El AI decide:
+**All decisions about the project are made by the AI.** The user does NOT need to make technical, product, architecture, design, or roadmap decisions. The AI decides:
 
-- **Stack técnico** (frameworks, libraries, databases, hosting)
-- **Arquitectura** (estructura del código, database schema, API design)
-- **Features y prioridades** (qué construir primero, en qué orden)
-- **Diseño UI/UX** (colores, tipografía, layouts, componentes)
-- **Roadmap y fases** (cuándo añadir qué feature)
-- **Estrategia de crecimiento** (integraciones, escalabilidad)
-- **Código de todos los archivos** (frontend, backend, tests, config)
-- **Documentación** (AGENTS.md, docs, README)
+- **Tech stack** (frameworks, libraries, databases, hosting)
+- **Architecture** (code structure, database schema, API design)
+- **Features and priorities** (what to build first, in what order)
+- **UI/UX design** (colors, typography, layouts, components)
+- **Roadmap and phases** (when to add what feature)
+- **Growth strategy** (integrations, scalability)
+- **Code of all files** (frontend, backend, tests, config)
+- **Documentation** (AGENTS.md, docs, README)
 
-### El usuario solo debe hacer:
-1. **Proporcionar contexto** (preferencias, restricciones, información del proyecto)
-2. **Probar y dar feedback** sobre lo construido
-3. **Aprobar o rechazar** lo que se construye (sin necesidad de justificar por qué)
-4. **Entrevistar usuarios reales** (cuando sea necesario para validación)
-5. **Decidir si lanzar o no** (cuando el producto esté listo)
-6. **Proporcionar expertise de dominio** (conocimiento específico de Agile/Scrum)
+### The user should only:
+1. **Provide context** (preferences, constraints, project information)
+2. **Test and give feedback** on what was built
+3. **Approve or reject** what was built (without needing to justify why)
+4. **Interview real users** (when necessary for validation)
+5. **Decide whether to launch** (when the product is ready)
+6. **Provide domain expertise** (specific Agile/Scrum knowledge)
 
-### Reglas de decisión:
-1. **El AI decide por defecto** — si no hay una razón clara para que el usuario decida, el AI decide
-2. **El AI debe explicar sus decisiones** — cada decisión técnica se comunica brevemente al usuario
-3. **El usuario puede revocar cualquier decisión** — si el usuario dice "no quiero esto", el AI lo cambia
-4. **El AI prioriza el $0 cost** — siempre que sea posible dentro de las restricciones
-5. **El AI prioriza la velocidad** — construir rápido, iterar, no sobre-ingenieril
+### Decision rules:
+1. **The AI decides by default** — if there is no clear reason for the user to decide, the AI decides
+2. **The AI must explain its decisions** — each technical decision is communicated briefly to the user
+3. **The user can revoke any decision** — if the user says "I don't want this," the AI changes it
+4. **The AI prioritizes the $0 cost** — whenever possible within the constraints
+5. **The AI prioritizes speed** — build fast, iterate, don't over-engineer
 
 ## Tech direction
 
 - Web application (PWA considered)
 - Real-time collaboration needed for ceremonies
 - Integrations: Jira, GitHub, Slack (later Linear, Azure DevOps, GitLab, Teams)
-- AI integration for facilitation (LLM-based)
+- AI integration for learning facilitation (LLM-based)
 - Local-first data preferences where possible
-- **Costo $0/mes — TODA la infraestructura debe usar tier gratuitos verificados**
-- **NINGÚN servicio de pago a menos que el usuario lo apruebe explícitamente**
-- **Verificar precios actuales antes de cada decisión de infraestructura (ver PLAN_CERO_COSTO.md)**
+- **$0/month — ALL infrastructure must use verified free tiers**
+- **NO paid service unless explicitly approved by the user**
+- **Verify current prices before every infrastructure decision (see PLAN_CERO_COSTO.md)**
 
 ## Repository status
 
-This repository is currently **empty**. All project files, code, and configuration need to be created from scratch.
+This is an active Next.js project with a deployed Vercel site (`https://sprintquest-five.vercel.app`). The codebase includes:
+- Landing page with 2-mode MVP (Boss Battle + Sailboat)
+- Dashboard, retro session, history pages
+- Supabase integration for teams, sprints, ceremonies
+- NextAuth.js for GitHub/Google sign-in
+- Jira and Slack integration routes
+- PWA cache disabled (service worker unregistration)
+- Prisma schema for database
 
 ## How to proceed
 
 1. Initialize project structure and select a tech stack
 2. Check AGENTS.md before making architectural decisions to ensure alignment with product principles above
 3. This file will be updated as the project evolves
-4. When building, validate assumptions from the master questionnaire before committing to features
+4. When building, validate assumptions from the master questionnaire against neuroscience evidence before committing to features
+5. **Every feature must pass the "overjustification test"**: Would this feature still be valuable if XP were removed? If not, redesign it so learning is the driver, not the reward.

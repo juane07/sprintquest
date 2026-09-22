@@ -24,6 +24,7 @@ model Team {
   sprints   Sprint[]
   ceremonies Ceremony[]
   badges    Badge[]
+  shoutouts ShoutOut[]
 }
 
 model Member {
@@ -48,6 +49,7 @@ model Sprint {
   ceremonies Ceremony[]
   quests     Quest[]
   pulses     DailyPulse[]
+  retrievals RetrievalSession[]
 }
 
 model Ceremony {
@@ -66,6 +68,8 @@ model Ceremony {
   comments   Comment[]
   votes      Vote[]
   actions    Action[]
+  reflections Reflection[]
+  shoutouts  ShoutOut[]
 }
 
 model Comment {
@@ -135,4 +139,40 @@ model DailyPulse {
   today     String
   blockers  String
   createdAt DateTime @default(now())
+}
+
+// Learning science data: tracks spaced retrieval history
+model RetrievalSession {
+  id          String   @id @default(dbgenerated("gen_random_uuid()::text"))
+  sprintId    String
+  sprint      Sprint   @relation(fields: [sprintId], references: [id])
+  promptType  String
+  answered    Boolean  @default(false)
+  answer      String?
+  createdAt   DateTime @default(now())
+}
+
+// Learning science data: tracks structured reflection responses
+model Reflection {
+  id         String   @id @default(dbgenerated("gen_random_uuid()::text"))
+  ceremonyId String
+  ceremony   Ceremony @relation(fields: [ceremonyId], references: [id])
+  round      Int
+  prompt     String
+  response   String?
+  type       String
+  createdAt  DateTime @default(now())
+}
+
+// Social recognition: peer shout-outs (cooperative, no ranking)
+model ShoutOut {
+  id         String   @id @default(dbgenerated("gen_random_uuid()::text"))
+  teamId     String
+  team       Team     @relation(fields: [teamId], references: [id])
+  fromUser   String
+  toUser     String
+  message    String
+  ceremonyId String?
+  ceremony   Ceremony? @relation(fields: [ceremonyId], references: [id])
+  createdAt  DateTime @default(now())
 }
