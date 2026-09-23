@@ -5,6 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { MODE_CONFIG } from "@/constants"
 import { progressToNext, actionValue, engagementLabel, levelLabel } from "@/lib/xp"
 import Navbar from "@/components/Navbar"
+import MasteryDeckDisplay from "@/components/MasteryDeckDisplay"
+import LegacySprintMap from "@/components/LegacySprintMap"
+import { buildDeckFromBadges } from "@/components/mastery-deck"
+import { BOARD_CATEGORY, buildSprintMapFromBoardComments } from "@/components/legacy-sprint-map"
+import type { SprintMap } from "@/components/legacy-sprint-map"
 
 async function awardBadge(supabase: any, teamId: string, name: string, description: string) {
   const { data } = await supabase.from("Badge").select("id").eq("teamId", teamId).eq("name", name).limit(1)
@@ -19,6 +24,7 @@ function DashboardInner() {
   const [actions, setActions] = useState<any[]>([])
   const [badges, setBadges] = useState<any[]>([])
   const [recentComments, setRecentComments] = useState<any[]>([])
+  const [sprintMap, setSprintMap] = useState<SprintMap | null>(null)
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState<string | null>(null)
   const [completing, setCompleting] = useState<string | null>(null)
@@ -50,6 +56,13 @@ function DashboardInner() {
         }
         const { data: b } = await supabase.from("Badge").select("*").eq("teamId", teamId).order("earnedAt", { ascending: false })
         if (b) setBadges(b)
+        const { data: sprints } = await supabase.from("Sprint").select("id,number").eq("teamId", teamId)
+        let board: any[] = []
+        if (c && c.length > 0) {
+          const { data: bc } = await supabase.from("Comment").select("id,content,createdAt,ceremonyId").in("ceremonyId", c.map((x: any) => x.id)).eq("category", BOARD_CATEGORY).order("createdAt", { ascending: true })
+          if (bc) board = bc
+        }
+        setSprintMap(buildSprintMapFromBoardComments(teamId, c ?? [], sprints ?? [], board))
       } catch (e: any) {
         setError(e?.message ?? "Failed to load team.")
       } finally {
@@ -218,6 +231,8 @@ function DashboardInner() {
             </div>
           </section>
         )}
+        {teamId && <MasteryDeckDisplay teamId={teamId} initialDeck={buildDeckFromBadges(teamId, badges)} />}
+        {sprintMap && <LegacySprintMap map={sprintMap} />}
         {(() => {
           const open = actions.filter(a => a.status !== "completed")
           const done = actions.filter(a => a.status === "completed")

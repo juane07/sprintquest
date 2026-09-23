@@ -15,6 +15,7 @@ import ReflectionPhase from "@/components/ReflectionPhase"
 import SafetyCheckIn from "@/components/SafetyCheckIn"
 import AIFacilitator from "@/components/AIFacilitator"
 import PeerRecognition from "@/components/PeerRecognition"
+import AsymmetryWarmup from "@/components/AsymmetryWarmup"
 
 const REACTION_EMOJIS = ["❤️", "🔥", "👍"]
 const ROUND_SECONDS = 5 * 60
@@ -50,6 +51,8 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   const [reflectionDone, setReflectionDone] = useState<Record<number, boolean>>({})
   const [safetyScore, setSafetyScore] = useState<number | null>(null)
   const [safetyComplete, setSafetyComplete] = useState(false)
+  const [asymmetryDone, setAsymmetryDone] = useState(false)
+  const [asymmetryAnswers, setAsymmetryAnswers] = useState<string[]>([])
   useEffect(() => {
     try { if (!window.localStorage.getItem("sq_coach_seen")) setCoachShow(true) } catch { /* private mode */ }
   }, [])
@@ -202,6 +205,22 @@ export default function RetroPage({ params }: { params: { id: string } }) {
       if (done && done.length <= 1) await awardBadge(supabase, ceremony.teamId, "Retrospective Explorer", "Completed first ceremony with reflection")
       const { data: nq } = await supabase.from("Action").select("*").eq("ceremonyId", params.id).neq("status", "completed").order("createdAt")
       if (nq) setNextQuests(nq)
+      if (asymmetryAnswers.length >= 3) {
+        await awardBadge(supabase, ceremony.teamId, "Recall Master", "mastery:recall-master — Spaced retrieval warm-up: correctly identified 3+ past commitments")
+      }
+      try {
+        const openCount = (nq ?? []).length
+        await fetch("/api/sprintmap", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ceremonyId: params.id,
+            type: openCount > 0 ? "quest" : "insight",
+            title: `${mode.name} reflection pinned`,
+            description: `${visible.length} entries shared · engagement ${score + bonus} · ${openCount} open quests`,
+          }),
+        })
+      } catch { /* map pin is optional */ }
       setEngagementScore(score + bonus)
       setAiLoading(true)
       try {
@@ -377,6 +396,25 @@ export default function RetroPage({ params }: { params: { id: string } }) {
         )}
         {safetyComplete && safetyScore !== null && (
           <div className="text-xs text-gray-500 mb-2">🛡️ Safety: {safetyScore}/5</div>
+        )}
+        {/* Hanabi-style warm-up: information asymmetry before recall */}
+        {round === 1 && !asymmetryDone && (
+          <AsymmetryWarmup
+            sprintNumber={ceremony?.sprint?.number ?? 1}
+            playerCount={3}
+            onComplete={(answers) => {
+              setAsymmetryAnswers(answers)
+              setAsymmetryDone(true)
+              const sprintId = ceremony?.sprintId
+              if (sprintId) {
+                fetch("/api/retrieval", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ sprintId, promptType: "asymmetry-hanabi", answered: answers.length > 0, answer: answers.join(" | ").slice(0, 500) }),
+                }).catch(() => { /* retrieval history is optional */ })
+              }
+            }}
+          />
         )}
         {/* Spaced Retrieval Warm-Up — Step 0 */}
         <SpacedRetrieval
