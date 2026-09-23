@@ -250,6 +250,16 @@ export default function Home() {
       </div>
       </div>
 
+      <section className="max-w-6xl mx-auto px-8 py-16">
+        <h2 className="text-3xl font-bold text-center mb-2">Retros your team will actually learn from</h2>
+        <p className="text-gray-400 text-center mb-10 max-w-2xl mx-auto">SprintQuest turns Agile ceremonies into a team learning system grounded in neuroscience. No boring video-call rituals — guided recall, timed rounds, live reactions, votes, and action items that persist sprint after sprint.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="glass rounded-xl p-6"><div className="text-3xl mb-2">👥</div><h3 className="font-bold mb-1">1. Invite with a code</h3><p className="text-sm text-gray-400">Create a team, share the 6-letter code. Players join in seconds — no accounts, no installs, works on phones.</p></div>
+          <div className="glass rounded-xl p-6"><div className="text-3xl mb-2">🎮</div><h3 className="font-bold mb-1">2. Play the ceremony</h3><p className="text-sm text-gray-400">Pick a game mode. Warm up with cooperative recall, share entries (anonymous if you like), reflect with guided prompts, vote, and commit.</p></div>
+          <div className="glass rounded-xl p-6"><div className="text-3xl mb-2">🧠</div><h3 className="font-bold mb-1">3. Improve every sprint</h3><p className="text-sm text-gray-400">Entries become owned action items. Next retro opens reviewing them. Your engagement level, mastery deck and sprint map track team learning — never individuals.</p></div>
+        </div>
+      </section>
+
       <section className="max-w-6xl mx-auto px-8 py-8">
         <h2 className="text-3xl font-bold text-center mb-2">2 modos · 1 mecánica</h2>
         <p className="text-gray-400 text-center mb-10">MVP mínimo — sin parálisis. El resto llega después.</p>
@@ -260,6 +270,39 @@ export default function Home() {
               <div className="text-sm text-gray-400">{m.desc}</div>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-8 py-8">
+        <h2 className="text-3xl font-bold text-center mb-2">Board-game mechanics, built for learning</h2>
+        <p className="text-gray-400 text-center mb-10 max-w-2xl mx-auto">Cooperative tabletop ideas adapted to Scrum — every mechanic serves team learning, never competition.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🃏</div><h3 className="font-bold mb-1">Hanabi Warm-Up</h3><p className="text-sm text-gray-400">Teammates hold cards from past sprints they can&apos;t show. Describe them verbally so the team reconstructs past commitments — spaced retrieval as a cooperative game.</p></div>
+          <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🏆</div><h3 className="font-bold mb-1">Mastery Deck</h3><p className="text-sm text-gray-400">Cards like Pattern Spotter or Bridge Builder unlock only when the team demonstrates the behavior — mastery signals, never participation prizes.</p></div>
+          <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🗺️</div><h3 className="font-bold mb-1">Legacy Sprint Map</h3><p className="text-sm text-gray-400">A persistent board that evolves every sprint — winds, anchors, bosses defeated. Recurring patterns surface so the team can finally break them.</p></div>
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-8 py-8">
+        <h2 className="text-3xl font-bold text-center mb-2">A learning system, not another retro board</h2>
+        <p className="text-gray-400 text-center mb-10 max-w-2xl mx-auto">Every design decision is validated against learning science.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🔄</div><h3 className="font-bold mb-1">Spaced Retrieval</h3><p className="text-sm text-gray-400">Every retro opens recalling past commitments — retrieval beats re-reading.</p></div>
+          <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🛡️</div><h3 className="font-bold mb-1">Psychological Safety</h3><p className="text-sm text-gray-400">Anonymous sharing by default, safety check-ins, no individual rankings — ever.</p></div>
+          <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🤖</div><h3 className="font-bold mb-1">AI Facilitator</h3><p className="text-sm text-gray-400">Real-time pattern detection and probing questions — scaffolding reflection, not summarizing.</p></div>
+          <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">📈</div><h3 className="font-bold mb-1">Engagement Metrics</h3><p className="text-sm text-gray-400">Team-level informational dashboards, like a fitness tracker — never rewards that undermine motivation.</p></div>
+        </div>
+      </section>
+
+      <section className="max-w-4xl mx-auto px-8 py-8">
+        <h2 className="text-3xl font-bold text-center mb-8">Questions your coworkers will ask</h2>
+        <div className="space-y-3">
+          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Do players need an account?</h3><p className="text-sm text-gray-400">No. They open the link, enter the 6-letter team code, and play — on any device. Only facilitators optionally sign in with GitHub or Google.</p></div>
+          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Does it replace Jira?</h3><p className="text-sm text-gray-400">No, it sits on top of it. Import open sprint issues as quests with one click; completing a quest can move the Jira issue to Done.</p></div>
+          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Is it surveillance disguised as a game?</h3><p className="text-sm text-gray-400">No. Metrics are team-level and informational — like a fitness tracker, never a prize. Entries can be anonymous, there are no individual rankings, and votes stay within the ceremony.</p></div>
+          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Why no individual leaderboards?</h3><p className="text-sm text-gray-400">Social comparison triggers the brain&apos;s loss-detection circuits and kills psychological safety. We measure team learning only — cooperation outperforms competition without the stress.</p></div>
+          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">What are Mastery Cards?</h3><p className="text-sm text-gray-400">Cards like Pattern Spotter or Safety Builder unlock when the team demonstrably shows that behavior across sprints. They signal mastery, not attendance.</p></div>
+          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">What does it cost?</h3><p className="text-sm text-gray-400">The project runs permanently on free tiers. AI facilitation uses a free Groq key; nothing here generates infrastructure bills.</p></div>
         </div>
       </section>
 
