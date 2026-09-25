@@ -1,32 +1,26 @@
 "use client"
 import { BOARD_STEPS, DEPTH_BOOSTERS, BOARD_COPY, type DepthBooster } from "../constants"
+import type { BoosterUsage } from "../lib/board"
 
 interface TeamBoardProps {
-  round: number
-  totalRounds: number
-  entriesCount: number
+  step: number
+  playerEntries: number
   enabled: boolean
   onToggle: (v: boolean) => void
-  usedBoosters: Record<string, boolean>
+  usage: BoosterUsage
   onUseBooster: (b: DepthBooster) => void
-  activeBoosterNote: string | null
-}
-
-export function boardPositionForRound(round: number, totalRounds: number): number {
-  // Map N mode rounds onto 5 board steps. Clamp, never throws.
-  if (totalRounds <= 1) return 0
-  const t = Math.min(Math.max(round, 1), totalRounds)
-  return Math.min(BOARD_STEPS.length - 1, Math.floor(((t - 1) / (totalRounds - 1)) * (BOARD_STEPS.length - 1)))
-}
-
-export function canAdvance(entriesCount: number): boolean {
-  return entriesCount >= 3
+  activeNote: string | null
+  blockNote: string | null
+  onAdvance: () => void
+  advanceLabel: string
 }
 
 export default function TeamBoard({
-  round, totalRounds, entriesCount, enabled, onToggle, usedBoosters, onUseBooster, activeBoosterNote,
+  step, playerEntries: playerCount, enabled, onToggle, usage, onUseBooster,
+  activeNote, blockNote, onAdvance, advanceLabel,
 }: TeamBoardProps) {
-  const pos = boardPositionForRound(round, totalRounds)
+  const pos = Math.min(Math.max(step, 0), BOARD_STEPS.length - 1)
+  const usedMap: Record<string, boolean> = { lupa: usage.lupa, "doble-porque": usage.pourquoi, puente: usage.puente }
   return (
     <section aria-label="Team journey board" className="glass rounded-xl p-4 mb-6">
       <div className="flex justify-between items-center mb-1 flex-wrap gap-2">
@@ -57,19 +51,24 @@ export default function TeamBoard({
               )
             })}
           </ol>
-          <p className="text-[11px] text-gray-500 mt-2">One team token · No dice for advancing · Moving gives 0 XP · {entriesCount} team entries</p>
-          {!canAdvance(entriesCount) && round < totalRounds && (
-            <p className="text-[11px] text-gold mt-1">{BOARD_COPY.advanceBlocked}</p>
+          <p className="text-[11px] text-gray-500 mt-2">One team token · No dice for advancing · Moving gives 0 XP · {playerCount} team entries</p>
+          <div className="mt-3">
+            <button onClick={onAdvance} className="w-full sm:w-auto px-5 py-2.5 bg-teal text-white font-bold rounded-lg hover:bg-teal/80">
+              {advanceLabel}
+            </button>
+          </div>
+          {blockNote && (
+            <p className="text-xs text-gold mt-2" role="alert">{blockNote}</p>
           )}
           <div className="flex gap-2 mt-3 flex-wrap" aria-label="Depth boosters">
             {DEPTH_BOOSTERS.map((b) => {
-              const used = !!usedBoosters[b.id]
+              const used = !!usedMap[b.id]
               return (
                 <button
                   key={b.id}
                   disabled={used}
                   onClick={() => onUseBooster(b)}
-                  title={b.desc}
+                  title={used ? "Already used this ceremony (1 use each)" : b.desc}
                   className={`text-xs px-3 py-1.5 rounded-full border ${used ? "border-gray-700 text-gray-600" : "border-teal text-teal hover:bg-teal hover:text-white"}`}
                 >
                   {b.emoji} {b.label}{used ? " ✓" : ""}
@@ -77,8 +76,8 @@ export default function TeamBoard({
               )
             })}
           </div>
-          {activeBoosterNote && (
-            <p className="text-xs text-teal mt-2" role="status">{activeBoosterNote}</p>
+          {activeNote && (
+            <p className="text-xs text-teal mt-2" role="status">{activeNote}</p>
           )}
         </>
       ) : (

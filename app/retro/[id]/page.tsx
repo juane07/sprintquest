@@ -18,6 +18,21 @@ import PeerRecognition from "@/components/PeerRecognition"
 import AsymmetryWarmup from "@/components/AsymmetryWarmup"
 import TeamBoard from "@/components/TeamBoard"
 import type { DepthBooster } from "@/constants"
+import {
+  boardStepFor,
+  advanceGate,
+  lupaInsight,
+  findPuentePair,
+  encodePuenteProposal,
+  decodePuenteProposal,
+  boosterUsageFrom,
+  pourquoiQuestion,
+  playerEntries,
+  isPlayerEntry,
+  LUPA_CAT,
+  POURQUOI_CAT,
+  PUENTE_CAT,
+} from "@/lib/board"
 
 const REACTION_EMOJIS = ["❤️", "🔥", "👍"]
 const ROUND_SECONDS = 5 * 60
@@ -58,6 +73,10 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   const [boardEnabled, setBoardEnabled] = useState(true)
   const [usedBoosters, setUsedBoosters] = useState<Record<string, boolean>>({})
   const [boosterNote, setBoosterNote] = useState<string | null>(null)
+  const [blockNote, setBlockNote] = useState<string | null>(null)
+  const [pourquoiAnswers, setPourquoiAnswers] = useState<Record<string, string>>({})
+  const [pourquoiSaved, setPourquoiSaved] = useState<Record<string, boolean>>({})
+  const [confirmingPuente, setConfirmingPuente] = useState(false)
   useEffect(() => {
     try { if (window.localStorage.getItem("sq_board") === "off") setBoardEnabled(false) } catch { /* ignore */ }
   }, [])
@@ -65,15 +84,69 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     setBoardEnabled(v)
     try { window.localStorage.setItem("sq_board", v ? "on" : "off") } catch { /* ignore */ }
   }
-  const useBooster = (b: DepthBooster) => {
-    setUsedBoosters(prev => ({ ...prev, [b.id]: true }))
-    setBoosterNote(
-      b.id === "lupa"
-        ? "🔍 Lupa: pick one recurring theme from past sprints and ask why it persists. Suggestion only — team decides."
-        : b.id === "doble-porque"
-          ? "❓ Doble porqué: ask 'why did this happen?' once more before voting. Depth over speed."
-          : "🌉 Puente: propose grouping two similar entries. Team confirms or rejects."
-    )
+
+  const insertGameMasterEntry = async (category: string, content: string) => {
+    const supabase = getSupabase()
+    const { data, error } = await supabase
+      .from("Comment")
+      .insert({ ceremonyId: params.id, content, author: "Game Master", anonymous: false, category })
+      .select()
+      .single()
+    if (!error && data) setComments((prev) => [...prev, data])
+    return !error
+  }
+
+  const useBooster = async (b: DepthBooster) => {
+    setBoosterNote(null)
+    setBlockNote(null)
+    if (b.id === "lupa") {
+      const insight = lupaInsight(comments)
+      if (!insight) { setBoosterNote("🔍 Lupa needs at least 2 team entries first — share, then reveal.") ; return }
+      const ok = await insertGameMasterEntry(LUPA_CAT, insight)
+      if (ok) setBoosterNote("🔍 Lupa revealed a pattern in the feed — discuss it, then advance.")
+    } else if (b.id === "doble-porque") {
+      const count = comments.filter((c: any) => c.category === POURQUOI_CAT).length
+      const q = pourquoiQuestion(comments, count)
+      const ok = await insertGameMasterEntry(POURQUOI_CAT, q)
+      if (ok) setBoosterNote("❓ Doble porqué added below — answer it to deepen reflection.")
+    } else {
+      const pair = findPuentePair(comments)
+      if (!pair) { setBoosterNote("🌉 Puente needs 2 entries sharing some words — nothing to group yet.") ; return }
+      const summary = `A: "${pair.a.content.slice(0, 80)}" (${pair.a.category})\nB: "${pair.b.content.slice(0, 80)}" (${pair.b.category})`
+      const ok = await insertGameMasterEntry(PUENTE_CAT, encodePuenteProposal(pair.a.id, pair.b.id, summary))
+      if (ok) setBoosterNote("🌉 Puente proposed a grouping below — confirm it together to merge.")
+    }
+  }
+
+  const confirmPuente = async () => {
+    const proposal = comments.find((c: any) => c.category === PUENTE_CAT)
+    if (!proposal) return
+    const ids = decodePuenteProposal(proposal.content)
+    if (!ids) return
+    const a = comments.find((c: any) => c.id === ids.aId)
+    const b = comments.find((c: any) => c.id === ids.bId)
+    if (!a || !b || a.category === b.category) return
+    setConfirmingPuente(true)
+    try {
+      const supabase = getSupabase()
+      const { error } = await supabase.from("Comment").update({ category: a.category }).eq("id", b.id)
+      if (!error) setComments((prev) => prev.map((c) => (c.id === b.id ? { ...c, category: a.category } : c)))
+    } finally {
+      setConfirmingPuente(false)
+    }
+  }
+
+  const savePourquoiAnswer = async (commentId: string, question: string) => {
+    const answer = (pourquoiAnswers[commentId] ?? "").trim()
+    if (!answer) return
+    const supabase = getSupabase()
+    const { error } = await supabase.from("Reflection").insert({
+      ceremonyId: params.id, round, prompt: question, response: answer, type: "elaborative",
+    })
+    if (!error) {
+      setPourquoiSaved((prev) => ({ ...prev, [commentId]: true }))
+      setReflectionDone((prev) => ({ ...prev, [round]: true }))
+    }
   }
   useEffect(() => {
     try { if (!window.localStorage.getItem("sq_coach_seen")) setCoachShow(true) } catch { /* private mode */ }
@@ -111,6 +184,12 @@ export default function RetroPage({ params }: { params: { id: string } }) {
         setCeremony(data)
         const m = MODE_CONFIG[data.gameMode] ?? DEFAULT_MODE
         setCategory(m.categories[0]?.name ?? "")
+        if (typeof data.round === "number" && data.round >= 2) {
+          // Resume a ceremony already in progress: token keeps its square,
+          // warm-up counts as done (it gated leaving Salida).
+          setRound(Math.min(data.round, m.rounds.length))
+          setRetrievalDone(true)
+        }
         const { data: prev } = await supabase.from("Ceremony").select("*").eq("teamId", data.teamId).eq("status", "completed").neq("id", params.id).order("endedAt", { ascending: false }).limit(1).single()
         if (prev) {
           setPrevCeremony(prev)
@@ -191,9 +270,30 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     setPrevActions(prev => prev.map(a => (a.id === action.id ? { ...a, status: "completed" } : a)))
   }
 
-  const nextStep = () => {
-    if (round < totalRounds) setRound(round + 1)
-    else setVoting(true)
+  // The team token advances ONLY through here: gated by the current
+  // square's completion rule and persisted to Ceremony.round.
+  const advanceTeam = async () => {
+    const step = boardStepFor(round, totalRounds, false)
+    const gate = advanceGate(step, {
+      recallDone: retrievalDone,
+      entries: playerEntries(comments).length,
+      reflectionDone: !!reflectionDone[round],
+    })
+    if (!gate.ok) {
+      setBlockNote(gate.reason)
+      setBoosterNote(null)
+      return
+    }
+    setBlockNote(null)
+    const supabase = getSupabase()
+    if (round < totalRounds) {
+      const next = round + 1
+      setRound(next)
+      supabase.from("Ceremony").update({ round: next }).eq("id", params.id).then(() => {}, () => {})
+    } else {
+      setVoting(true)
+      supabase.from("Ceremony").update({ round: totalRounds }).eq("id", params.id).then(() => {}, () => {})
+    }
   }
 
   const finishCeremony = async () => {
@@ -315,6 +415,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
           <div className="glass rounded-xl p-8 text-center">
             <div className="text-4xl mb-3">🗳️</div>
             <h2 className="text-2xl font-bold mb-2">{mode.voteTitle}</h2>
+            <p className="text-xs text-gold mb-1">⚔️ Quest square — lock in to finish: winners become owned action items for next sprint.</p>
             <p className="text-sm text-gray-400 mb-6">Discuss out loud, then lock it in — the team decides together. Turn the winners into action items for next sprint.</p>
             <div className="space-y-3 mb-6">
               {mode.categories.map(cat => {
@@ -412,17 +513,66 @@ export default function RetroPage({ params }: { params: { id: string } }) {
             </ol>
           </div>
         )}
-        {/* Team Journey Board — cooperative wrapper, 0 XP for moving */}
-        <TeamBoard
-          round={round}
-          totalRounds={totalRounds}
-          entriesCount={visible.length}
-          enabled={boardEnabled}
-          onToggle={toggleBoard}
-          usedBoosters={usedBoosters}
-          onUseBooster={useBooster}
-          activeBoosterNote={boosterNote}
-        />
+        {/* Team Journey Board — the token advances only via advanceTeam (gated + persisted) */}
+        {(() => {
+          const step = boardStepFor(round, totalRounds, false)
+          const usage = boosterUsageFrom(comments)
+          const proposal = comments.find((c: any) => c.category === PUENTE_CAT)
+          const pourquoiOpen = comments.filter((c: any) => c.category === POURQUOI_CAT && !pourquoiSaved[c.id])
+          let puenteCard: { a: any; b: any; merged: boolean } | null = null
+          if (proposal) {
+            const ids = decodePuenteProposal(proposal.content)
+            if (ids) {
+              const a = comments.find((c: any) => c.id === ids.aId)
+              const b = comments.find((c: any) => c.id === ids.bId)
+              if (a && b) puenteCard = { a, b, merged: a.category === b.category }
+            }
+          }
+          return (
+            <>
+              <TeamBoard
+                step={step}
+                playerEntries={playerEntries(comments).length}
+                enabled={boardEnabled}
+                onToggle={toggleBoard}
+                usage={usage}
+                onUseBooster={useBooster}
+                activeNote={boosterNote}
+                blockNote={blockNote}
+                onAdvance={advanceTeam}
+                advanceLabel={round < totalRounds ? "Advance team token ➜" : "Go to Vote 🗳️"}
+              />
+              {puenteCard && !puenteCard.merged && (
+                <div className="glass rounded-xl p-4 mb-6 border-teal/40" role="status">
+                  <p className="font-bold text-sm mb-1">🌉 Puente proposal — confirm together to group</p>
+                  <p className="text-sm text-gray-300 mb-1">A ({puenteCard.a.category}): “{(puenteCard.a.content ?? "").slice(0, 90)}”</p>
+                  <p className="text-sm text-gray-300 mb-3">B ({puenteCard.b.category}): “{(puenteCard.b.content ?? "").slice(0, 90)}”</p>
+                  <button onClick={confirmPuente} disabled={confirmingPuente} className="px-4 py-2 bg-teal text-white font-bold rounded-lg text-sm hover:bg-teal/80 disabled:opacity-50">
+                    {confirmingPuente ? "Merging..." : `Group B under ${puenteCard.a.category}`}
+                  </button>
+                </div>
+              )}
+              {puenteCard?.merged && (
+                <p className="text-xs text-teal mb-6" role="status">🌉 Puente merged ✓ — grouped under {puenteCard.a.category}.</p>
+              )}
+              {pourquoiOpen.map((c: any) => (
+                <div key={c.id} className="glass rounded-xl p-4 mb-6 border-gold/30">
+                  <p className="font-bold text-sm mb-1">❓ Doble porqué — depth booster</p>
+                  <p className="text-sm text-gray-200 mb-3 whitespace-pre-wrap">{c.content}</p>
+                  <textarea
+                    value={pourquoiAnswers[c.id] ?? ""}
+                    onChange={(e) => setPourquoiAnswers((prev) => ({ ...prev, [c.id]: e.target.value }))}
+                    placeholder="Answer as a team..."
+                    className="w-full p-3 rounded-lg bg-dark border border-gray-600 text-white placeholder-gray-400 mb-3 h-20 resize-none"
+                  />
+                  <button onClick={() => savePourquoiAnswer(c.id, c.content)} className="px-4 py-2 bg-gold text-black font-bold rounded-lg text-sm hover:bg-yellow-400">
+                    Save reflection ✓
+                  </button>
+                </div>
+              ))}
+            </>
+          )
+        })()}
         {/* Psychological Safety Check-In */}
         {!safetyComplete && round === 1 && (
           <SafetyCheckIn onComplete={(score) => { setSafetyScore(score); setSafetyComplete(true) }} />
@@ -520,7 +670,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
           {others.length > 0 && <div><h3 className="text-lg font-bold mb-3">Other</h3><div className="space-y-3">{others.map(commentCard)}</div></div>}
         </div>
         <div className="flex justify-between mt-8">
-          <button onClick={nextStep} className="p-3 bg-teal text-white font-bold rounded-lg">{round < totalRounds ? "Next Round →" : "Go to Vote 🗳️"}</button>
+          <button onClick={advanceTeam} className="p-3 bg-teal text-white font-bold rounded-lg">{round < totalRounds ? "Advance team token →" : "Go to Vote 🗳️"}</button>
           {ceremony?.status === "completed"
             ? <span className="p-3 bg-gold/20 text-gold font-bold rounded-lg">Completed ✓</span>
             : <button onClick={finishCeremony} disabled={finishing} className="p-3 bg-red-600 text-white font-bold rounded-lg disabled:opacity-50">{finishing ? "Finishing..." : "Lock it in — Finish + Share"}</button>}
