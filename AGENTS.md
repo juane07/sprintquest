@@ -98,6 +98,11 @@ Every player-facing choice must have all three ingredients:
 - A visual board (squares, tokens, dice graphics) with no trade-off, no uncertainty, and no win/lose state is **decoration, not a game** — reject it even if it looks fun.
 - Dice that only decorate advancement violate Autonomy (§1) and add zero decision value. Every random element must feed a decision.
 
+### 7. Game Feel on $0 (juice without engines)
+- Flash is dead; its replacement is native web tech only: Canvas 2D + requestAnimationFrame, Web Animations API / CSS transforms, Pointer Events (one drag system for touch + mouse), synthesized Web Audio. **No game engines, no animation libraries, no sound assets** — hand-rolled `lib/juice.ts` + `FXLayer` canvas overlay.
+- Apply Vlambeer-style juice where it communicates state change: screenshake, hit-stop (≤120ms), hit flash, particles, permanence (defeated bosses stay drawn), bassy synth SFX.
+- **Mandatory escape hatches**: honor `prefers-reduced-motion` (motion degrades to instant state), persisted mute flag, audio unlocks only on first user gesture (autoplay policy).
+
 ## Key product principles
 
 - **$0 COST — NON-NEGOTIABLE** — the project must run on $0/month, PERMANENTLY. Every dependency, tool, and service MUST be open source or have a verified free tier. NEVER assume something is free without checking the current price on the provider's official page. NO money is spent, under any circumstances, not even when the project grows. If a service exhausts its free tier, a FREE ALTERNATIVE is sought — no payment is made. The domain can be a free subdomain (sprintquest.vercel.app, netlify.app, etc.) or eventually a .com domain if the user decides to pay for it SEPARATELY from the infrastructure — but that is their personal decision, not a project expense. NO paid service is ever used without the user's explicit approval, and even then, the rule is: seek a free alternative first, always.

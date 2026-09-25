@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { getSupabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { MODE_CONFIG, DEFAULT_MODE } from "@/constants"
@@ -16,6 +16,9 @@ import SafetyCheckIn from "@/components/SafetyCheckIn"
 import AIFacilitator from "@/components/AIFacilitator"
 import PeerRecognition from "@/components/PeerRecognition"
 import AsymmetryWarmup from "@/components/AsymmetryWarmup"
+import FXLayer from "@/components/FXLayer"
+import BossArena from "@/components/BossArena"
+import SailboatSea from "@/components/SailboatSea"
 import TeamBoard from "@/components/TeamBoard"
 import type { DepthBooster } from "@/constants"
 import {
@@ -33,6 +36,8 @@ import {
   POURQUOI_CAT,
   PUENTE_CAT,
 } from "@/lib/board"
+import { fxBurst } from "@/components/FXLayer"
+import { playSfx } from "@/lib/juice"
 
 const REACTION_EMOJIS = ["❤️", "🔥", "👍"]
 const ROUND_SECONDS = 5 * 60
@@ -167,6 +172,16 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     return id
   })
   const router = useRouter()
+  const victoryCelebrated = useRef(false)
+  useEffect(() => {
+    if (engagementScore !== null && !victoryCelebrated.current) {
+      victoryCelebrated.current = true
+      try {
+        fxBurst(window.innerWidth / 2, window.innerHeight / 3, { count: 70, speed: 0.35 })
+      } catch { /* ignore */ }
+      playSfx("fanfare")
+    }
+  }, [engagementScore])
 
   const mode = ceremony ? (MODE_CONFIG[ceremony.gameMode] ?? DEFAULT_MODE) : DEFAULT_MODE
   const isBoss = ceremony?.gameMode === "BOSS_BATTLE"
@@ -370,6 +385,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   if (engagementScore !== null) {
     return (
       <main className="min-h-screen flex items-center justify-center p-8">
+        <FXLayer />
         <div className="glass rounded-xl p-10 max-w-md w-full text-center">
           <div className="text-6xl mb-4">{mode.victoryEmoji}</div>
           <h1 className="text-3xl font-bold text-gradient mb-2">{mode.victoryTitle}</h1>
@@ -407,6 +423,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   if (voting) {
     return (
       <main className="min-h-screen p-8">
+        <FXLayer />
         <div className="max-w-2xl mx-auto">
           <div className="flex gap-4 mb-6 text-sm">
             <a href="/" className="text-gray-400 hover:text-teal transition">← Home</a>
@@ -442,6 +459,12 @@ export default function RetroPage({ params }: { params: { id: string } }) {
 
   const matched = mode.categories.map(cat => ({ cat, items: visible.filter((c: any) => c.category === cat.name) }))
   const others = visible.filter((c: any) => !mode.categories.some(cat => cat.name === c.category))
+  const bossFeed = visible
+    .filter((c: any) => c.category === "👹 Boss")
+    .map((c: any) => {
+      const attacks = reactionCount(c.id, ATTACK_EMOJI)
+      return { id: c.id, content: c.content, hp: bossHp(attacks), defeated: isDefeated(attacks), myAttacked: myReaction(c.id, ATTACK_EMOJI) }
+    })
   const activeHint = mode.categories.find(c => c.name === category)?.hint ?? ""
   const commentCard = (c: any) => (
     <div key={c.id} className="glass rounded-xl p-4">
@@ -456,7 +479,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
             <div className="flex justify-between text-xs text-gray-400 mb-1"><span>👹 Boss HP</span><span>{hp}/{BOSS_HP}</span></div>
             <div className="h-2 rounded-full bg-dark border border-gray-700 mb-2"><div className={`h-full rounded-full transition-all ${dead ? "bg-teal" : "bg-red-500"}`} style={{ width: `${hp}%` }} /></div>
             <div className="flex gap-2 flex-wrap">
-              {!dead && <button onClick={() => toggleReaction(c.id, ATTACK_EMOJI)} className={`text-xs px-2 py-0.5 rounded-full border ${myReaction(c.id, ATTACK_EMOJI) ? "border-gold bg-gold/10" : "border-gray-700 hover:border-red-500"}`}>🗡️ Attack{attacks > 0 && ` (${attacks})`}</button>}
+              {!dead && <span className="text-xs text-gray-500">↑ drag a blade from the arena above</span>}
               {dead && <span className="text-xs text-teal font-bold">💀 DEFEATED</span>}
               {dead && <button onClick={() => { setActionFor(c); setActionTitle(`Defeat: ${c.content.slice(0, 60)}`); setActionOwner(""); setActionDue("") }} className="text-xs text-teal hover:text-white">⚔️ Forge quest</button>}
             </div>
@@ -481,6 +504,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
 
   return (
     <>
+      <FXLayer />
       <Navbar team={ceremony ? { id: ceremony.teamId } : null} />
       <main className="min-h-screen p-8">
       <div className="max-w-4xl mx-auto">
@@ -629,6 +653,20 @@ export default function RetroPage({ params }: { params: { id: string } }) {
             prompts={reflectionPrompts}
             round={round}
             onComplete={() => { setReflectionDone({ ...reflectionDone, [round]: true }) }}
+          />
+        )}
+        {/* Boss Arena — drag blades onto the boss (Flash-style interaction) */}
+        {isBoss && bossFeed.length > 0 && (
+          <BossArena bosses={bossFeed} onAttack={(id) => toggleReaction(id, ATTACK_EMOJI)} />
+        )}
+        {/* Sailboat Sea — reactive voyage canvas */}
+        {ceremony?.gameMode === "SAILBOAT" && (
+          <SailboatSea
+            wind={visible.filter((c: any) => c.category === "🌬️ Wind").length}
+            anchor={visible.filter((c: any) => c.category === "⚓ Anchor").length}
+            rocks={visible.filter((c: any) => c.category === "🪨 Rocks").length}
+            step={boardStepFor(round, totalRounds, false)}
+            islandLabel={visible.find((c: any) => c.category === "🏝️ Island")?.content ?? "Island"}
           />
         )}
         {/* Entry form */}
