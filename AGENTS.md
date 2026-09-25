@@ -62,6 +62,42 @@ All product decisions must be evaluated against these evidence-based principles:
 - Gamification positively affects autonomy (g = 0.638) and relatedness (g = 1.776) but minimally affects competence (g = 0.277).
 - **Key insight**: Poorly designed gamification can be *harmful*. Every game element must be justified by evidence.
 
+## Game Design Foundation (permanent)
+
+The AI acts as a **board game designer AND a learning scientist** — both lenses are mandatory on every feature. Neuroscience constrains *what is allowed*; game design drives *what is fun*. A feature that passes neuroscience but has no game in it is rejected. A feature that is fun but violates neuroscience is rejected.
+
+### 1. MDA Framework (Hunicke, LeBlanc & Zubek, 2004)
+- Designer controls **Mechanics** (rules) → **Dynamics** (run-time behavior) emerge → **Aesthetics** (player emotion) result. Never edit dynamics or aesthetics directly; change mechanics and observe.
+- Design **outside-in**: target aesthetic first ("cooperative tension with relief"), then the dynamic that produces it, then the mechanic. Debug **forward**: boredom/anxiety complaint → find the dynamic → trace to the mechanic → change one number.
+- **MDA chain rule**: every game element must be statable as "players feel X because dynamic Y emerges from mechanic Z." If it can't be stated, it isn't designed yet.
+
+### 2. Meaningful Decisions Test (BoardBrain Labs; Toth & Toth on valuation/reading/donkeyspace)
+Every player-facing choice must have all three ingredients:
+- **Trade-off**: gaining something costs something (resources, tempo, opportunity). If the answer to "what am I giving up?" is "nothing," the choice is a chore.
+- **Uncertainty**: calculable risk, not blind guessing — enough information to reason, never full certainty.
+- **Context**: the best option changes with game state. If one option is always best, it is a dominant strategy — treat dominant strategies as **bugs**.
+- **Fast filter** (apply to every decision, need yes on ≥2): Can a reasonable player argue for more than one option? Would a different game state flip the answer? Does the choice express a plan or style?
+
+### 3. Cooperative Game Patterns (Pandemic / Spirit Island / Gloomhaven school)
+- **Win vs Lose tension**: a clear team goal competing against visible lose conditions ("put out fires"). No game without a lose state — but defeat must be **narrative and productive** (unresolved items become next sprint's retrieval fuel), never shame. The *board* loses; the *team* learns.
+- **Limited team action points**: a shared pool spent on advance/investigate/boost. Scarcity creates the trade-off. Team pool only — never individual budgets or scoring.
+- **Visible clock**: an escalating track or depleting deck, never a countdown timer as the primary mechanic (see "What to avoid").
+- **Asymmetry without individuals**: rotating team-level roles/lenses with one-use powers (no personal scores, no comparison).
+- **Alpha-player mitigation** (the Pandemic failure mode): hidden hands, simultaneous commit-then-reveal votes, enough parallel complexity that one voice cannot play everyone's turn. Structurally guarantee all voices, don't rely on etiquette.
+- **Arc**: new information must enter every phase (events, dilemmas, reveals). Round N must never feel identical to round 2.
+
+### 4. Decision-Resolution Cycles (tension engine)
+- Tension = the gap between **committing** to a concrete plan and its **resolution** under visible threats. Design commit-then-reveal moments; deny instant gratification where it creates pleasurable stress.
+- Plans must be concrete (imaginable steps + imaginable failure), threats must be visible. Abstract goals generate no tension.
+
+### 5. Uncertainty Budget (what randomness is allowed)
+- **Allowed**: seeded setup randomness (deterministic per ceremony, $0, no new infra), simultaneous hidden decisions, event/dilemma decks with calculable odds.
+- **Forbidden**: output randomness that decides learning outcomes; randomness gating reflection (retrieval/reflection phases are never skippable by luck); any randomness producing individual winners/losers.
+
+### 6. "Skin Is Not a Game" Rule
+- A visual board (squares, tokens, dice graphics) with no trade-off, no uncertainty, and no win/lose state is **decoration, not a game** — reject it even if it looks fun.
+- Dice that only decorate advancement violate Autonomy (§1) and add zero decision value. Every random element must feed a decision.
+
 ## Key product principles
 
 - **$0 COST — NON-NEGOTIABLE** — the project must run on $0/month, PERMANENTLY. Every dependency, tool, and service MUST be open source or have a verified free tier. NEVER assume something is free without checking the current price on the provider's official page. NO money is spent, under any circumstances, not even when the project grows. If a service exhausts its free tier, a FREE ALTERNATIVE is sought — no payment is made. The domain can be a free subdomain (sprintquest.vercel.app, netlify.app, etc.) or eventually a .com domain if the user decides to pay for it SEPARATELY from the infrastructure — but that is their personal decision, not a project expense. NO paid service is ever used without the user's explicit approval, and even then, the rule is: seek a free alternative first, always.
@@ -278,6 +314,7 @@ If a solution has no verified free alternative, it is NOT implemented. Another s
 
 This is an active Next.js project with a deployed Vercel site (`https://sprintquest-five.vercel.app`). The codebase includes:
 - Landing page with 2-mode MVP (Boss Battle + Sailboat)
+- Team Journey Board wrapper (5 squares, gated advance persisted to Ceremony.round, 3 depth boosters as Game Master entries)
 - Dashboard, retro session, history pages
 - Supabase integration for teams, sprints, ceremonies
 - NextAuth.js for GitHub/Google sign-in
@@ -292,3 +329,4 @@ This is an active Next.js project with a deployed Vercel site (`https://sprintqu
 3. This file will be updated as the project evolves
 4. When building, validate assumptions from the master questionnaire against neuroscience evidence before committing to features
 5. **Every feature must pass the "overjustification test"**: Would this feature still be valuable if XP were removed? If not, redesign it so learning is the driver, not the reward.
+6. **Every game element must pass the "skin test" and the "meaningful-decision test"**: state its MDA chain ("players feel X because Y emerges from Z"); confirm trade-off + uncertainty + context with yes on ≥2 filter questions. A board without a game in it is rejected, even if it looks fun.
