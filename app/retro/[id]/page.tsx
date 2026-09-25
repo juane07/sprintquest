@@ -16,6 +16,8 @@ import SafetyCheckIn from "@/components/SafetyCheckIn"
 import AIFacilitator from "@/components/AIFacilitator"
 import PeerRecognition from "@/components/PeerRecognition"
 import AsymmetryWarmup from "@/components/AsymmetryWarmup"
+import TeamBoard from "@/components/TeamBoard"
+import type { DepthBooster } from "@/constants"
 
 const REACTION_EMOJIS = ["❤️", "🔥", "👍"]
 const ROUND_SECONDS = 5 * 60
@@ -53,6 +55,26 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   const [safetyComplete, setSafetyComplete] = useState(false)
   const [asymmetryDone, setAsymmetryDone] = useState(false)
   const [asymmetryAnswers, setAsymmetryAnswers] = useState<string[]>([])
+  const [boardEnabled, setBoardEnabled] = useState(true)
+  const [usedBoosters, setUsedBoosters] = useState<Record<string, boolean>>({})
+  const [boosterNote, setBoosterNote] = useState<string | null>(null)
+  useEffect(() => {
+    try { if (window.localStorage.getItem("sq_board") === "off") setBoardEnabled(false) } catch { /* ignore */ }
+  }, [])
+  const toggleBoard = (v: boolean) => {
+    setBoardEnabled(v)
+    try { window.localStorage.setItem("sq_board", v ? "on" : "off") } catch { /* ignore */ }
+  }
+  const useBooster = (b: DepthBooster) => {
+    setUsedBoosters(prev => ({ ...prev, [b.id]: true }))
+    setBoosterNote(
+      b.id === "lupa"
+        ? "🔍 Lupa: pick one recurring theme from past sprints and ask why it persists. Suggestion only — team decides."
+        : b.id === "doble-porque"
+          ? "❓ Doble porqué: ask 'why did this happen?' once more before voting. Depth over speed."
+          : "🌉 Puente: propose grouping two similar entries. Team confirms or rejects."
+    )
+  }
   useEffect(() => {
     try { if (!window.localStorage.getItem("sq_coach_seen")) setCoachShow(true) } catch { /* private mode */ }
   }, [])
@@ -390,6 +412,17 @@ export default function RetroPage({ params }: { params: { id: string } }) {
             </ol>
           </div>
         )}
+        {/* Team Journey Board — cooperative wrapper, 0 XP for moving */}
+        <TeamBoard
+          round={round}
+          totalRounds={totalRounds}
+          entriesCount={visible.length}
+          enabled={boardEnabled}
+          onToggle={toggleBoard}
+          usedBoosters={usedBoosters}
+          onUseBooster={useBooster}
+          activeBoosterNote={boosterNote}
+        />
         {/* Psychological Safety Check-In */}
         {!safetyComplete && round === 1 && (
           <SafetyCheckIn onComplete={(score) => { setSafetyScore(score); setSafetyComplete(true) }} />

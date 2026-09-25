@@ -109,6 +109,29 @@ export const MODE_CONFIG: Record<string, ModeConfig> = {
 
 }
 
+// Team Journey Board — cooperative wrapper skin over existing modes.
+// Single team token, no dice for advancement, no XP for moving.
+// Boosters add depth (not speed) and are opt-in, 1 use each per ceremony.
+export interface BoardStep { id: string; label: string; emoji: string; hint: string }
+export const BOARD_STEPS: BoardStep[] = [
+  { id: "salida", label: "Salida", emoji: "🏁", hint: "Retrieval + safety: review last commitments" },
+  { id: "compartir", label: "Compartir", emoji: "💬", hint: "Share entries, one idea each" },
+  { id: "profundizar", label: "Profundizar", emoji: "🔍", hint: "Guided reflection prompts" },
+  { id: "votar", label: "Votar", emoji: "🗳️", hint: "Team decides together" },
+  { id: "quest", label: "Quest", emoji: "⚔️", hint: "Commit with owner + date" },
+]
+
+export interface DepthBooster { id: "lupa" | "doble-porque" | "puente"; label: string; emoji: string; desc: string }
+export const DEPTH_BOOSTERS: DepthBooster[] = [
+  { id: "lupa", label: "Lupa", emoji: "🔍", desc: "Reveal one pattern from past sprints (suggestion only)" },
+  { id: "doble-porque", label: "Doble porqué", emoji: "❓", desc: "Add one extra 'why?' elaborative prompt" },
+  { id: "puente", label: "Puente", emoji: "🌉", desc: "Suggest grouping two similar ideas (team confirms)" },
+]
+
+export const BOARD_COPY = {
+  tagline: "Tu retro de siempre, en tablero de equipo.",
+  advanceBlocked: "Add at least 3 team entries before advancing — slow is deep.",
+} as const
 export const DEFAULT_MODE: ModeConfig = {
   name: "Retro",
   desc: "Classic retrospective",
