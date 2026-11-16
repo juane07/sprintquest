@@ -2,11 +2,9 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { getSupabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
-import { MODE_CONFIG, DEFAULT_MODE } from "@/constants"
+import { DEFAULT_MODE } from "@/constants"
 import { engagementMetric, streakIndicator, levelForXp, actionValue, engagementLabel } from "@/lib/xp"
 import { getReflectionPrompts } from "@/lib/learning-science"
-import { BOSS_HP, bossHp, isDefeated, ATTACK_EMOJI } from "@/lib/boss"
-import { rankSuspects, majorityThreshold, ACCUSE_EMOJI } from "@/lib/detective"
 import Navbar from "@/components/Navbar"
 import ShareRecap from "@/components/ShareRecap"
 import SpacedRetrieval from "@/components/SpacedRetrieval"
@@ -16,7 +14,6 @@ import AIFacilitator from "@/components/AIFacilitator"
 import PeerRecognition from "@/components/PeerRecognition"
 import AsymmetryWarmup from "@/components/AsymmetryWarmup"
 import FXLayer from "@/components/FXLayer"
-import BossArena from "@/components/BossArena"
 import SailboatSea from "@/components/SailboatSea"
 import TeamBoard from "@/components/TeamBoard"
 import RoundTimer from "@/components/RoundTimer"
@@ -135,9 +132,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   })
   const router = useRouter()
 
-  const mode = ceremony ? (MODE_CONFIG[ceremony.gameMode] ?? DEFAULT_MODE) : DEFAULT_MODE
-  const isBoss = ceremony?.gameMode === "BOSS_BATTLE"
-  const isDetective = ceremony?.gameMode === "DETECTIVE"
+  const mode = DEFAULT_MODE
   const totalRounds = mode.rounds.length
 
   // ---- The shared flow. Every phase value below is folded from the ceremony
@@ -189,15 +184,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   const reactionCount = useCallback((commentId: string, emoji: string) => reactionIndex.get(`${commentId}:${emoji}`)?.count ?? 0, [reactionIndex])
   const myReaction = useCallback((commentId: string, emoji: string) => reactionIndex.get(`${commentId}:${emoji}`)?.mine ?? false, [reactionIndex])
 
-  const bossFeed = useMemo(() => {
-    if (!isBoss) return []
-    return visible
-      .filter((c: any) => c.category === "👹 Boss")
-      .map((c: any) => {
-        const attacks = reactionCount(c.id, ATTACK_EMOJI)
-        return { id: c.id, content: c.content, hp: bossHp(attacks), defeated: isDefeated(attacks), myAttacked: myReaction(c.id, ATTACK_EMOJI) }
-      })
-  }, [isBoss, visible, reactionCount, myReaction])
+
 
   const countsIn = useCallback((name: string) => visible.filter((c: any) => c.category === name).length, [visible])
   const sailCounts = useMemo(
@@ -227,18 +214,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     return { a, b, merged: a.category === b.category }
   }, [puenteProposal, comments])
 
-  const detectiveBoard = useMemo(() => {
-    if (!isDetective) return null
-    const acc = votes
-      .filter((v) => typeof v.option === "string" && v.option.endsWith(`:${ACCUSE_EMOJI}`))
-      .map((v) => ({ commentId: v.option.split(":")[0], userId: v.userId }))
-    const suspects = comments.filter((c: any) => c.category === "❓ Suspect").map((c: any) => ({ id: c.id, content: c.content }))
-    const voters = new Set(acc.map((a) => a.userId)).size
-    return {
-      need: majorityThreshold(voters),
-      shown: rankSuspects(suspects, acc).filter((r) => r.accusations > 0),
-    }
-  }, [isDetective, votes, comments])
+
 
   // ---- Writes. Every flow change is an append to the log; there is no
   // local-only path for anything the whole team must see.
@@ -276,8 +252,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
       const { data } = await supabase.from("Ceremony").select("*").eq("id", params.id).single()
       if (!data) return
       setCeremony(data)
-      const m = MODE_CONFIG[data.gameMode] ?? DEFAULT_MODE
-      setCategory(m.categories[0]?.name ?? "")
+      setCategory(DEFAULT_MODE.categories[0]?.name ?? "")
       const { data: prev } = await supabase
         .from("Ceremony")
         .select("*")
@@ -531,7 +506,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
             description: `${visible.length} entries shared · engagement ${score + bonus} · ${openCount} open quests`,
           }),
         })
-        // Pin key team-shared themes (winds/anchors/risks/bosses/islands) so Legacy Sprint Map reflects what the team shared.
+        // Pin key team-shared themes (winds/anchors/risks/islands) so Legacy Sprint Map reflects what the team shared.
         const pin = (type: string, title: string, description: string) =>
           fetch("/api/sprintmap", {
             method: "POST",
@@ -539,16 +514,12 @@ export default function RetroPage({ params }: { params: { id: string } }) {
             body: JSON.stringify({ ceremonyId: params.id, type, title: title.slice(0, 120), description: description.slice(0, 500) }),
           }).catch(() => null)
         const byCat = (cat: string) => visible.filter((c: any) => c.category === cat).slice(0, 2)
-        if (ceremony?.gameMode === "SAILBOAT") {
-          await Promise.all([
-            ...byCat("🌬️ Wind").map((c: any) => pin("wind", c.content, "Wind shared by the team")),
-            ...byCat("⚓ Anchor").map((c: any) => pin("anchor", c.content, "Anchor shared by the team")),
-            ...byCat("🪨 Rocks").map((c: any) => pin("rock", c.content, "Risk/rock shared by the team")),
-            ...byCat("🏝️ Island").map((c: any) => pin("star", c.content, "Island/goal shared by the team")),
-          ])
-        } else if (ceremony?.gameMode === "BOSS_BATTLE") {
-          await Promise.all(byCat("👹 Boss").map((c: any) => pin("boss", c.content, "Boss identified by the team")))
-        }
+        await Promise.all([
+          ...byCat("🌬️ Wind").map((c: any) => pin("wind", c.content, "Wind shared by the team")),
+          ...byCat("⚓ Anchor").map((c: any) => pin("anchor", c.content, "Anchor shared by the team")),
+          ...byCat("🪨 Rocks").map((c: any) => pin("rock", c.content, "Risk/rock shared by the team")),
+          ...byCat("🏝️ Island").map((c: any) => pin("star", c.content, "Island/goal shared by the team")),
+        ])
       } catch { /* map pin is optional */ }
 
       setAiLoading(true)
@@ -575,7 +546,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   }
 
   const openPrevActions = useMemo(() => (prevActions || []).filter((a: any) => a && a.status !== "completed"), [prevActions])
-  const reflectionPrompts = useMemo(() => getReflectionPrompts(ceremony?.gameMode ?? "DEFAULT"), [ceremony?.gameMode])
+  const reflectionPrompts = useMemo(() => getReflectionPrompts("SAILBOAT"), [])
   const activeHint = mode.categories.find(c => c.name === category)?.hint ?? ""
 
   if (stage === "done") {
@@ -684,33 +655,14 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     <div key={c.id} className="glass rounded-xl p-4">
       <div className="text-sm text-gray-400 mb-1">{c.anonymous ? "Anonymous" : c.author}</div>
       <div className="mb-2">{c.content}</div>
-      {isBoss && c.category === "👹 Boss" && (() => {
-        const attacks = reactionCount(c.id, ATTACK_EMOJI)
-        const hp = bossHp(attacks)
-        const dead = isDefeated(attacks)
-        return (
-          <div className="mt-1 mb-2">
-            <div className="flex justify-between text-xs text-gray-400 mb-1"><span>👹 Boss HP</span><span>{hp}/{BOSS_HP}</span></div>
-            <div className="h-2 rounded-full bg-dark border border-gray-700 mb-2"><div className={`h-full rounded-full transition-all ${dead ? "bg-teal" : "bg-red-500"}`} style={{ width: `${hp}%` }} /></div>
-            <div className="flex gap-2 flex-wrap">
-              {!dead && <span className="text-xs text-gray-500">↑ drag a blade from the arena above</span>}
-              {dead && <span className="text-xs text-teal font-bold">💀 DEFEATED</span>}
-              {dead && <button onClick={() => { setActionFor(c); setActionTitle(`Defeat: ${c.content.slice(0, 60)}`); setActionOwner(""); setActionDue("") }} className="text-xs text-teal hover:text-white">⚔️ Forge quest</button>}
-            </div>
-          </div>
-        )
-      })()}
+
       <div className="flex items-center gap-2 flex-wrap">
         {REACTION_EMOJIS.map(e => (
           <button key={e} onClick={() => toggleReaction(c.id, e)} className={`text-sm px-2 py-0.5 rounded-full border ${myReaction(c.id, e) ? "border-gold bg-gold/10" : "border-gray-700 hover:border-gray-500"}`}>
             {e} {reactionCount(c.id, e) > 0 && reactionCount(c.id, e)}
           </button>
         ))}
-        {isDetective && c.category === "❓ Suspect" && (
-          <button onClick={() => toggleReaction(c.id, ACCUSE_EMOJI)} className={`text-xs px-2 py-0.5 rounded-full border ${myReaction(c.id, ACCUSE_EMOJI) ? "border-gold bg-gold/10" : "border-gray-700 hover:border-gray-500"}`}>
-            ⚖️ Accuse{reactionCount(c.id, ACCUSE_EMOJI) > 0 && ` (${reactionCount(c.id, ACCUSE_EMOJI)})`}
-          </button>
-        )}
+
         <button onClick={() => { setActionFor(c); setActionTitle(c.content.slice(0, 80)); setActionOwner(""); setActionDue("") }} className="ml-auto text-xs text-teal hover:text-white">→ Make action</button>
       </div>
     </div>
@@ -890,33 +842,16 @@ export default function RetroPage({ params }: { params: { id: string } }) {
           <button onClick={addComment} className="w-full p-3 bg-gold text-black font-bold rounded-lg hover:bg-yellow-400">Post Entry</button>
         </div>
 
-        {isBoss && bossFeed.length > 0 && (
-          <BossArena bosses={bossFeed} onAttack={(id) => toggleReaction(id, ATTACK_EMOJI)} />
-        )}
-
-        {ceremony?.gameMode === "SAILBOAT" && (
-          <SailboatSea
-            wind={sailCounts.wind}
-            anchor={sailCounts.anchor}
-            rocks={sailCounts.rocks}
-            step={boardStep}
-            islandLabel={sailCounts.island}
-          />
-        )}
+        <SailboatSea
+          wind={sailCounts.wind}
+          anchor={sailCounts.anchor}
+          rocks={sailCounts.rocks}
+          step={boardStep}
+          islandLabel={sailCounts.island}
+        />
 
         <div className="space-y-6">
           <PeerRecognition teamId={ceremony?.teamId} ceremonyId={params.id} />
-          {detectiveBoard && detectiveBoard.shown.length > 0 && (
-            <div className="glass rounded-xl p-4">
-              <p className="font-bold mb-2">🔎 Case board <span className="text-xs font-normal text-gray-500">conviction needs {detectiveBoard.need} votes</span></p>
-              {detectiveBoard.shown.map((r, i) => (
-                <div key={r.id} className="flex justify-between text-sm py-1 gap-2">
-                  <span className="truncate">{i === 0 && r.accusations >= detectiveBoard.need ? "👑 " : ""}{r.content}</span>
-                  <span className="text-gold font-bold shrink-0">{r.accusations} ⚖️</span>
-                </div>
-              ))}
-            </div>
-          )}
           {matched.map(({ cat, items }) => {
             if (items.length === 0) return null
             return <div key={cat.name}><h3 className="text-lg font-bold mb-1">{cat.name}</h3><p className="text-xs text-gray-500 mb-3">{cat.hint}</p><div className="space-y-3">{items.map(commentCard)}</div></div>

@@ -7,13 +7,15 @@ interface NavTeam {
   mascot?: string
 }
 
+import Logo from "./Logo"
+
 export default function Navbar({ team }: { team?: NavTeam | null }) {
   const [open, setOpen] = useState(false)
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-dark/70 backdrop-blur-xl">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
-        <a href="/" className="font-display font-extrabold text-lg tracking-tight">
-          <span className="text-gradient">SprintQuest</span>
+        <a href="/" aria-label="SprintQuest home" className="inline-flex items-center">
+          <Logo size="sm" />
         </a>
         {team && (
           <>

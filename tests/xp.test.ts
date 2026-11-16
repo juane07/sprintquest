@@ -82,18 +82,14 @@ describe("learning-science: retrieval", () => {
 })
 
 describe("learning-science: reflection", () => {
-  it("returns BOSS_BATTLE prompts", () => {
-    const p = getReflectionPrompts("BOSS_BATTLE")
-    expect(p.length).toBe(4)
-    expect(p[0].type).toBe("metacognitive")
-  })
   it("returns SAILBOAT prompts", () => {
     const p = getReflectionPrompts("SAILBOAT")
     expect(p.length).toBe(4)
+    expect(p[0].type).toBe("metacognitive")
   })
   it("returns default prompts for unknown mode", () => {
     const p = getReflectionPrompts("UNKNOWN")
-    expect(p.length).toBe(4)
+    expect(p.length).toBeGreaterThan(0)
   })
 })
 

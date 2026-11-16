@@ -7,7 +7,6 @@ import {
   shakeOffset,
   SFX_SCORE,
 } from "../lib/juice"
-import { targetBoss } from "../components/BossArena"
 import { boatProgress } from "../components/SailboatSea"
 
 describe("juice particles", () => {
@@ -59,14 +58,6 @@ describe("shakeOffset", () => {
   })
 })
 
-describe("targetBoss", () => {
-  const mk = (id: string, hp: number, defeated: boolean) => ({ id, content: id, hp, defeated, myAttacked: false })
-  it("picks the weakest alive boss, prefers any alive over defeated", () => {
-    expect(targetBoss([])).toBeNull()
-    expect(targetBoss([mk("a", 100, false), mk("b", 25, false), mk("c", 0, true)])!.id).toBe("b")
-    expect(targetBoss([mk("a", 0, true)])!.id).toBe("a")
-  })
-})
 describe("boatProgress", () => {
   it("advances with steps and wind, drags with anchors, stays bounded", () => {
     expect(boatProgress(0, 0, 0)).toBeGreaterThan(0)

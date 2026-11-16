@@ -21,15 +21,16 @@ describe("Spaced Retrieval", () => {
 })
 
 describe("Reflection Prompts", () => {
-  it("returns prompts for each mode", () => {
-    const modes = ["boss", "sailboat", "mission", "detective", "team"]
-    modes.forEach((mode) => {
-      const prompts = getReflectionPrompts(mode)
-      expect(prompts.length).toBeGreaterThan(0)
-      prompts.forEach((p) => {
-        expect(p.type).toMatch(/metacognitive|elaborative|evaluative|exploratory/)
-      })
+  it("returns sailboat prompts", () => {
+    const prompts = getReflectionPrompts("SAILBOAT")
+    expect(prompts.length).toBeGreaterThan(0)
+    prompts.forEach((p) => {
+      expect(p.type).toMatch(/metacognitive|elaborative|evaluative|exploratory/)
     })
+  })
+  it("falls back for unknown mode", () => {
+    const prompts = getReflectionPrompts("UNKNOWN")
+    expect(prompts.length).toBeGreaterThan(0)
   })
 })
 

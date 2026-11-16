@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation"
 import { getSupabase } from "@/lib/supabase"
 import { generateJoinCode, normalizeCode } from "@/lib/joinCode"
 import { useSession, signIn, signOut } from "next-auth/react"
-import { MODE_CONFIG } from "@/constants"
+import Logo from "@/components/Logo"
+
 
 const MASCOTS = ["🐉", "🦊", "🚀", "🤖", "🐙"]
 
@@ -213,8 +214,8 @@ export default function Home() {
       <div className="flex flex-col items-center justify-center px-6 pt-16 pb-10 min-h-[88vh]">
       <div className="text-center mb-10 max-w-3xl">
         <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-mist/80 mb-5">Team learning · Cooperative · $0</div>
-        <h1 className="text-5xl sm:text-7xl font-display font-extrabold leading-[0.95] mb-5">
-          <span className="text-gradient">SprintQuest</span>
+        <h1 className="leading-[0.95] mb-5">
+          <Logo size="lg" className="justify-center" />
         </h1>
         <p className="text-xl sm:text-2xl text-mist/80 leading-relaxed">Turn every sprint into a shared expedition — where the team recalls, reflects, and charts the next quest together.</p>
       </div>
@@ -269,21 +270,20 @@ export default function Home() {
         <p className="text-gray-400 text-center mb-10 max-w-2xl mx-auto">SprintQuest turns Agile ceremonies into a team learning system grounded in neuroscience. No boring video-call rituals — guided recall, timed rounds, live reactions, votes, and action items that persist sprint after sprint.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="glass rounded-xl p-6"><div className="text-3xl mb-2">👥</div><h3 className="font-bold mb-1">1. Invite with a code</h3><p className="text-sm text-gray-400">Create a team, share the 6-letter code. Players join in seconds — no accounts, no installs, works on phones.</p></div>
-          <div className="glass rounded-xl p-6"><div className="text-3xl mb-2">🎮</div><h3 className="font-bold mb-1">2. Play the ceremony</h3><p className="text-sm text-gray-400">Pick a game mode. Follow the Team Journey Board — one team token across 5 squares (Start → Share → Deepen → Vote → Quest) with depth boosters (Magnifier, Why Twice, Bridge). Warm up with cooperative recall, share entries (anonymous if you like), reflect with guided prompts, vote, and commit.</p></div>
+          <div className="glass rounded-xl p-6"><div className="text-3xl mb-2">🎮</div><h3 className="font-bold mb-1">2. Play the ceremony</h3><p className="text-sm text-gray-400">Start the Sailboat retro and follow the Team Journey Board — one team token across 5 squares (Start → Share → Deepen → Vote → Quest) with depth boosters (Magnifier, Why Twice, Bridge). Warm up with cooperative recall, share entries (anonymous if you like), reflect with guided prompts, vote, and commit.</p></div>
           <div className="glass rounded-xl p-6"><div className="text-3xl mb-2">🧠</div><h3 className="font-bold mb-1">3. Improve every sprint</h3><p className="text-sm text-gray-400">Entries become owned action items. Next retro opens reviewing them. Your engagement level, mastery deck and sprint map track team learning — never individuals.</p></div>
         </div>
       </section>
 
       <section className="max-w-6xl mx-auto px-6 sm:px-8 py-10">
-        <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-center mb-2">2 modes · 1 mechanic</h2>
-        <p className="text-gray-400 text-center mb-10">Minimal MVP — no paralysis. The rest ships later.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
-          {Object.values(MODE_CONFIG).map(m => (
-            <div key={m.name} className="glass rounded-xl p-5">
-              <div className="font-bold mb-1">{m.name}</div>
-              <div className="text-sm text-gray-400">{m.desc}</div>
-            </div>
-          ))}
+        <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-center mb-2">One mode · one clear flow</h2>
+        <p className="text-gray-400 text-center mb-10">No mode paralysis — just run the Sailboat retro and get to what matters.</p>
+        <div className="max-w-2xl mx-auto">
+          <div className="glass rounded-xl p-6 text-center">
+            <div className="text-4xl mb-3">🏝️</div>
+            <div className="font-bold text-xl mb-1">Sailboat Retro</div>
+            <div className="text-sm text-gray-400">Catch the wind, cut the anchors, watch for rocks, and set the course together.</div>
+          </div>
         </div>
       </section>
 

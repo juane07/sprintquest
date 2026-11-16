@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getSupabase } from "@/lib/supabase"
 import { buildCeremonyRecap, postToSlack } from "@/lib/slack"
-import { MODE_CONFIG } from "@/constants"
+import { DEFAULT_MODE } from "@/constants"
 
 // POST { ceremonyId, xp } → posts ceremony recap to Slack.
 export async function POST(req: Request) {
@@ -14,10 +14,9 @@ export async function POST(req: Request) {
     const { data: team } = await supabase.from("Team").select("name").eq("id", ceremony.teamId).single()
     const { count: entries } = await supabase.from("Comment").select("id", { count: "exact", head: true }).eq("ceremonyId", ceremonyId)
     const { count: openActions } = await supabase.from("Action").select("id", { count: "exact", head: true }).eq("ceremonyId", ceremonyId).neq("status", "completed")
-    const label = ((MODE_CONFIG as any)[ceremony.gameMode]?.name ?? "Retro")
     await postToSlack(buildCeremonyRecap({
       teamName: team?.name ?? "Team",
-      label,
+      label: DEFAULT_MODE.name,
       xp: xp ?? 0,
       entries: entries ?? 0,
       summary: ceremony.summary,

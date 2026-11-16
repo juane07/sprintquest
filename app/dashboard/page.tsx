@@ -2,7 +2,7 @@
 import { Suspense, useState, useEffect } from "react"
 import { getSupabase } from "@/lib/supabase"
 import { useRouter, useSearchParams } from "next/navigation"
-import { MODE_CONFIG } from "@/constants"
+
 import { progressToNext, actionValue, engagementLabel, levelLabel } from "@/lib/xp"
 import Navbar from "@/components/Navbar"
 import MasteryDeckDisplay from "@/components/MasteryDeckDisplay"
@@ -72,9 +72,9 @@ function DashboardInner() {
     fetchData()
   }, [teamId])
 
-  const startCeremony = async (gameMode: string) => {
+  const startCeremony = async () => {
     if (!teamId) return
-    setStarting(gameMode)
+    setStarting("SAILBOAT")
     setError("")
     try {
       const supabase = getSupabase()
@@ -88,7 +88,7 @@ function DashboardInner() {
         if (se || !created) { setError(se?.message ?? "Could not create sprint."); return }
         sprintId = created.id
       }
-      const { data, error: ce } = await supabase.from("Ceremony").insert({ type: "retro", gameMode, teamId, sprintId, status: "active" }).select().single()
+      const { data, error: ce } = await supabase.from("Ceremony").insert({ type: "retro", gameMode: "SAILBOAT", teamId, sprintId, status: "active" }).select().single()
       if (ce || !data) { setError(ce?.message ?? "Could not start ceremony."); return }
       router.push(`/retro/${data.id}`)
     } catch (e: any) {
@@ -140,23 +140,21 @@ function DashboardInner() {
 
   const gameMasterTips = () => {
     const tips: string[] = []
-    if (ceremonies.length === 0) return ["Your first retro → Sailboat is the perfect warm-up. Your team will get it in 2 minutes."]
+    if ((ceremonies || []).length === 0) return ["Start your first Sailboat retro — your team will get the flow in minutes."]
     const open = (actions || []).filter((a: any) => a && a.status !== "completed").length
-    const used = new Set((ceremonies || []).filter(Boolean).map((c: any) => c.gameMode))
-    const unused = Object.keys(MODE_CONFIG).filter(k => !used.has(k))
-    if (open >= 5) tips.push(`You have ${open} open actions — try a 🔥 Boss Battle to prioritize the most critical one.`)
-    else if (unused.length > 0) tips.push(`Try a new format: ${(MODE_CONFIG as any)[unused[0]]?.name ?? unused[0]} — variety keeps the retro fresh.`)
+    if (open >= 5) tips.push(`You have ${open} open actions — use the next retro to prioritize the most critical one together.`)
     if (recentComments.length > 0) {
       const counts: Record<string, number> = {}
       recentComments.forEach((c: any) => { if (c?.category) counts[c.category] = (counts[c.category] ?? 0) + 1 })
       const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
       if (top && top[1] >= 3) tips.push(`Recurring theme: "${top[0]}" appeared ${top[1]} times — it deserves an action item.`)
     }
+    if (tips.length === 0) tips.push("Keep sharing winds, anchors, rocks, and islands — small honest entries build team learning.")
     return tips.slice(0, 2)
   }
 
   const ceremonyHref = (c: any) => `/retro/${c.id}`
-  const ceremonyName = (c: any) => ((MODE_CONFIG as any)[c.gameMode]?.name ?? c.gameMode)
+  const ceremonyName = (_c: any) => "🏝️ Sailboat Retro"
 
   const copyCode = async () => {
     const code = team?.joinCode ?? ""
@@ -218,7 +216,7 @@ function DashboardInner() {
             <h2 className="text-xl font-bold mb-3">🧭 Your first retro in 3 steps</h2>
             <ol className="space-y-2 text-gray-300">
               <li><span className="font-bold text-gold">1.</span> Invite — share <span className="font-mono text-teal font-bold">{team.joinCode}</span> (no account, works on mobile)</li>
-              <li><span className="font-bold text-gold">2.</span> Pick a mode and start</li>
+              <li><span className="font-bold text-gold">2.</span> Start the Sailboat retro</li>
               <li><span className="font-bold text-gold">3.</span> Finish → share your engagement level</li>
             </ol>
           </div>
@@ -234,19 +232,15 @@ function DashboardInner() {
           )
         })()}
 
-        <section className="mb-12" id="ceremonies"><h2 className="text-2xl font-bold mb-4">🎮 Choose your retro</h2>
-        <p className="text-sm text-gray-400 mb-4">2 modes, 4 rounds each. Sailboat to start, Boss to prioritize.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12 max-w-3xl">
-          {Object.entries(MODE_CONFIG).map(([key, mode]) => {
-            return (
-              <button key={key} onClick={() => startCeremony(key)} disabled={starting !== null} title={mode.desc} className="glass rounded-xl p-6 text-left hover:border-gold transition cursor-pointer disabled:opacity-50">
-                <div className="text-3xl mb-2">{mode.name.split(" ")[0]}</div>
-                <div className="text-gray-200 font-bold">{starting === key ? "Starting..." : mode.name}</div>
-                <div className="text-sm text-gray-400 mt-1">{mode.desc}</div>
-              </button>
-            )
-          })}
-        </div>
+        <section className="mb-12" id="ceremonies"><h2 className="text-2xl font-bold mb-4">🎮 Start your retro</h2>
+          <div className="glass rounded-xl p-6 mb-8 max-w-2xl">
+            <div className="text-4xl mb-3">🏝️</div>
+            <h3 className="text-xl font-bold mb-2">Sailboat Retro</h3>
+            <p className="text-gray-300 mb-4">Catch the wind, cut the anchors, watch for rocks, and set the course — one simple flow for the whole team.</p>
+            <button onClick={startCeremony} disabled={starting !== null} className="btn-primary disabled:opacity-50">
+              {starting ? "Starting..." : "Start Sailboat Retro"}
+            </button>
+          </div>
         </section>
         {(() => {
           const safeActions = (actions || []).filter(Boolean)

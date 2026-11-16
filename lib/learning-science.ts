@@ -36,12 +36,6 @@ const RETRIEVAL_PROMPTS = {
 }
 
 const REFLECTION_PROMPTS = {
-  BOSS_BATTLE: [
-    { question: "What surprised us about the bosses we identified?", type: "metacognitive" },
-    { question: "Why do you think this problem keeps recurring?", type: "elaborative" },
-    { question: "How confident are we that our chosen fight is the right one?", type: "evaluative" },
-    { question: "What would we try if we had to approach this differently?", type: "exploratory" },
-  ],
   SAILBOAT: [
     { question: "What did we underestimate about what pushes us forward?", type: "metacognitive" },
     { question: "Why do you think these anchors are holding us back?", type: "elaborative" },
@@ -73,7 +67,7 @@ export function getRetrievalPrompt(sprintNumber: number): RetrievalData {
 
 export function getReflectionPrompts(gameMode: string): ReflectionPrompt[] {
   const key = gameMode as keyof typeof REFLECTION_PROMPTS
-  return (REFLECTION_PROMPTS[key] ?? DEFAULT_REFLECTION_PROMPTS) as ReflectionPrompt[]
+  return (REFLECTION_PROMPTS[key] ?? REFLECTION_PROMPTS.SAILBOAT ?? DEFAULT_REFLECTION_PROMPTS) as ReflectionPrompt[]
 }
 
 // Generate elaborative interrogation prompts for deeper learning

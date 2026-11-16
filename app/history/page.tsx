@@ -2,7 +2,7 @@
 import { Suspense, useState, useEffect } from "react"
 import { getSupabase } from "@/lib/supabase"
 import { useSearchParams } from "next/navigation"
-import { MODE_CONFIG } from "@/constants"
+
 import Navbar from "@/components/Navbar"
 
 function HistoryInner() {
@@ -80,7 +80,7 @@ function HistoryInner() {
         </nav>
         <div className="flex items-center gap-4 mb-8">
           <div className="text-5xl">{team.mascot}</div>
-          <div><h1 className="text-3xl font-bold text-gradient">{team.name} — History</h1><p className="text-gray-400">Level {team.level ?? 1} · Engagement level {team.xp ?? 0}</p></div>
+          <div><h1 className="text-3xl font-bold text-gradient">{team.name} — History</h1><p className="text-gray-400">Engagement level {team.xp ?? 0}</p></div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-10">
           {stats.map(s => (
@@ -96,7 +96,7 @@ function HistoryInner() {
             {ceremonies.length === 0 && <p className="text-gray-400">No ceremonies yet.</p>}
             {(ceremonies || []).filter(Boolean).map((c: any) => (
               <a key={c.id} href={`/retro/${c.id}`} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block">
-                <span className="font-bold">{((MODE_CONFIG as any)[c.gameMode]?.name ?? c.gameMode)}</span>
+                <span className="font-bold">🏝️ Sailboat Retro</span>
                 <span className="flex gap-3 items-center text-sm">
                   <span className={c?.status === "completed" ? "text-teal" : "text-gold"}>{c?.status === "completed" ? "✓ done" : "● live"}</span>
                   <span className="text-gray-400">{c?.startedAt ? new Date(c.startedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}</span>
