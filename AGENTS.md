@@ -335,3 +335,9 @@ This is an active Next.js project with a deployed Vercel site (`https://sprintqu
 4. When building, validate assumptions from the master questionnaire against neuroscience evidence before committing to features
 5. **Every feature must pass the "overjustification test"**: Would this feature still be valuable if XP were removed? If not, redesign it so learning is the driver, not the reward.
 6. **Every game element must pass the "skin test" and the "meaningful-decision test"**: state its MDA chain ("players feel X because Y emerges from Z"); confirm trade-off + uncertainty + context with yes on ≥2 filter questions. A board without a game in it is rejected, even if it looks fun.
+
+## Standing delivery authorization (user-confirmed, permanent for this project)
+
+- **Explicit authorization:** The user has explicitly authorized the agent to always **commit, push, and deploy/publish** completed requested changes so the latest version is visible to everyone on the public site (`https://sprintquest-five.vercel.app/`), without asking for permission each time.
+- **Default flow for every change:** verify (typecheck/build as relevant) → commit → push to the production/deploy branch (`main`, or the branch configured for production deploy) → ensure the public deployment is triggered/succeeds and serves the new version. Report blockers immediately if deploy cannot be completed.
+- **Safety:** never force-push, never rewrite history, never deploy secrets; keep $0-cost constraints. If Vercel CLI/auth or deploy configuration blocks completion, take the safest available path (e.g. push to production branch to trigger Git integration) and clearly report what remains. Do not claim public visibility until confirmed.
