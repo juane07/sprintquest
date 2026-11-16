@@ -137,9 +137,11 @@ export default function Home() {
 
   if (step === "create") {
     return (
-      <main className="min-h-screen flex items-center justify-center p-8 bg-dark">
-        <div className="glass rounded-xl p-8 max-w-md w-full">
-          <h2 className="text-2xl font-bold mb-4 text-center">Create your team</h2>
+      <main className="min-h-screen flex items-center justify-center p-8 relative overflow-hidden">
+        <div className="absolute inset-0 -z-10"><div className="absolute top-0 left-1/4 h-72 w-72 rounded-full bg-gold/10 blur-3xl" /><div className="absolute bottom-0 right-1/4 h-72 w-72 rounded-full bg-teal/10 blur-3xl" /></div>
+        <div className="glass rounded-2xl p-8 max-w-md w-full border-white/15">
+          <h2 className="text-3xl font-display font-extrabold mb-2 text-center">Create your team</h2>
+          <p className="text-sm text-mist/70 text-center mb-5">Name your crew, pick a mascot, and start the expedition.</p>
           {error && <div className="bg-red-900/60 text-red-200 p-3 rounded mb-4 text-sm">{error}</div>}
           <div className="space-y-4">
             <input
@@ -147,27 +149,27 @@ export default function Home() {
               placeholder="Team name (e.g. Checkout Squad)"
               value={teamName}
               onChange={(e) => setTeamName(e.target.value)}
-              className="w-full p-3 rounded-lg bg-dark border border-gray-600 text-white placeholder-gray-400"
+              className="w-full p-3 rounded-xl bg-dark/60 border border-white/15 text-white placeholder-gray-400"
             />
             <div>
-              <p className="text-sm text-gray-400 mb-2">Choose a mascot</p>
-              <div className="flex gap-2">
+              <p className="text-sm text-mist/70 mb-2">Choose a mascot</p>
+              <div className="flex gap-2 flex-wrap">
                 {MASCOTS.map((m) => (
                   <button
                     key={m}
                     onClick={() => setMascot(m)}
-                    className={`text-3xl p-2 rounded-lg border ${mascot === m ? "border-gold bg-gold/10" : "border-transparent hover:border-gray-600"}`}
+                    className={`text-3xl p-2.5 rounded-xl border transition ${mascot === m ? "border-gold bg-gold/15 shadow-glow scale-105" : "border-white/10 bg-white/5 hover:border-white/25"}`}
                   >
                     {m}
                   </button>
                 ))}
               </div>
-              <input type="text" placeholder="Or paste any emoji 🦄" value={MASCOTS.includes(mascot) ? "" : mascot} onChange={(e) => setMascot(e.target.value || "🐉")} maxLength={8} className="mt-2 w-full p-2 rounded-lg bg-dark border border-gray-600 text-white placeholder-gray-500 text-sm" />
+              <input type="text" placeholder="Or paste any emoji 🦄" value={MASCOTS.includes(mascot) ? "" : mascot} onChange={(e) => setMascot(e.target.value || "🐉")} maxLength={8} className="mt-3 w-full p-2.5 rounded-xl bg-dark/60 border border-white/15 text-white placeholder-gray-500 text-sm" />
             </div>
-            <button onClick={createTeam} disabled={busy} className="w-full p-3 bg-gold text-black font-bold rounded-lg hover:bg-yellow-400 disabled:opacity-50">
+            <button onClick={createTeam} disabled={busy} className="w-full p-3 bg-gold text-black font-extrabold rounded-xl hover:brightness-110 shadow-glow disabled:opacity-50">
               {busy ? "Creating..." : "Create Team"}
             </button>
-            <button onClick={() => { setStep("home"); setError("") }} className="w-full p-3 bg-navy-800 border border-gray-600 rounded-lg text-white hover:bg-dark">Back</button>
+            <button onClick={() => { setStep("home"); setError("") }} className="w-full p-3 bg-white/5 border border-white/15 rounded-xl text-white hover:bg-white/10">Back</button>
           </div>
         </div>
       </main>
@@ -176,11 +178,12 @@ export default function Home() {
 
   if (step === "join") {
     return (
-      <main className="min-h-screen flex items-center justify-center p-8 bg-dark">
-        <div className="glass rounded-xl p-8 max-w-md w-full">
-          <h2 className="text-2xl font-bold mb-2 text-center">Join a team</h2>
-          <p className="text-sm text-gray-400 text-center mb-4">Ask your facilitator for the 6-letter code — no account needed.</p>
-          {error && <div className="bg-red-900/60 text-red-200 p-3 rounded mb-4 text-sm">{error}</div>}
+      <main className="min-h-screen flex items-center justify-center p-8 relative overflow-hidden">
+        <div className="absolute inset-0 -z-10"><div className="absolute top-10 right-1/4 h-72 w-72 rounded-full bg-teal/10 blur-3xl" /><div className="absolute bottom-0 left-1/4 h-72 w-72 rounded-full bg-sea/10 blur-3xl" /></div>
+        <div className="glass rounded-2xl p-8 max-w-md w-full border-white/15">
+          <h2 className="text-3xl font-display font-extrabold mb-2 text-center">Join a team</h2>
+          <p className="text-sm text-mist/70 text-center mb-4">Ask your facilitator for the 6-letter code — no account needed.</p>
+          {error && <div className="bg-red-950/70 border border-red-500/30 text-red-100 p-3 rounded-xl mb-4 text-sm">{error}</div>}
           <div className="space-y-4">
             <input
               type="text"
@@ -188,12 +191,12 @@ export default function Home() {
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
               maxLength={40}
-              className="w-full p-3 rounded-lg bg-dark border border-gray-600 text-white placeholder-gray-400 text-center text-2xl tracking-widest font-mono"
+              className="w-full p-4 rounded-xl bg-dark/60 border border-white/15 text-white placeholder-gray-500 text-center text-3xl tracking-[0.3em] font-mono"
             />
-            <button onClick={joinTeam} disabled={busy} className="w-full p-3 bg-gold text-black font-bold rounded-lg hover:bg-yellow-400 disabled:opacity-50">
+            <button onClick={joinTeam} disabled={busy} className="w-full p-3 bg-gold text-black font-extrabold rounded-xl hover:brightness-110 shadow-glow disabled:opacity-50">
               {busy ? "Joining..." : "Join the quest ⚔️"}
             </button>
-            <button onClick={() => { setStep("home"); setError("") }} className="w-full p-3 bg-navy-800 border border-gray-600 rounded-lg text-white hover:bg-dark">Back</button>
+            <button onClick={() => { setStep("home"); setError("") }} className="w-full p-3 bg-white/5 border border-white/15 rounded-xl text-white hover:bg-white/10">Back</button>
           </div>
         </div>
       </main>
@@ -201,23 +204,34 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-dark">
-      <div className="flex flex-col items-center justify-center p-8 min-h-[90vh]">
-      <div className="text-center mb-10"><h1 className="text-6xl font-bold text-gradient mb-4">SprintQuest</h1><p className="text-xl text-gray-400">Turn every sprint into a mission</p></div>
-      {error && <div className="bg-red-900/60 text-red-200 p-3 rounded mb-4 text-sm max-w-md w-full">{error}</div>}
-      <div className="flex gap-4 flex-wrap justify-center">
-        <button onClick={() => setStep("create")} className="px-8 py-4 bg-gold text-black font-bold rounded-lg text-xl hover:bg-yellow-400 transition">Create Team</button>
-        <button onClick={() => setStep("join")} className="px-8 py-4 bg-navy-800 border border-gray-600 rounded-lg text-xl hover:bg-dark text-white transition">Join Team</button>
+    <main className="min-h-screen relative overflow-hidden">
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-gold/10 blur-3xl" />
+        <div className="absolute top-10 right-0 h-[28rem] w-[28rem] rounded-full bg-teal/10 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-sea/10 blur-3xl" />
       </div>
-      <button onClick={startDemo} disabled={demoBusy} className="mt-4 text-teal hover:text-white transition disabled:opacity-50">
+      <div className="flex flex-col items-center justify-center px-6 pt-16 pb-10 min-h-[88vh]">
+      <div className="text-center mb-10 max-w-3xl">
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-mist/80 mb-5">Team learning · Cooperative · $0</div>
+        <h1 className="text-5xl sm:text-7xl font-display font-extrabold leading-[0.95] mb-5">
+          <span className="text-gradient">SprintQuest</span>
+        </h1>
+        <p className="text-xl sm:text-2xl text-mist/80 leading-relaxed">Turn every sprint into a shared expedition — where the team recalls, reflects, and charts the next quest together.</p>
+      </div>
+      {error && <div className="bg-red-950/70 border border-red-500/30 text-red-100 p-3 rounded-xl mb-4 text-sm max-w-md w-full">{error}</div>}
+      <div className="flex gap-4 flex-wrap justify-center">
+        <button onClick={() => setStep("create")} className="px-8 py-4 bg-gold text-black font-extrabold rounded-xl text-lg hover:brightness-110 shadow-glow transition">Create Team</button>
+        <button onClick={() => setStep("join")} className="px-8 py-4 bg-white/5 border border-white/15 rounded-xl text-lg hover:bg-white/10 text-white font-semibold transition">Join with Code</button>
+      </div>
+      <button onClick={startDemo} disabled={demoBusy} className="mt-5 text-teal hover:text-white transition disabled:opacity-50 font-medium">
         {demoBusy ? "Preparing your demo..." : "⚡ Just looking? Try an instant demo — no setup"}
       </button>
       {facilitated.length > 0 && (
-        <div className="mt-6 w-full max-w-md">
-          <p className="text-sm text-gray-400 mb-2 text-center">Teams you facilitate</p>
+        <div className="mt-8 w-full max-w-md">
+          <p className="text-sm text-mist/70 mb-2 text-center uppercase tracking-wider">Teams you facilitate</p>
           <div className="space-y-2">
             {facilitated.map(t => (
-              <a key={t.id} href={`/dashboard?team=${t.id}`} className="glass rounded-xl p-3 flex items-center gap-3 hover:border-gold transition block">
+              <a key={t.id} href={`/dashboard?team=${t.id}`} className="glass rounded-xl p-3 flex items-center gap-3 hover:border-gold/50 hover:bg-white/10 transition block">
                 <span className="text-2xl">{t.mascot}</span>
                 <span className="font-bold">{t.name}</span>
                 <span className="ml-auto font-mono text-teal text-sm">{t.joinCode}</span>
@@ -227,11 +241,11 @@ export default function Home() {
         </div>
       )}
       {myTeams.length > 0 && (
-        <div className="mt-8 w-full max-w-md">
-          <p className="text-sm text-gray-400 mb-2 text-center">Your teams on this device</p>
+        <div className="mt-6 w-full max-w-md">
+          <p className="text-sm text-mist/70 mb-2 text-center uppercase tracking-wider">Your teams on this device</p>
           <div className="space-y-2">
             {myTeams.map(t => (
-              <a key={t.id} href={`/dashboard?team=${t.id}`} className="glass rounded-xl p-3 flex items-center gap-3 hover:border-gold transition block">
+              <a key={t.id} href={`/dashboard?team=${t.id}`} className="glass rounded-xl p-3 flex items-center gap-3 hover:border-teal/50 hover:bg-white/10 transition block">
                 <span className="text-2xl">{t.mascot}</span>
                 <span className="font-bold">{t.name}</span>
                 <span className="ml-auto font-mono text-teal text-sm">{t.joinCode}</span>
@@ -240,29 +254,29 @@ export default function Home() {
           </div>
         </div>
       )}
-      <p className="text-gray-500 mt-6 text-sm">No account needed — join with a team code</p>
-      <div className="mt-3 text-sm text-gray-500">
+      <p className="text-mist/60 mt-6 text-sm">No account needed — join with a team code</p>
+      <div className="mt-3 text-sm text-mist/60">
         {session ? (
-          <span>Facilitator: <span className="text-gray-300">{session.user?.name ?? session.user?.email}</span> · <button onClick={() => signOut()} className="text-teal hover:text-white">Sign out</button></span>
+          <span>Facilitator: <span className="text-gray-200">{session.user?.name ?? session.user?.email}</span> · <button onClick={() => signOut()} className="text-teal hover:text-white underline-offset-4 hover:underline">Sign out</button></span>
         ) : (
-          <span>Facilitator? <button onClick={() => signIn("github")} className="text-teal hover:text-white">GitHub</button> · <button onClick={() => signIn("google")} className="text-teal hover:text-white">Google</button></span>
+          <span>Facilitator? <button onClick={() => signIn("github")} className="text-teal hover:text-white underline-offset-4 hover:underline">GitHub</button> · <button onClick={() => signIn("google")} className="text-teal hover:text-white underline-offset-4 hover:underline">Google</button></span>
         )}
       </div>
       </div>
 
-      <section className="max-w-6xl mx-auto px-8 py-16">
-        <h2 className="text-3xl font-bold text-center mb-2">Retros your team will actually learn from</h2>
+      <section className="max-w-6xl mx-auto px-6 sm:px-8 py-16">
+        <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-center mb-3">Retros your team will actually learn from</h2>
         <p className="text-gray-400 text-center mb-10 max-w-2xl mx-auto">SprintQuest turns Agile ceremonies into a team learning system grounded in neuroscience. No boring video-call rituals — guided recall, timed rounds, live reactions, votes, and action items that persist sprint after sprint.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="glass rounded-xl p-6"><div className="text-3xl mb-2">👥</div><h3 className="font-bold mb-1">1. Invite with a code</h3><p className="text-sm text-gray-400">Create a team, share the 6-letter code. Players join in seconds — no accounts, no installs, works on phones.</p></div>
-          <div className="glass rounded-xl p-6"><div className="text-3xl mb-2">🎮</div><h3 className="font-bold mb-1">2. Play the ceremony</h3><p className="text-sm text-gray-400">Pick a game mode. Follow the Team Journey Board — one team token across 5 squares (Salida → Compartir → Profundizar → Votar → Quest) with depth boosters (Lupa, Doble porqué, Puente). Warm up with cooperative recall, share entries (anonymous if you like), reflect with guided prompts, vote, and commit.</p></div>
+          <div className="glass rounded-xl p-6"><div className="text-3xl mb-2">🎮</div><h3 className="font-bold mb-1">2. Play the ceremony</h3><p className="text-sm text-gray-400">Pick a game mode. Follow the Team Journey Board — one team token across 5 squares (Start → Share → Deepen → Vote → Quest) with depth boosters (Magnifier, Why Twice, Bridge). Warm up with cooperative recall, share entries (anonymous if you like), reflect with guided prompts, vote, and commit.</p></div>
           <div className="glass rounded-xl p-6"><div className="text-3xl mb-2">🧠</div><h3 className="font-bold mb-1">3. Improve every sprint</h3><p className="text-sm text-gray-400">Entries become owned action items. Next retro opens reviewing them. Your engagement level, mastery deck and sprint map track team learning — never individuals.</p></div>
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-8 py-8">
-        <h2 className="text-3xl font-bold text-center mb-2">2 modos · 1 mecánica</h2>
-        <p className="text-gray-400 text-center mb-10">MVP mínimo — sin parálisis. El resto llega después.</p>
+      <section className="max-w-6xl mx-auto px-6 sm:px-8 py-10">
+        <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-center mb-2">2 modes · 1 mechanic</h2>
+        <p className="text-gray-400 text-center mb-10">Minimal MVP — no paralysis. The rest ships later.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
           {Object.values(MODE_CONFIG).map(m => (
             <div key={m.name} className="glass rounded-xl p-5">
@@ -273,19 +287,19 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-8 py-8">
-        <h2 className="text-3xl font-bold text-center mb-2">Board-game mechanics, built for learning</h2>
+      <section className="max-w-6xl mx-auto px-6 sm:px-8 py-10">
+        <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-center mb-2">Board-game mechanics, built for learning</h2>
         <p className="text-gray-400 text-center mb-10 max-w-2xl mx-auto">Cooperative tabletop ideas adapted to Scrum — every mechanic serves team learning, never competition. The Team Journey Board wraps any mode: one team token, zero dice for advancing, zero XP for moving.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="glass rounded-xl p-5 border-gold"><div className="text-3xl mb-2">🗺️</div><h3 className="font-bold mb-1">Team Journey Board <span className="text-xs font-normal text-gold">NEW</span></h3><p className="text-sm text-gray-400">Your retro as a cooperative board: 5 squares from Salida to Quest, one team token, depth boosters that deepen reflection instead of speeding it up. Toggle it on or off anytime.</p></div>
+          <div className="glass rounded-xl p-5 border-gold"><div className="text-3xl mb-2">🗺️</div><h3 className="font-bold mb-1">Team Journey Board <span className="text-xs font-normal text-gold">NEW</span></h3><p className="text-sm text-gray-400">Your retro as a cooperative board: 5 squares from Start to Quest, one team token, depth boosters that deepen reflection instead of speeding it up. Toggle it on or off anytime.</p></div>
           <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🃏</div><h3 className="font-bold mb-1">Hanabi Warm-Up</h3><p className="text-sm text-gray-400">Teammates hold cards from past sprints they can&apos;t show. Describe them verbally so the team reconstructs past commitments — spaced retrieval as a cooperative game.</p></div>
           <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🏆</div><h3 className="font-bold mb-1">Mastery Deck</h3><p className="text-sm text-gray-400">Cards like Pattern Spotter or Bridge Builder unlock only when the team demonstrates the behavior — mastery signals, never participation prizes.</p></div>
           <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🗺️</div><h3 className="font-bold mb-1">Legacy Sprint Map</h3><p className="text-sm text-gray-400">A persistent board that evolves every sprint — winds, anchors, bosses defeated. Recurring patterns surface so the team can finally break them.</p></div>
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-8 py-8">
-        <h2 className="text-3xl font-bold text-center mb-2">A learning system, not another retro board</h2>
+      <section className="max-w-6xl mx-auto px-6 sm:px-8 py-10">
+        <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-center mb-2">A learning system, not another retro board</h2>
         <p className="text-gray-400 text-center mb-10 max-w-2xl mx-auto">Every design decision is validated against learning science.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🔄</div><h3 className="font-bold mb-1">Spaced Retrieval</h3><p className="text-sm text-gray-400">Every retro opens recalling past commitments — retrieval beats re-reading.</p></div>
@@ -295,22 +309,22 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="max-w-4xl mx-auto px-8 py-8">
-        <h2 className="text-3xl font-bold text-center mb-8">Questions your coworkers will ask</h2>
+      <section className="max-w-4xl mx-auto px-6 sm:px-8 py-10">
+        <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-center mb-8">Questions your coworkers will ask</h2>
         <div className="space-y-3">
           <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Do players need an account?</h3><p className="text-sm text-gray-400">No. They open the link, enter the 6-letter team code, and play — on any device. Only facilitators optionally sign in with GitHub or Google.</p></div>
           <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Does it replace Jira?</h3><p className="text-sm text-gray-400">No, it sits on top of it. Import open sprint issues as quests with one click; completing a quest can move the Jira issue to Done.</p></div>
           <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Is it surveillance disguised as a game?</h3><p className="text-sm text-gray-400">No. Metrics are team-level and informational — like a fitness tracker, never a prize. Entries can be anonymous, there are no individual rankings, and votes stay within the ceremony.</p></div>
           <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Why no individual leaderboards?</h3><p className="text-sm text-gray-400">Social comparison triggers the brain&apos;s loss-detection circuits and kills psychological safety. We measure team learning only — cooperation outperforms competition without the stress.</p></div>
           <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">What are Mastery Cards?</h3><p className="text-sm text-gray-400">Cards like Pattern Spotter or Safety Builder unlock when the team demonstrably shows that behavior across sprints. They signal mastery, not attendance.</p></div>
-          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">What is the Team Journey Board?</h3><p className="text-sm text-gray-400">A cooperative wrapper over any retro mode: the team moves one shared token across 5 squares (Salida, Compartir, Profundizar, Votar, Quest). No dice for advancing, no XP for moving, no rankings. Three optional depth boosters (Lupa, Doble porqué, Puente) add reflection — never shortcuts. You can hide it anytime and keep the classic view.</p></div>
+          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">What is the Team Journey Board?</h3><p className="text-sm text-gray-400">A cooperative wrapper over any retro mode: the team moves one shared token across 5 squares (Start, Share, Deepen, Vote, Quest). No dice for advancing, no XP for moving, no rankings. Three optional depth boosters (Magnifier, Why Twice, Bridge) add reflection — never shortcuts. You can hide it anytime and keep the classic view.</p></div>
           <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">What does it cost?</h3><p className="text-sm text-gray-400">The project runs permanently on free tiers. AI facilitation uses a free Groq key; nothing here generates infrastructure bills.</p></div>
         </div>
       </section>
 
-      <footer className="border-t border-gray-800 mt-8">
-        <div className="max-w-6xl mx-auto px-8 py-6 flex justify-between items-center text-sm text-gray-500 flex-wrap gap-2">
-          <span><span className="text-gradient font-bold">SprintQuest</span> — Continuous Improvement as a game.</span>
+      <footer className="border-t border-white/10 mt-12 bg-black/10">
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 py-8 flex justify-between items-center text-sm text-mist/60 flex-wrap gap-3">
+          <span><span className="text-gradient font-display font-extrabold">SprintQuest</span> — continuous improvement, as a team expedition.</span>
           <span>Learning system · Neuroscience-aligned · Free forever</span>
         </div>
       </footer>

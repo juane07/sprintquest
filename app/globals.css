@@ -3,20 +3,88 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 15, 15, 35;
-  --background-end-rgb: 26, 26, 46;
+  --foreground-rgb: 231, 238, 252;
+  --bg-0: 11, 16, 32;
+  --bg-1: 16, 23, 46;
+  --bg-2: 20, 26, 46;
+  --gold: 242, 178, 75;
+  --teal: 60, 201, 176;
+  --sea: 74, 163, 255;
+  --ember: 255, 122, 69;
+}
+
+html, body {
+  min-height: 100%;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-  min-height: 100vh;
+  background:
+    radial-gradient(1200px 600px at 5% -10%, rgba(var(--gold), 0.16), transparent 55%),
+    radial-gradient(900px 500px at 95% 0%, rgba(var(--teal), 0.14), transparent 55%),
+    radial-gradient(700px 400px at 50% 120%, rgba(var(--sea), 0.10), transparent 60%),
+    linear-gradient(180deg, rgb(var(--bg-1)) 0%, rgb(var(--bg-0)) 45%, #080c18 100%);
+  background-attachment: fixed;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(circle at 50% 30%, black, transparent 85%);
+  opacity: 0.35;
+}
+
+::selection {
+  background: rgba(var(--gold), 0.28);
+  color: #fff;
+}
+
+@layer base {
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+  a, button, input, select, textarea {
+    transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease, opacity 150ms ease;
+  }
+  input, select, textarea {
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: rgba(var(--teal), 0.7) !important;
+    box-shadow: 0 0 0 3px rgba(var(--teal), 0.18);
+  }
+}
+
+@layer components {
+  .glass {
+    background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    box-shadow: 0 10px 30px rgba(2, 8, 23, 0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .panel {
+    background: linear-gradient(180deg, rgba(20,26,46,0.9), rgba(12,17,34,0.92));
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 12px 40px rgba(2,8,23,0.45);
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-gold px-5 py-3 font-bold text-black shadow-glow hover:brightness-110 active:translate-y-px;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-5 py-3 font-semibold text-white hover:bg-white/10 hover:border-white/25 active:translate-y-px;
+  }
+  .chip {
+    @apply inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm;
+  }
 }
 
 @layer utilities {
@@ -24,11 +92,22 @@ body {
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-image: linear-gradient(135deg, #f5a623, #2d9cdb);
+    background-image: linear-gradient(120deg, #ffd27a 0%, #f2b24b 35%, #3cc9b0 100%);
   }
-  .glass {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+  .bg-grid-fade {
+    background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .ring-focus {
+    box-shadow: 0 0 0 3px rgba(60,201,176,0.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

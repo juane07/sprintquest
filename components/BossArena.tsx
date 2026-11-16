@@ -83,6 +83,7 @@ export default function BossArena({ bosses, onAttack }: BossArenaProps) {
     const ctx = canvas.getContext("2d")
     if (!ctx) return
     let raf = 0
+    const still = prefersReducedMotion()
 
     const draw = () => {
       raf = requestAnimationFrame(draw)
@@ -105,8 +106,8 @@ export default function BossArena({ bosses, onAttack }: BossArenaProps) {
       const now = fxNow()
       const c = bossCenter(w, h)
       trauma.current = Math.max(0, trauma.current - 0.03)
-      const sh = prefersReducedMotion() ? { dx: 0, dy: 0 } : shakeOffset(trauma.current, now, 9)
-      const bob = t.defeated || prefersReducedMotion() ? 0 : Math.sin(now * 0.004) * 5
+      const sh = still ? { dx: 0, dy: 0 } : shakeOffset(trauma.current, now, 9)
+      const bob = t.defeated || still ? 0 : Math.sin(now * 0.004) * 5
       const bx = c.x + sh.dx
       const by = c.y + bob + sh.dy
       const hpFrac = Math.max(0, t.hp / BOSS_HP)
@@ -182,11 +183,11 @@ export default function BossArena({ bosses, onAttack }: BossArenaProps) {
       ctx.fillText(`${Math.round(t.hp)}/${BOSS_HP} HP`, w / 2, 52)
 
       // Projectiles
+      ctx.font = "20px system-ui"
       projectiles.current = projectiles.current.filter((p) => {
         const k = Math.min(1, (now - p.t0) / p.dur)
         const x = p.x0 + (p.x1 - p.x0) * k
         const y = p.y0 + (p.y1 - p.y0) * k - Math.sin(k * Math.PI) * 24
-        ctx.font = "20px system-ui"
         ctx.fillText("🗡️", x, y)
         return k < 1
       })

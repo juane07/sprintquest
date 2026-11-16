@@ -111,7 +111,7 @@ function DashboardInner() {
         setTeam({ ...team, xp: (t.xp ?? 0) + gain })
       }
       await awardBadge(supabase, teamId, "Action Completer", "Completed action items consistently")
-      setActions(prev => prev.map(a => (a.id === action.id ? { ...a, status: "completed" } : a)))
+      setActions(prev => prev.map(a => (a.id === action.id ? { ...a, status: "completed", completedAt: new Date().toISOString() } : a)))
       const { data: b } = await supabase.from("Badge").select("*").eq("teamId", teamId).order("earnedAt", { ascending: false })
       if (b) setBadges(b)
     } finally {
@@ -119,19 +119,38 @@ function DashboardInner() {
     }
   }
 
+  const undoCompleteAction = async (action: any) => {
+    if (!teamId || completing) return
+    setCompleting(action.id)
+    try {
+      const supabase = getSupabase()
+      await supabase.from("Action").update({ status: "pending", completedAt: null }).eq("id", action.id)
+      const { data: t } = await supabase.from("Team").select("xp").eq("id", teamId).single()
+      const gain = actionValue(action.xpValue)
+      if (t) {
+        const nextXp = Math.max(0, (t.xp ?? 0) - gain)
+        await supabase.from("Team").update({ xp: nextXp }).eq("id", teamId)
+        setTeam({ ...team, xp: nextXp })
+      }
+      setActions(prev => prev.map(a => (a.id === action.id ? { ...a, status: "pending", completedAt: null } : a)))
+    } finally {
+      setCompleting(null)
+    }
+  }
+
   const gameMasterTips = () => {
     const tips: string[] = []
-    if (ceremonies.length === 0) return ["Tu primera retro → Sailboat es el warm-up perfecto. Lo entenderán en 2 minutos."]
+    if (ceremonies.length === 0) return ["Your first retro → Sailboat is the perfect warm-up. Your team will get it in 2 minutes."]
     const open = actions.filter(a => a.status !== "completed").length
     const used = new Set(ceremonies.map((c: any) => c.gameMode))
     const unused = Object.keys(MODE_CONFIG).filter(k => !used.has(k))
-    if (open >= 5) tips.push(`Tienes ${open} acciones abiertas — prueba un 🔥 Boss Battle para priorizar la más crítica.`)
-    else if (unused.length > 0) tips.push(`Prueba un formato nuevo: ${(MODE_CONFIG as any)[unused[0]]?.name ?? unused[0]} — variar mantiene la retro fresca.`)
+    if (open >= 5) tips.push(`You have ${open} open actions — try a 🔥 Boss Battle to prioritize the most critical one.`)
+    else if (unused.length > 0) tips.push(`Try a new format: ${(MODE_CONFIG as any)[unused[0]]?.name ?? unused[0]} — variety keeps the retro fresh.`)
     if (recentComments.length > 0) {
       const counts: Record<string, number> = {}
       recentComments.forEach((c: any) => { counts[c.category] = (counts[c.category] ?? 0) + 1 })
       const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
-      if (top && top[1] >= 3) tips.push(`Tema recurrente: "${top[0]}" apareció ${top[1]} veces — merece un action item.`)
+      if (top && top[1] >= 3) tips.push(`Recurring theme: "${top[0]}" appeared ${top[1]} times — it deserves an action item.`)
     }
     return tips.slice(0, 2)
   }
@@ -167,8 +186,12 @@ function DashboardInner() {
       <Navbar team={team ? { id: team.id, name: team.name, mascot: team.mascot } : null} />
       <main className="min-h-screen p-8">
       <div className="max-w-6xl mx-auto">
-        <a href="/" className="text-sm text-gray-400 hover:text-teal transition">← Home</a>
-        {teamId && <a href={`/history?team=${teamId}`} className="ml-4 text-sm text-gray-400 hover:text-teal transition">📜 History</a>}
+        <nav aria-label="Breadcrumb" className="text-sm text-gray-400 mb-2 flex items-center gap-2 flex-wrap">
+          <a href="/" className="hover:text-teal transition">Home</a>
+          <span>/</span>
+          <span className="text-gray-300">Dashboard</span>
+          {teamId && <><span>/</span><a href={`/history?team=${teamId}`} className="hover:text-teal transition">History</a></>}
+        </nav>
         <div className="flex items-center gap-6 mb-6 mt-2">
           <div className="text-6xl">{team.mascot}</div>
           <div>
@@ -192,11 +215,11 @@ function DashboardInner() {
 
         {ceremonies.length === 0 && (
           <div className="glass rounded-xl p-6 mb-8">
-            <h2 className="text-xl font-bold mb-3">🧭 Tu primera retro en 3 pasos</h2>
+            <h2 className="text-xl font-bold mb-3">🧭 Your first retro in 3 steps</h2>
             <ol className="space-y-2 text-gray-300">
-              <li><span className="font-bold text-gold">1.</span> Invita — comparte <span className="font-mono text-teal font-bold">{team.joinCode}</span> (sin cuenta, en el móvil)</li>
-              <li><span className="font-bold text-gold">2.</span> Elige un modo y empieza</li>
-              <li><span className="font-bold text-gold">3.</span> Termina → comparte tu nivel de engagement</li>
+              <li><span className="font-bold text-gold">1.</span> Invite — share <span className="font-mono text-teal font-bold">{team.joinCode}</span> (no account, works on mobile)</li>
+              <li><span className="font-bold text-gold">2.</span> Pick a mode and start</li>
+              <li><span className="font-bold text-gold">3.</span> Finish → share your engagement level</li>
             </ol>
           </div>
         )}
@@ -211,8 +234,8 @@ function DashboardInner() {
           )
         })()}
 
-        <section className="mb-12" id="ceremonies"><h2 className="text-2xl font-bold mb-4">🎮 Elige tu retro</h2>
-        <p className="text-sm text-gray-400 mb-4">2 modos, 4 rondas cada uno. Sailboat para empezar, Boss para priorizar.</p>
+        <section className="mb-12" id="ceremonies"><h2 className="text-2xl font-bold mb-4">🎮 Choose your retro</h2>
+        <p className="text-sm text-gray-400 mb-4">2 modes, 4 rounds each. Sailboat to start, Boss to prioritize.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12 max-w-3xl">
           {Object.entries(MODE_CONFIG).map(([key, mode]) => {
             return (
@@ -225,42 +248,61 @@ function DashboardInner() {
           })}
         </div>
         </section>
-        {badges.length > 0 && (
-          <section className="mb-8"><h2 className="text-xl font-bold mb-3">🏅 Badges de Maestría</h2>
-            <div className="flex gap-3 flex-wrap">{badges.map((b: any) => <div key={b.id} title={b.description} className="glass rounded-xl px-4 py-2 text-sm"><span className="font-bold">{b.name}</span> <span className="text-gray-400">· {b.description}</span></div>)}
-            </div>
-          </section>
-        )}
-        {teamId && <MasteryDeckDisplay teamId={teamId} initialDeck={buildDeckFromBadges(teamId, badges)} />}
-        {sprintMap && <LegacySprintMap map={sprintMap} />}
         {(() => {
           const open = actions.filter(a => a.status !== "completed")
           const done = actions.filter(a => a.status === "completed")
           if (actions.length === 0) return null
           return (
-            <section className="mb-12" id="actions"><h2 className="text-2xl font-bold mb-4">⚔️ Action Items ({open.length} abiertos)</h2>
-              <p className="text-sm text-gray-400 mb-3">Compromisos de tus retros. Completar los rastrea en tu nivel de engagement.</p>
+            <section className="mb-12" id="actions"><h2 className="text-2xl font-bold mb-4">⚔️ Action Items ({open.length} open)</h2>
+              <p className="text-sm text-gray-400 mb-3">Commitments from your retros. Completing them tracks on your engagement level.</p>
               <div className="space-y-3">
                 {open.map((a: any) => (
                   <div key={a.id} className="glass rounded-xl p-4 flex items-center gap-3">
                     <button onClick={() => completeAction(a)} disabled={completing !== null} className="w-6 h-6 rounded border border-gray-500 hover:border-gold shrink-0 disabled:opacity-50" title="Mark done">{completing === a.id ? "..." : ""}</button>
-                    <div><div className="font-bold">{a.title}</div><div className="text-xs text-gray-500">{a.owner}{a.dueDate ? ` · due ${new Date(a.dueDate).toLocaleDateString()}` : ""}</div></div>
+                    <div><div className="font-bold">{a.title}</div><div className="text-xs text-gray-500">{a.owner}{a.dueDate ? ` · due ${new Date(a.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}</div></div>
                     <span className="ml-auto text-gray-400 font-bold shrink-0">Tracked</span>
                   </div>
                 ))}
                 {done.slice(0, 5).map((a: any) => (
-                  <div key={a.id} className="rounded-xl p-4 flex items-center gap-3 border border-gray-800 opacity-60">
-                    <span className="text-teal font-bold">✓</span>
-                    <div><div className="line-through text-gray-400">{a.title}</div><div className="text-xs text-gray-600">{a.owner}</div></div>
+                  <div key={a.id} className="rounded-xl p-4 flex items-center gap-3 border border-gray-800 opacity-80">
+                    <button onClick={() => undoCompleteAction(a)} disabled={completing !== null} className="text-teal font-bold hover:text-gold" title="Undo (mark as not done)">✓</button>
+                    <div><div className="line-through text-gray-400">{a.title}</div><div className="text-xs text-gray-600">{a.owner} · click ✓ to undo</div></div>
                   </div>
                 ))}
               </div>
             </section>
           )
         })()}
-        <section className="mb-12"><h2 className="text-2xl font-bold mb-4">📋 Ceremonias pasadas</h2>
-          <div className="space-y-4">{ceremonies.length === 0 && <p className="text-gray-400">Aún no hay ceremonias — ¡empieza la primera arriba!</p>}
-            {ceremonies.map((c: any) => <a key={c.id} href={ceremonyHref(c)} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block gap-2"><span className="font-bold">{ceremonyName(c)}</span>{c.status !== "completed" ? <span className="text-xs text-teal">🟢 live →</span> : <span className="text-xs text-gray-500">Completed ✓</span>}</a>)}
+        <details className="mb-8 glass rounded-xl p-4">
+          <summary className="cursor-pointer font-bold text-lg">🏅 Mastery & Team Progress <span className="text-sm font-normal text-gray-400">(expand)</span></summary>
+          <div className="mt-4">
+            {badges.length === 0 ? (
+              <div className="glass rounded-xl p-4 text-sm text-gray-400 mb-4">
+                No mastery badges yet. Badges signal team mastery (not participation) — they unlock as your team demonstrates learning patterns over time.
+              </div>
+            ) : (
+              <div className="flex gap-3 flex-wrap mb-4">{badges.map((b: any) => <div key={b.id} title={b.description} className="glass rounded-xl px-4 py-2 text-sm"><span className="font-bold">{b.name}</span> <span className="text-gray-400">· {b.description}</span></div>)}
+              </div>
+            )}
+            {teamId && <MasteryDeckDisplay teamId={teamId} initialDeck={buildDeckFromBadges(teamId, badges)} />}
+            {sprintMap && <LegacySprintMap map={sprintMap} />}
+          </div>
+        </details>
+        <section className="mb-12"><h2 className="text-2xl font-bold mb-4">📋 Past ceremonies</h2>
+          <div className="space-y-4">{ceremonies.length === 0 && <p className="text-gray-400">No ceremonies yet — start the first one above!</p>}
+            {ceremonies.map((c: any) => {
+              const date = c.endedAt || c.startedAt
+              const dateLabel = date ? new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""
+              return (
+                <a key={c.id} href={ceremonyHref(c)} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block gap-2">
+                  <div>
+                    <span className="font-bold">{ceremonyName(c)}</span>
+                    {dateLabel && <span className="ml-2 text-xs text-gray-500">{dateLabel}</span>}
+                  </div>
+                  {c.status !== "completed" ? <span className="text-xs text-teal">🟢 live →</span> : <span className="text-xs text-gray-500">Completed ✓</span>}
+                </a>
+              )
+            })}
           </div>
         </section>
       </div>

@@ -45,16 +45,16 @@ describe("boardStepFor", () => {
 })
 
 describe("advanceGate", () => {
-  it("blocks leaving Salida without recall", () => {
+  it("blocks leaving Start without recall", () => {
     const r = advanceGate(0, { recallDone: false, entries: 5, reflectionDone: true })
     expect(r.ok).toBe(false)
     expect(r.reason).toMatch(/recall/i)
   })
-  it("blocks Compartir with fewer than 3 entries", () => {
+  it("blocks Share with fewer than 3 entries", () => {
     expect(advanceGate(1, { recallDone: true, entries: 2, reflectionDone: true }).ok).toBe(false)
     expect(advanceGate(1, { recallDone: true, entries: 3, reflectionDone: true }).ok).toBe(true)
   })
-  it("blocks Profundizar/Votar without reflection", () => {
+  it("blocks Deepen/Vote without reflection", () => {
     expect(advanceGate(2, { recallDone: true, entries: 5, reflectionDone: false }).ok).toBe(false)
     expect(advanceGate(3, { recallDone: true, entries: 5, reflectionDone: false }).ok).toBe(false)
     expect(advanceGate(3, { recallDone: true, entries: 5, reflectionDone: true }).ok).toBe(true)
@@ -129,7 +129,7 @@ describe("boosterUsageFrom + pourquoiQuestion", () => {
     const q1 = pourquoiQuestion([], 0)
     const q2 = pourquoiQuestion([], 1)
     expect(q1).not.toBe(q2)
-    expect(q1).toMatch(/❓ Doble porqué/)
+    expect(q1).toMatch(/❓ Why twice/)
     expect(POURQUOI_CAT.length).toBeGreaterThan(0)
   })
 })

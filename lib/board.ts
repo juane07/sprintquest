@@ -24,7 +24,7 @@ export function playerEntries(comments: BoardComment[]): BoardComment[] {
   return comments.filter(isPlayerEntry)
 }
 
-// Board step: 0 Salida · 1 Compartir · 2 Profundizar · 3 Votar · 4 Quest.
+// Board step: 0 Start · 1 Share · 2 Deepen · 3 Vote · 4 Quest.
 // Voting screen / finished flow counts as the Quest square.
 export function boardStepFor(round: number, totalRounds: number, voting: boolean): number {
   if (voting) return 4
@@ -47,7 +47,7 @@ export interface GateResult {
 // Advancing FROM step N requires that square's completion rule.
 export function advanceGate(step: number, s: GateState): GateResult {
   if (step <= 0 && !s.recallDone)
-    return { ok: false, reason: "🏁 Complete the recall warm-up first — the team token can't leave Salida without it." }
+    return { ok: false, reason: "🏁 Complete the recall warm-up first — the team token can't leave Start without it." }
   if (step === 1 && s.entries < 3)
     return { ok: false, reason: "💬 Share at least 3 team entries before advancing — slow is deep." }
   if ((step === 2 || step === 3) && !s.reflectionDone)
@@ -80,7 +80,7 @@ export function lupaInsight(comments: BoardComment[]): string | null {
   }
   const topCat = [...byCat.entries()].sort((a, b) => b[1] - a[1])[0]
   const topWord = [...wordCount.entries()].filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1])[0]
-  let out = `🔍 Lupa insight (suggestion only — the team decides): most entries are in ${topCat[0]} (${topCat[1]} of ${entries.length}).`
+  let out = `🔍 Magnifier insight (suggestion only — the team decides): most entries are in ${topCat[0]} (${topCat[1]} of ${entries.length}).`
   if (topWord) out += ` The word "${topWord[0]}" keeps coming up (${topWord[1]}×). Ask: why does this persist?`
   else out += ` Ask: what pattern connects them?`
   return out
@@ -117,7 +117,7 @@ export function findPuentePair(comments: BoardComment[]): PuentePair | null {
 
 // Proposal codec: IDs embedded in the comment so any device can confirm.
 export function encodePuenteProposal(aId: string, bId: string, summary: string): string {
-  return `🌉 Puente proposal — these two entries look like the same theme. Confirm to group them under one category.\n${summary}\nIDs: ${aId}|${bId}`
+  return `🌉 Bridge proposal — these two entries look like the same theme. Confirm to group them under one category.\n${summary}\nIDs: ${aId}|${bId}`
 }
 
 export function decodePuenteProposal(content: string): { aId: string; bId: string } | null {
@@ -149,5 +149,5 @@ const POURQUOI_BANK = [
 export function pourquoiQuestion(comments: BoardComment[], usageCount: number): string {
   const insight = lupaInsight(comments)
   const base = POURQUOI_BANK[usageCount % POURQUOI_BANK.length]
-  return insight ? `❓ Doble porqué: ${base}\nContext: ${insight}` : `❓ Doble porqué: ${base}`
+  return insight ? `❓ Why twice: ${base}\nContext: ${insight}` : `❓ Why twice: ${base}`
 }

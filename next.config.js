@@ -9,11 +9,16 @@ const nextConfig = {
       {
         source: "/(.*)",
         headers: [
+          // `no-store` already forbids HTTP caching. The old
+          // `Clear-Site-Data: "cache", "storage"` header went further and
+          // wiped localStorage on every navigation — it was there to defeat
+          // the (already unregistered) service worker, and it cost a storage
+          // teardown plus the participant identity, board preference and mute
+          // flag on every single page load.
           { key: "Cache-Control", value: "no-store, must-revalidate" },
-          { key: "Clear-Site-Data", value: '"cache", "storage"' },
         ],
       },
-    ]
+    ];
   },
-}
-module.exports = nextConfig
+};
+module.exports = nextConfig;

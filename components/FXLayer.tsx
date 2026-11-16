@@ -57,13 +57,8 @@ export default function FXLayer() {
     }
     window.addEventListener("pointerdown", unlock)
 
-    const onBurst: BurstFn = (x, y, opts) => {
-      particles = [...particles, ...spawnBurst(x, y, opts)].slice(-400)
-    }
-    listeners.add(onBurst)
-
     const loop = () => {
-      raf = requestAnimationFrame(loop)
+      raf = particles.length > 0 ? requestAnimationFrame(loop) : 0
       const now = fxNow()
       const dt = Math.min(50, Math.max(0, now - last))
       last = now
@@ -79,7 +74,17 @@ export default function FXLayer() {
       }
       ctx.globalAlpha = 1
     }
-    raf = requestAnimationFrame(loop)
+
+    const onBurst: BurstFn = (x, y, opts) => {
+      const burst = spawnBurst(x, y, opts)
+      particles = particles.length > 0 ? particles.concat(burst) : burst
+      if (particles.length > 400) particles = particles.slice(-400)
+      if (raf === 0) {
+        last = fxNow()
+        raf = requestAnimationFrame(loop)
+      }
+    }
+    listeners.add(onBurst)
 
     return () => {
       cancelAnimationFrame(raf)

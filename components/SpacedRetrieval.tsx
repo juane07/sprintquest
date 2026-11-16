@@ -5,15 +5,28 @@ import { getRetrievalPrompt } from "@/lib/learning-science"
 
 interface SpacedRetrievalProps {
   sprintNumber: number
+  // Shared: once ANY teammate completes the recall, it counts for the whole
+  // team. Rendering the collapsed state from shared state is what keeps every
+  // screen showing the same ceremony.
+  done: boolean
   onComplete: (answer: string) => void
 }
 
-export default function SpacedRetrieval({ sprintNumber, onComplete }: SpacedRetrievalProps) {
+export default function SpacedRetrieval({ sprintNumber, done, onComplete }: SpacedRetrievalProps) {
   const [answer, setAnswer] = useState("")
   const [shown, setShown] = useState(false)
   const data = getRetrievalPrompt(sprintNumber)
   const prompts = RETRIEVAL_PROMPTS[data.type] ?? RETRIEVAL_PROMPTS.early
   const prompt = prompts[Math.min(prompts.length - 1, sprintNumber - 1)]?.prompt ?? data.prompt
+
+  if (done) {
+    return (
+      <div className="glass rounded-xl p-4 mb-6 border-teal/30" role="status">
+        <p className="text-sm text-teal font-bold">🧠 Recall complete</p>
+        <p className="text-sm text-gray-400">The team already recalled this sprint — the token moved on for everyone.</p>
+      </div>
+    )
+  }
 
   if (shown) {
     return (

@@ -69,10 +69,13 @@ function HistoryInner() {
       <Navbar team={team ? { id: team.id, name: team.name, mascot: team.mascot } : null} />
       <main className="min-h-screen p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex gap-4 mb-4 text-sm">
-          <a href="/" className="text-gray-400 hover:text-teal transition">← Home</a>
-          <a href={`/dashboard?team=${teamId}`} className="text-gray-400 hover:text-teal transition">← Team dashboard</a>
-        </div>
+        <nav aria-label="Breadcrumb" className="text-sm text-gray-400 mb-4 flex items-center gap-2 flex-wrap">
+          <a href="/" className="hover:text-teal transition">Home</a>
+          <span>/</span>
+          <a href={`/dashboard?team=${teamId}`} className="hover:text-teal transition">Dashboard</a>
+          <span>/</span>
+          <span className="text-gray-300">History</span>
+        </nav>
         <div className="flex items-center gap-4 mb-8">
           <div className="text-5xl">{team.mascot}</div>
           <div><h1 className="text-3xl font-bold text-gradient">{team.name} — History</h1><p className="text-gray-400">Level {team.level ?? 1} · Engagement level {team.xp ?? 0}</p></div>
@@ -94,7 +97,7 @@ function HistoryInner() {
                 <span className="font-bold">{((MODE_CONFIG as any)[c.gameMode]?.name ?? c.gameMode)}</span>
                 <span className="flex gap-3 items-center text-sm">
                   <span className={c.status === "completed" ? "text-teal" : "text-gold"}>{c.status === "completed" ? "✓ done" : "● live"}</span>
-                  <span className="text-gray-400">{c.startedAt ? new Date(c.startedAt).toLocaleDateString() : ""}</span>
+                  <span className="text-gray-400">{c.startedAt ? new Date(c.startedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}</span>
                 </span>
               </a>
             ))}
@@ -102,7 +105,7 @@ function HistoryInner() {
         </section>
         {badges.length > 0 && (
           <section className="mb-10"><h2 className="text-2xl font-bold mb-4">🏅 Badges</h2>
-            <div className="flex gap-3 flex-wrap">{badges.map((b: any) => <div key={b.id} title={b.description} className="glass rounded-xl px-4 py-2 text-sm"><span className="font-bold">{b.name}</span> <span className="text-gray-400">· {new Date(b.earnedAt).toLocaleDateString()}</span></div>)}
+            <div className="flex gap-3 flex-wrap">{badges.map((b: any) => <div key={b.id} title={b.description} className="glass rounded-xl px-4 py-2 text-sm"><span className="font-bold">{b.name}</span> <span className="text-gray-400">· {new Date(b.earnedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span></div>)}
             </div>
           </section>
         )}

@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { fxNow, prefersReducedMotion, playSfx } from "../lib/juice"
 import { fxBurst } from "./FXLayer"
 
@@ -21,6 +21,7 @@ export function boatProgress(step: number, wind: number, anchor: number): number
 export default function SailboatSea({ wind, anchor, rocks, step, islandLabel = "Island" }: SailboatSeaProps) {
   const ref = useRef<HTMLCanvasElement>(null)
   const celebrated = useRef(false)
+  const [showDetails, setShowDetails] = useState(false)
 
   useEffect(() => {
     if (step >= 4 && !celebrated.current) {
@@ -42,6 +43,8 @@ export default function SailboatSea({ wind, anchor, rocks, step, islandLabel = "
     if (!ctx) return
     let raf = 0
     const still = prefersReducedMotion()
+    const started = performance.now()
+    const MAX_ANIM_MS = 5 * 60 * 1000
 
     const frame = () => {
       const dpr = Math.min(2, window.devicePixelRatio || 1)
@@ -50,8 +53,10 @@ export default function SailboatSea({ wind, anchor, rocks, step, islandLabel = "
       if (canvas.width !== Math.floor(w * dpr)) canvas.width = Math.floor(w * dpr)
       if (canvas.height !== Math.floor(h * dpr)) canvas.height = Math.floor(h * dpr)
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      const now = still ? 0 : fxNow()
-      const t = now * 0.001
+      const elapsed = performance.now() - started
+      const animate = !still && elapsed < MAX_ANIM_MS
+      const now = animate ? fxNow() : 0
+      const t = animate ? fxNow() * 0.001 : 0
 
       // Sky + sea
       const sky = ctx.createLinearGradient(0, 0, 0, h)
@@ -81,6 +86,9 @@ export default function SailboatSea({ wind, anchor, rocks, step, islandLabel = "
         ctx.fill()
       }
 
+      // Voyage progress (used by island, rocks, boat)
+      const prog = boatProgress(step, wind, anchor)
+
       // Island (goal) at right edge
       const ix = w - 46
       ctx.fillStyle = "#14532d"
@@ -94,9 +102,14 @@ export default function SailboatSea({ wind, anchor, rocks, step, islandLabel = "
       ctx.fillStyle = "#9ca3af"
       ctx.font = "10px system-ui"
       ctx.fillText(islandLabel.slice(0, 18), ix, horizon + 26)
+      // Coconuts appear as team progress/wind grows (small celebratory detail)
+      const coconuts = Math.min(3, Math.floor(wind / 2) + (prog > 0.7 ? 1 : 0))
+      ctx.font = "12px system-ui"
+      for (let i = 0; i < coconuts; i++) {
+        ctx.fillText("🥥", ix - 18 + i * 14, horizon - 18 - (i % 2) * 4)
+      }
 
       // Rocks (risks) ahead of the boat
-      const prog = boatProgress(step, wind, anchor)
       const bx = 40 + prog * (w - 130)
       for (let i = 0; i < Math.min(rocks, 5); i++) {
         const rx = Math.min(w - 70, bx + 60 + i * 44)
@@ -163,22 +176,36 @@ export default function SailboatSea({ wind, anchor, rocks, step, islandLabel = "
       ctx.textAlign = "left"
       ctx.fillText(`🌬️ ${wind} wind · ⚓ ${anchor} anchor · voyage ${Math.round(prog * 100)}%`, 8, h - 8)
 
-      if (!still) raf = requestAnimationFrame(frame)
+      if (animate) raf = requestAnimationFrame(frame)
     }
+    // frame() draws the first frame and arms the next one itself.
+    // Reduced motion or timeout (>5min) draws one static frame and arms nothing.
     frame()
-    if (still) return
-    const loop = () => {
-      frame()
-      raf = requestAnimationFrame(loop)
-    }
-    raf = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(raf)
   }, [wind, anchor, rocks, step, islandLabel])
 
+  const progPct = Math.round(boatProgress(step, wind, anchor) * 100)
   return (
     <div className="glass rounded-xl p-4 mb-6">
-      <p className="font-bold text-sm mb-2">⛵ Voyage <span className="font-normal text-gray-400 text-xs">— winds fill the sail, anchors list the boat</span></p>
-      <canvas ref={ref} className="w-full h-52 rounded-lg border border-gray-800" aria-label={`Voyage at ${Math.round(boatProgress(step, wind, anchor) * 100)} percent`} />
+      <div className="flex justify-between items-center mb-2 gap-2 flex-wrap">
+        <p className="font-bold text-sm">⛵ Team Voyage <span className="font-normal text-gray-400 text-xs">— one sailboat for this sprint/ceremony</span></p>
+        <button onClick={() => setShowDetails(v => !v)} className="text-xs px-2 py-1 rounded border border-gray-700 text-gray-300 hover:border-teal">{showDetails ? "Hide details" : "Map details"}</button>
+      </div>
+      <canvas
+        ref={ref}
+        onClick={() => setShowDetails(v => !v)}
+        className="w-full h-52 rounded-lg border border-gray-800 cursor-pointer"
+        aria-label={`Team voyage at ${progPct} percent. Click for details.`}
+        title="Click to toggle voyage details"
+      />
+      {showDetails && (
+        <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          <div className="bg-dark/40 rounded p-2"><span className="font-bold">🌬️ Winds</span><div className="text-gray-300">{wind} pushing forward</div></div>
+          <div className="bg-dark/40 rounded p-2"><span className="font-bold">⚓ Anchors</span><div className="text-gray-300">{anchor} holding back</div></div>
+          <div className="bg-dark/40 rounded p-2"><span className="font-bold">🪨 Rocks</span><div className="text-gray-300">{rocks} risks ahead</div></div>
+          <div className="bg-dark/40 rounded p-2"><span className="font-bold">🏝️ Island</span><div className="text-gray-300">{islandLabel} · {progPct}% voyage</div></div>
+        </div>
+      )}
     </div>
   )
 }

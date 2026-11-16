@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { detectPatterns, getFacilitationSuggestion } from "@/lib/ai"
 
 interface Entry {
@@ -14,17 +14,23 @@ interface AIFacilitatorProps {
 }
 
 export default function AIFacilitator({ entries, round, totalRounds }: AIFacilitatorProps) {
-  const [suggestions, setSuggestions] = useState<string[]>([])
-  const [patterns, setPatterns] = useState<{ topic: string; count: number; suggestion: string }[]>([])
   const [collapsed, setCollapsed] = useState(false)
 
-  useEffect(() => {
-    if (entries.length < 2) return
-    const detected = detectPatterns(entries)
-    setPatterns(detected)
-    const suggestion = getFacilitationSuggestion(entries, round, totalRounds)
-    if (suggestion) setSuggestions([suggestion])
-  }, [entries, round, totalRounds])
+  const latest = useRef(entries)
+  latest.current = entries
+
+  const key = entries.map((e) => `${e.category}::${e.content}`).join("\u0001")
+
+  const patterns = useMemo<{ topic: string; count: number; suggestion: string }[]>(
+    () => (latest.current.length < 2 ? [] : detectPatterns(latest.current)),
+    [key],
+  )
+
+  const suggestions = useMemo<string[]>(() => {
+    if (latest.current.length < 2) return []
+    const suggestion = getFacilitationSuggestion(latest.current, round, totalRounds)
+    return suggestion ? [suggestion] : []
+  }, [key, round, totalRounds])
 
   if (entries.length < 2 && !collapsed) {
     return (
