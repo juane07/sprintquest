@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { levelForXp, progressToNext, engagementMetric, streakIndicator, actionValue, engagementLabel, levelLabel } from "../lib/xp"
-import { getRetrievalPrompt, getReflectionPrompts, getElaborativePrompts, getAdaptiveRoundDuration, shouldExtendRound } from "../lib/learning-science"
+import { getRetrievalPrompt, getReflectionPrompts, getElaborativePrompts, getAdaptiveRoundDuration } from "../lib/learning-science"
 
 describe("levelForXp", () => {
   it("starts at level 1", () => {

@@ -10,7 +10,6 @@ interface ReflectionPhaseProps {
 
 export default function ReflectionPhase({ prompts, round, onComplete }: ReflectionPhaseProps) {
   const [responses, setResponses] = useState<Record<string, string>>({})
-  const [submitted, setSubmitted] = useState(false)
   const [currentPrompt, setCurrentPrompt] = useState(0)
 
   const prompt = prompts[currentPrompt]
@@ -21,7 +20,6 @@ export default function ReflectionPhase({ prompts, round, onComplete }: Reflecti
     if (currentPrompt < prompts.length - 1) {
       setCurrentPrompt(currentPrompt + 1)
     } else {
-      setSubmitted(true)
       setTimeout(onComplete, 500)
     }
   }

@@ -55,7 +55,6 @@ export default function SailboatSea({ wind, anchor, rocks, step, islandLabel = "
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       const elapsed = performance.now() - started
       const animate = !still && elapsed < MAX_ANIM_MS
-      const now = animate ? fxNow() : 0
       const t = animate ? fxNow() * 0.001 : 0
 
       // Sky + sea
