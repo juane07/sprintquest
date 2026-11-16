@@ -141,14 +141,14 @@ function DashboardInner() {
   const gameMasterTips = () => {
     const tips: string[] = []
     if (ceremonies.length === 0) return ["Your first retro → Sailboat is the perfect warm-up. Your team will get it in 2 minutes."]
-    const open = actions.filter(a => a.status !== "completed").length
-    const used = new Set(ceremonies.map((c: any) => c.gameMode))
+    const open = (actions || []).filter((a: any) => a && a.status !== "completed").length
+    const used = new Set((ceremonies || []).filter(Boolean).map((c: any) => c.gameMode))
     const unused = Object.keys(MODE_CONFIG).filter(k => !used.has(k))
     if (open >= 5) tips.push(`You have ${open} open actions — try a 🔥 Boss Battle to prioritize the most critical one.`)
     else if (unused.length > 0) tips.push(`Try a new format: ${(MODE_CONFIG as any)[unused[0]]?.name ?? unused[0]} — variety keeps the retro fresh.`)
     if (recentComments.length > 0) {
       const counts: Record<string, number> = {}
-      recentComments.forEach((c: any) => { counts[c.category] = (counts[c.category] ?? 0) + 1 })
+      recentComments.forEach((c: any) => { if (c?.category) counts[c.category] = (counts[c.category] ?? 0) + 1 })
       const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
       if (top && top[1] >= 3) tips.push(`Recurring theme: "${top[0]}" appeared ${top[1]} times — it deserves an action item.`)
     }
@@ -249,9 +249,10 @@ function DashboardInner() {
         </div>
         </section>
         {(() => {
-          const open = actions.filter(a => a.status !== "completed")
-          const done = actions.filter(a => a.status === "completed")
-          if (actions.length === 0) return null
+          const safeActions = (actions || []).filter(Boolean)
+          const open = safeActions.filter((a: any) => a.status !== "completed")
+          const done = safeActions.filter((a: any) => a.status === "completed")
+          if (safeActions.length === 0) return null
           return (
             <section className="mb-12" id="actions"><h2 className="text-2xl font-bold mb-4">⚔️ Action Items ({open.length} open)</h2>
               <p className="text-sm text-gray-400 mb-3">Commitments from your retros. Completing them tracks on your engagement level.</p>
@@ -290,7 +291,7 @@ function DashboardInner() {
         </details>
         <section className="mb-12"><h2 className="text-2xl font-bold mb-4">📋 Past ceremonies</h2>
           <div className="space-y-4">{ceremonies.length === 0 && <p className="text-gray-400">No ceremonies yet — start the first one above!</p>}
-            {ceremonies.map((c: any) => {
+            {(ceremonies || []).filter(Boolean).map((c: any) => {
               const date = c.endedAt || c.startedAt
               const dateLabel = date ? new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""
               return (
@@ -299,7 +300,7 @@ function DashboardInner() {
                     <span className="font-bold">{ceremonyName(c)}</span>
                     {dateLabel && <span className="ml-2 text-xs text-gray-500">{dateLabel}</span>}
                   </div>
-                  {c.status !== "completed" ? <span className="text-xs text-teal">🟢 live →</span> : <span className="text-xs text-gray-500">Completed ✓</span>}
+                  {c?.status !== "completed" ? <span className="text-xs text-teal">🟢 live →</span> : <span className="text-xs text-gray-500">Completed ✓</span>}
                 </a>
               )
             })}

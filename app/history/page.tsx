@@ -51,9 +51,11 @@ function HistoryInner() {
   if (!teamId) return <div className="text-center p-20 text-gray-400">No team selected. <a href="/" className="text-teal underline">Go home</a></div>
   if (!team) return <div className="text-center p-20 text-gray-400">Team not found. <a href="/" className="text-teal underline">Go home</a></div>
 
-  const doneActions = actions.filter(a => a.status === "completed").length
-  const doneQuests = quests.filter(q => q.status === "completed").length
-  const completion = actions.length > 0 ? Math.round((doneActions / actions.length) * 100) : 100
+  const safeActions = (actions || []).filter(Boolean)
+  const safeQuests = (quests || []).filter(Boolean)
+  const doneActions = safeActions.filter((a: any) => a.status === "completed").length
+  const doneQuests = safeQuests.filter((q: any) => q.status === "completed").length
+  const completion = safeActions.length > 0 ? Math.round((doneActions / safeActions.length) * 100) : 100
 
   const stats = [
     { label: "Ceremonies", value: ceremonies.length, emoji: "🎮" },
@@ -92,12 +94,12 @@ function HistoryInner() {
         <section className="mb-10"><h2 className="text-2xl font-bold mb-4">🎮 Ceremonies</h2>
           <div className="space-y-3">
             {ceremonies.length === 0 && <p className="text-gray-400">No ceremonies yet.</p>}
-            {ceremonies.map((c: any) => (
+            {(ceremonies || []).filter(Boolean).map((c: any) => (
               <a key={c.id} href={`/retro/${c.id}`} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block">
                 <span className="font-bold">{((MODE_CONFIG as any)[c.gameMode]?.name ?? c.gameMode)}</span>
                 <span className="flex gap-3 items-center text-sm">
-                  <span className={c.status === "completed" ? "text-teal" : "text-gold"}>{c.status === "completed" ? "✓ done" : "● live"}</span>
-                  <span className="text-gray-400">{c.startedAt ? new Date(c.startedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}</span>
+                  <span className={c?.status === "completed" ? "text-teal" : "text-gold"}>{c?.status === "completed" ? "✓ done" : "● live"}</span>
+                  <span className="text-gray-400">{c?.startedAt ? new Date(c.startedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}</span>
                 </span>
               </a>
             ))}

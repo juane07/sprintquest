@@ -479,8 +479,9 @@ export default function RetroPage({ params }: { params: { id: string } }) {
       // window between claiming and publishing is a couple of milliseconds.
       const { data: t } = await supabase.from("Team").select("xp, streak").eq("id", ceremony.teamId).single()
       const before = t?.xp ?? 0
-      const hadPrev = !!prevCeremony && prevActions.length > 0
-      const streakKept = hadPrev && prevActions.every(a => a.status === "completed")
+      const safePrevActions = (prevActions || []).filter(Boolean)
+      const hadPrev = !!prevCeremony && safePrevActions.length > 0
+      const streakKept = hadPrev && safePrevActions.every((a: any) => a.status === "completed")
       const nextStreak = hadPrev ? (streakKept ? (t?.streak ?? 0) + 1 : 0) : (t?.streak ?? 0)
       const bonus = streakKept ? streakIndicator(nextStreak) : 0
       const streakMsg = streakKept ? `🔥 ${nextStreak}-sprint improvement streak` : null
@@ -573,7 +574,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     }
   }
 
-  const openPrevActions = useMemo(() => prevActions.filter(a => a.status !== "completed"), [prevActions])
+  const openPrevActions = useMemo(() => (prevActions || []).filter((a: any) => a && a.status !== "completed"), [prevActions])
   const reflectionPrompts = useMemo(() => getReflectionPrompts(ceremony?.gameMode ?? "DEFAULT"), [ceremony?.gameMode])
   const activeHint = mode.categories.find(c => c.name === category)?.hint ?? ""
 
@@ -848,13 +849,13 @@ export default function RetroPage({ params }: { params: { id: string } }) {
             <h3 className="font-bold mb-1">📋 Last ceremony&apos;s commitments ({openPrevActions.length} open)</h3>
             <p className="text-sm text-gray-400 mb-3">Review first — check off what got done.</p>
             <div className="space-y-2">
-              {prevActions.map(a => (
+              {(prevActions || []).filter(Boolean).map((a: any) => (
                 <div key={a.id} className="flex items-center gap-3 p-2 rounded-lg bg-dark/50">
-                  {a.status === "completed"
+                  {a?.status === "completed"
                     ? <button onClick={() => undoCompleteAction(a, ceremony.teamId)} className="text-teal font-bold hover:text-gold" title="Undo (mark as not done)">✓</button>
                     : <button onClick={() => completeAction(a, ceremony.teamId)} className="w-5 h-5 rounded border border-gray-500 hover:border-gold shrink-0" title="Mark done" />}
-                  <span className={a.status === "completed" ? "line-through text-gray-500" : ""}>{a.title}</span>
-                  {a.status === "completed" && <span className="ml-auto text-xs text-gray-500">click ✓ to undo</span>}
+                  <span className={a?.status === "completed" ? "line-through text-gray-500" : ""}>{a?.title}</span>
+                  {a?.status === "completed" && <span className="ml-auto text-xs text-gray-500">click ✓ to undo</span>}
                 </div>
               ))}
             </div>
