@@ -42,10 +42,10 @@ export default function Logo({ className = "", size = "sm" }: LogoProps) {
   const swordSize = size === "lg" ? "w-10 h-10 sm:w-14 sm:h-14" : "w-5 h-5 sm:w-6 sm:h-6"
   const textSize = size === "lg" ? "text-5xl sm:text-7xl" : "text-lg"
   return (
-    <span className={`relative inline-flex items-center font-display font-extrabold tracking-tight ${textSize} ${className}`}>
+    <span className={`inline-flex items-center gap-1.5 font-display font-extrabold tracking-tight ${textSize} ${className}`}>
       <span className="text-gradient">SprintQuest</span>
       <PixelSword
-        className={`pointer-events-none absolute left-1/2 top-1/2 ${swordSize} -translate-x-1/2 -translate-y-1/2 rotate-[35deg] drop-shadow-[0_2px_6px_rgba(242,178,75,0.45)] opacity-95`}
+        className={`pointer-events-none shrink-0 ${swordSize} rotate-[35deg] drop-shadow-[0_2px_6px_rgba(242,178,75,0.45)] opacity-95`}
       />
     </span>
   )
