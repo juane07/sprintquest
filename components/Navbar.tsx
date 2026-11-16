@@ -30,7 +30,6 @@ export default function Navbar({ team }: { team?: NavTeam | null }) {
           {team && (
             <>
               <a href={`/dashboard?team=${team.id}`} className="px-3 py-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 hidden sm:inline">Dashboard</a>
-              <a href={`/history?team=${team.id}`} className="px-3 py-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 hidden sm:inline">History</a>
               <button onClick={() => setOpen(!open)} className="sm:hidden px-3 py-1.5 rounded-lg text-gray-200 border border-white/15 bg-white/5">☰</button>
             </>
           )}
@@ -40,7 +39,6 @@ export default function Navbar({ team }: { team?: NavTeam | null }) {
       {open && team && (
         <div className="sm:hidden border-t border-white/10 px-4 py-2 flex flex-col gap-1 text-sm bg-dark/80 backdrop-blur-xl">
           <a href={`/dashboard?team=${team.id}`} className="px-3 py-2 rounded-lg text-gray-200 hover:bg-white/5">Dashboard</a>
-          <a href={`/history?team=${team.id}`} className="px-3 py-2 rounded-lg text-gray-200 hover:bg-white/5">History</a>
           <a href="/" className="px-3 py-2 rounded-lg text-gray-200 hover:bg-white/5">Home</a>
         </div>
       )}

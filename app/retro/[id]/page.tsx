@@ -6,12 +6,8 @@ import { DEFAULT_MODE } from "@/constants"
 import { engagementMetric, streakIndicator, levelForXp, actionValue, engagementLabel } from "@/lib/xp"
 import { getReflectionPrompts } from "@/lib/learning-science"
 import Navbar from "@/components/Navbar"
-import ShareRecap from "@/components/ShareRecap"
 import SpacedRetrieval from "@/components/SpacedRetrieval"
 import ReflectionPhase from "@/components/ReflectionPhase"
-import SafetyCheckIn from "@/components/SafetyCheckIn"
-import AIFacilitator from "@/components/AIFacilitator"
-import PeerRecognition from "@/components/PeerRecognition"
 import AsymmetryWarmup from "@/components/AsymmetryWarmup"
 import FXLayer from "@/components/FXLayer"
 import SailboatSea from "@/components/SailboatSea"
@@ -52,13 +48,6 @@ const REACTION_EMOJIS = ["❤️", "🔥", "👍"]
 // rows with these exact strings and they are matched with `===`.
 const LEGACY_SYSTEM_CATS = ["🎮 Burst", "🗺️ Board"]
 
-async function awardBadge(supabase: any, teamId: string, name: string, description: string) {
-  const { data } = await supabase.from("Badge").select("id").eq("teamId", teamId).eq("name", name).limit(1)
-  if (!data || data.length === 0) {
-    await supabase.from("Badge").insert({ name, description, teamId })
-  }
-}
-
 // Comment rows arrive twice: once from the INSERT we optimistically merge and
 // once from the realtime stream. Dedupe by id so nobody sees their own entry
 // twice, and so a long feed never doubles in size.
@@ -79,19 +68,15 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   const [finishing, setFinishing] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
   const [coachShow, setCoachShow] = useState(false)
-  const [safetyScore, setSafetyScore] = useState<number | null>(null)
-  const [safetyComplete, setSafetyComplete] = useState(false)
   const [asymmetryDone, setAsymmetryDone] = useState(false)
-  const [asymmetryAnswers, setAsymmetryAnswers] = useState<string[]>([])
   const [boardEnabled, setBoardEnabled] = useState(true)
-  const [online, setOnline] = useState(1)
   const [boosterNote, setBoosterNote] = useState<string | null>(null)
   const [gateNote, setGateNote] = useState<string | null>(null)
   const [pourquoiAnswers, setPourquoiAnswers] = useState<Record<string, string>>({})
   const [pourquoiSaved, setPourquoiSaved] = useState<Record<string, boolean>>({})
   const [confirmingPuente, setConfirmingPuente] = useState(false)
-  const [nextQuests, setNextQuests] = useState<any[]>([])
-  const [forgedQuests, setForgedQuests] = useState<Record<string, boolean>>({})
+  const [nextActions, setNextActions] = useState<any[]>([])
+  const [forgedActions, setForgedActions] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     try { if (window.localStorage.getItem("sq_board") === "off") setBoardEnabled(false) } catch { /* ignore */ }
@@ -196,8 +181,6 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     }),
     [visible],
   )
-  const aiEntries = useMemo(() => visible.map((c: any) => ({ category: c.category, content: c.content })), [visible])
-
   const boosterUsage = useMemo(() => boosterUsageFrom(comments), [comments])
   const puenteProposal = useMemo(() => comments.find((c: any) => c.category === PUENTE_CAT) ?? null, [comments])
   const pourquoiOpen = useMemo(
@@ -271,8 +254,8 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     const fetchComments = async () => { const { data } = await supabase.from("Comment").select("*").eq("ceremonyId", params.id).order("createdAt"); if (data) setComments(data) }
     const fetchVotes = async () => { const { data } = await supabase.from("Vote").select("*").eq("ceremonyId", params.id); if (data) setVotes(data) }
 
-    // One channel per device: feed changes AND room presence. This used to be
-    // two sockets (ceremony + presence), which is real overhead on phones.
+    // One channel per device for feed changes. Presence and the second
+    // presence socket were removed with the minimalist cut.
     const channel = supabase.channel(`ceremony:${params.id}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "Comment", filter: `ceremonyId=eq.${params.id}` },
         (payload: any) => setComments(prev => mergeComment(prev, payload.new)))
@@ -282,10 +265,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
         (payload: any) => setVotes(prev => prev.filter(v => v.id !== payload.old.id)))
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "Comment", filter: `ceremonyId=eq.${params.id}` },
         (payload: any) => setComments(prev => mergeComment(prev, payload.new)))
-      .on("presence", { event: "sync" }, () => setOnline(Math.max(1, Object.keys(channel.presenceState()).length)))
-      .subscribe((status: string) => {
-        if (status === "SUBSCRIBED") void channel.track({ at: Date.now() })
-      })
+      .subscribe()
 
     fetchCeremony()
     fetchComments()
@@ -293,7 +273,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     return () => { supabase.removeChannel(channel) }
   }, [params.id])
 
-  // Open quests are read on every device once the ceremony is done, so the
+  // Open actions are read on every device once the ceremony is done, so the
   // results screen is the same everywhere — not just on the device that
   // clicked Finish.
   useEffect(() => {
@@ -304,7 +284,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
       .eq("ceremonyId", params.id)
       .neq("status", "completed")
       .order("createdAt")
-      .then(({ data }: { data: any[] | null }) => { if (data) setNextQuests(data) })
+      .then(({ data }: { data: any[] | null }) => { if (data) setNextActions(data) })
   }, [stage, params.id])
 
   const victoryCelebrated = useRef(false)
@@ -404,7 +384,7 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   const createSuggestedAction = async (s: { title: string; why: string }) => {
     const supabase = getSupabase()
     const { error } = await supabase.from("Action").insert({ title: s.title, description: s.why || "Suggested by Game Master", owner: "Unassigned", ceremonyId: params.id, xpValue: 100 })
-    if (!error) setForgedQuests(prev => ({ ...prev, [s.title]: true }))
+    if (!error) setForgedActions(prev => ({ ...prev, [s.title]: true }))
   }
 
   const completeAction = async (action: any, teamId: string) => {
@@ -412,7 +392,6 @@ export default function RetroPage({ params }: { params: { id: string } }) {
     await supabase.from("Action").update({ status: "completed", completedAt: new Date().toISOString() }).eq("id", action.id)
     const { data: t } = await supabase.from("Team").select("xp").eq("id", teamId).single()
     if (t) await supabase.from("Team").update({ xp: (t.xp ?? 0) + actionValue(action.xpValue) }).eq("id", teamId)
-    await awardBadge(supabase, teamId, "Closer", "Completed your first action item")
     setPrevActions(prev => prev.map(a => (a.id === action.id ? { ...a, status: "completed", completedAt: new Date().toISOString() } : a)))
   }
 
@@ -486,41 +465,8 @@ export default function RetroPage({ params }: { params: { id: string } }) {
       // Side effects. The team already sees the result screen by now.
       if (hadPrev) await supabase.from("Team").update({ streak: nextStreak }).eq("id", ceremony.teamId)
       await supabase.from("Team").update({ xp: after, level: levelForXp(after) }).eq("id", ceremony.teamId)
-      if (streakKept && nextStreak >= 3) await awardBadge(supabase, ceremony.teamId, "Streak Mindset", "3-sprint improvement streak with reflection")
-      const { data: done } = await supabase.from("Ceremony").select("id").eq("teamId", ceremony.teamId).eq("status", "completed")
-      if (done && done.length <= 1) await awardBadge(supabase, ceremony.teamId, "Retrospective Explorer", "Completed first ceremony with reflection")
-      if (asymmetryAnswers.length >= 3) {
-        await awardBadge(supabase, ceremony.teamId, "Recall Master", "mastery:recall-master — Spaced retrieval warm-up: correctly identified 3+ past commitments")
-      }
-      try {
-        const { data: nq } = await supabase.from("Action").select("*").eq("ceremonyId", params.id).neq("status", "completed").order("createdAt")
-        if (nq) setNextQuests(nq)
-        const openCount = (nq ?? []).length
-        await fetch("/api/sprintmap", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ceremonyId: params.id,
-            type: openCount > 0 ? "quest" : "insight",
-            title: `${mode.name} reflection pinned`,
-            description: `${visible.length} entries shared · engagement ${score + bonus} · ${openCount} open quests`,
-          }),
-        })
-        // Pin key team-shared themes (winds/anchors/risks/islands) so Legacy Sprint Map reflects what the team shared.
-        const pin = (type: string, title: string, description: string) =>
-          fetch("/api/sprintmap", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ceremonyId: params.id, type, title: title.slice(0, 120), description: description.slice(0, 500) }),
-          }).catch(() => null)
-        const byCat = (cat: string) => visible.filter((c: any) => c.category === cat).slice(0, 2)
-        await Promise.all([
-          ...byCat("🌬️ Wind").map((c: any) => pin("wind", c.content, "Wind shared by the team")),
-          ...byCat("⚓ Anchor").map((c: any) => pin("anchor", c.content, "Anchor shared by the team")),
-          ...byCat("🪨 Rocks").map((c: any) => pin("rock", c.content, "Risk/rock shared by the team")),
-          ...byCat("🏝️ Island").map((c: any) => pin("star", c.content, "Island/goal shared by the team")),
-        ])
-      } catch { /* map pin is optional */ }
+      const { data: nq } = await supabase.from("Action").select("*").eq("ceremonyId", params.id).neq("status", "completed").order("createdAt")
+      if (nq) setNextActions(nq)
 
       setAiLoading(true)
       try {
@@ -578,19 +524,18 @@ export default function RetroPage({ params }: { params: { id: string } }) {
             {!aiLoading && !result?.summary && <p className="text-sm text-gray-500">AI insights unavailable.</p>}
             {doneActions.map(a => (
               <div key={a.title} className="flex items-center gap-2 py-1">
-                {forgedQuests[a.title] ? <span className="text-teal text-sm font-bold">✓</span> : <button onClick={() => createSuggestedAction(a)} className="text-xs px-2 py-0.5 rounded-full border border-gold text-gold hover:bg-gold hover:text-black">+ action</button>}
+                {forgedActions[a.title] ? <span className="text-teal text-sm font-bold">✓</span> : <button onClick={() => createSuggestedAction(a)} className="text-xs px-2 py-0.5 rounded-full border border-gold text-gold hover:bg-gold hover:text-black">+ action</button>}
                 <span className="text-sm">{a.title} <span className="text-gray-500">· {a.why}</span></span>
               </div>
             ))}
           </div>
-          {nextQuests.length > 0 && (
+          {nextActions.length > 0 && (
             <div className="text-left bg-dark/50 rounded-xl p-4 mb-6">
-              <p className="font-bold mb-2">⚔️ Next sprint quests</p>
-              {nextQuests.map(q => <div key={q.id} className="flex justify-between text-sm py-1"><span>{q.title} <span className="text-gray-500">· {q.owner}</span></span><span className="text-gold font-bold">{q.xpValue ?? 50}</span></div>)}
+              <p className="font-bold mb-2">✅ Actions for next sprint</p>
+              {nextActions.map(q => <div key={q.id} className="flex justify-between text-sm py-1"><span>{q.title} <span className="text-gray-500">· {q.owner}</span></span><span className="text-teal text-xs">open</span></div>)}
             </div>
           )}
           <p className="text-sm text-gray-400 mb-6">Every voice counts · No leaderboards · Team learning focused</p>
-          <ShareRecap ceremonyId={params.id} />
           <button onClick={() => router.push(`/dashboard?team=${ceremony?.teamId}`)} className="w-full p-3 bg-gold text-black font-bold rounded-lg hover:bg-yellow-400">Back to team dashboard</button>
         </div>
       </main>
@@ -616,7 +561,6 @@ export default function RetroPage({ params }: { params: { id: string } }) {
           <TeamBoard
             step={boardStep}
             playerEntries={entryCount}
-            online={online}
             waiting={null}
             enabled={boardEnabled}
             onToggle={toggleBoard}
@@ -706,7 +650,6 @@ export default function RetroPage({ params }: { params: { id: string } }) {
         <TeamBoard
           step={boardStep}
           playerEntries={entryCount}
-          online={online}
           waiting={waiting}
           enabled={boardEnabled}
           onToggle={toggleBoard}
@@ -747,15 +690,6 @@ export default function RetroPage({ params }: { params: { id: string } }) {
           </div>
         ))}
 
-        {/* Psychological safety stays private and per-device by design — it is
-            a personal check, never a shared number. */}
-        {!safetyComplete && round === 1 && (
-          <SafetyCheckIn onComplete={(score) => { setSafetyScore(score); setSafetyComplete(true) }} />
-        )}
-        {safetyComplete && safetyScore !== null && (
-          <div className="text-xs text-gray-500 mb-2">🛡️ Safety: {safetyScore}/5</div>
-        )}
-
         {/* Hanabi-style warm-up: optional hidden action (information asymmetry mechanic, per-device). */}
         {round === 1 && !asymmetryDone && (
           showHanabi ? (
@@ -763,7 +697,6 @@ export default function RetroPage({ params }: { params: { id: string } }) {
               sprintNumber={ceremony?.sprint?.number ?? 1}
               playerCount={3}
               onComplete={(answers) => {
-                setAsymmetryAnswers(answers)
                 setAsymmetryDone(true)
                 const sprintId = ceremony?.sprintId
                 if (sprintId) {
@@ -793,8 +726,6 @@ export default function RetroPage({ params }: { params: { id: string } }) {
           done={flow.recallDone}
           onComplete={(answer) => { void answer; void emitFlow({ e: "recall" }) }}
         />
-
-        <AIFacilitator entries={aiEntries} round={round} totalRounds={totalRounds} />
 
         {round === 1 && prevCeremony && prevActions.length > 0 && (
           <div className="glass rounded-xl p-6 mb-6">
@@ -851,7 +782,6 @@ export default function RetroPage({ params }: { params: { id: string } }) {
         />
 
         <div className="space-y-6">
-          <PeerRecognition teamId={ceremony?.teamId} ceremonyId={params.id} />
           {matched.map(({ cat, items }) => {
             if (items.length === 0) return null
             return <div key={cat.name}><h3 className="text-lg font-bold mb-1">{cat.name}</h3><p className="text-xs text-gray-500 mb-3">{cat.hint}</p><div className="space-y-3">{items.map(commentCard)}</div></div>

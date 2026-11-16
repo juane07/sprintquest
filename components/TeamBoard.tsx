@@ -1,17 +1,15 @@
 "use client"
 import { BOARD_STEPS, DEPTH_BOOSTERS, BOARD_COPY, type DepthBooster } from "../constants"
 import type { BoosterUsage } from "../lib/board"
-import Presence from "@/components/Presence"
 
-// The shared-flow surface. Everything it shows — the team's square, what the
-// team is waiting on, how many people are in the room — is derived from the
-// shared ceremony log, so every device renders the same thing at the same
-// moment. Nothing here is local to one browser.
+// The shared-flow surface. Everything it shows — the team's square and what
+// the team is waiting on — is derived from the shared ceremony log, so every
+// device renders the same thing at the same moment. Nothing here is local to
+// one browser.
 
 interface TeamBoardProps {
   step: number
   playerEntries: number
-  online: number
   waiting: string | null
   enabled: boolean
   onToggle: (v: boolean) => void
@@ -23,7 +21,7 @@ interface TeamBoardProps {
 }
 
 export default function TeamBoard({
-  step, playerEntries: playerCount, online, waiting, enabled, onToggle, usage,
+  step, playerEntries: playerCount, waiting, enabled, onToggle, usage,
   onUseBooster, activeNote, onAdvance, advanceLabel,
 }: TeamBoardProps) {
   const pos = Math.min(Math.max(step, 0), BOARD_STEPS.length - 1)
@@ -66,7 +64,6 @@ export default function TeamBoard({
             role="status"
             aria-live="polite"
           >
-            <Presence count={online} />
             <span className="font-bold">{waiting ? "⏳" : "✅"}</span>
             <span className="font-bold">{waiting ?? "Ready — the team can move"}</span>
             <span className="text-gray-400">·</span>
@@ -109,8 +106,8 @@ export default function TeamBoard({
             role="status"
             aria-live="polite"
           >
-            <Presence count={online} />
-            {waiting ? `⏳ ${waiting}` : `✅ Square ${pos + 1} of ${BOARD_STEPS.length} — ${BOARD_STEPS[pos].label} · Ready — the team can move`}
+            <span className="font-bold">{waiting ? "⏳" : "✅"}</span>
+            {waiting ? ` ${waiting}` : ` Square ${pos + 1} of ${BOARD_STEPS.length} — ${BOARD_STEPS[pos].label} · Ready — the team can move`}
           </div>
           {onAdvance && (
             <div className="mt-3">

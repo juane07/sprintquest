@@ -318,7 +318,7 @@ export default function Home() {
         <p className="text-gray-400 text-center mb-10 max-w-2xl mx-auto">Every design decision is validated against learning science.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🔄</div><h3 className="font-bold mb-1">Spaced Retrieval</h3><p className="text-sm text-gray-400">Every retro opens recalling past commitments — retrieval beats re-reading.</p></div>
-          <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🤖</div><h3 className="font-bold mb-1">AI Facilitator</h3><p className="text-sm text-gray-400">Real-time pattern detection and probing questions — scaffolding reflection, not summarizing.</p></div>
+          <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🤖</div><h3 className="font-bold mb-1">AI Game Master</h3><p className="text-sm text-gray-400">End-of-retro summary and suggested next actions — scaffolding the team&apos;s own reflection, never replacing it.</p></div>
           <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">📈</div><h3 className="font-bold mb-1">Engagement Metrics</h3><p className="text-sm text-gray-400">Team-level informational dashboards, like a fitness tracker — never rewards that undermine motivation.</p></div>
         </div>
       </section>
@@ -328,12 +328,10 @@ export default function Home() {
         <div className="space-y-3">
           <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Do players need an account?</h3><p className="text-sm text-gray-400">No. They open the link, enter the 6-letter team code, and play — on any device. Only facilitators optionally sign in with GitHub or Google.</p></div>
           <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Why only one game mode?</h3><p className="text-sm text-gray-400">Less setup debate, more reflection. Sailboat already covers what pushes us forward (wind), what holds us back (anchors), what risks are ahead (rocks) and where we are going (island). One flow keeps onboarding to a minute and every retro comparable with the last.</p></div>
-          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Does it replace Jira?</h3><p className="text-sm text-gray-400">No, it sits on top of it. Import open sprint issues as quests with one click; completing a quest can move the Jira issue to Done.</p></div>
           <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Is it surveillance disguised as a game?</h3><p className="text-sm text-gray-400">No. Metrics are team-level and informational — like a fitness tracker, never a prize. Entries can be anonymous, there are no individual rankings, and votes stay within the ceremony.</p></div>
           <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Why no individual leaderboards?</h3><p className="text-sm text-gray-400">Social comparison pulls attention toward status instead of learning. We measure team learning only — cooperation outperforms competition without the stress.</p></div>
-          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">What are Mastery Cards?</h3><p className="text-sm text-gray-400">Cards like Pattern Spotter or Safety Builder unlock when the team demonstrably shows that behavior across sprints. They signal mastery, not attendance.</p></div>
           <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">What is the Team Journey Board?</h3><p className="text-sm text-gray-400">A cooperative wrapper over your Sailboat retro: the team moves one shared token across 5 squares (Start, Share, Deepen, Vote, Quest). No dice for advancing, no XP for moving, no rankings. Three optional depth boosters (Magnifier, Why Twice, Bridge) add reflection — never shortcuts. You can hide it anytime and keep the classic view.</p></div>
-          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">What does it cost?</h3><p className="text-sm text-gray-400">The project runs permanently on free tiers. AI facilitation uses a free Groq key; nothing here generates infrastructure bills.</p></div>
+          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">What does it cost?</h3><p className="text-sm text-gray-400">The project runs permanently on free tiers. The optional AI summary uses a free Groq key; nothing here generates infrastructure bills.</p></div>
         </div>
       </section>
 

@@ -5,26 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation"
 
 import { progressToNext, actionValue, engagementLabel, levelLabel } from "@/lib/xp"
 import Navbar from "@/components/Navbar"
-import MasteryDeckDisplay from "@/components/MasteryDeckDisplay"
-import LegacySprintMap from "@/components/LegacySprintMap"
-import { buildDeckFromBadges } from "@/components/mastery-deck"
-import { BOARD_CATEGORY, buildSprintMapFromBoardComments } from "@/components/legacy-sprint-map"
-import type { SprintMap } from "@/components/legacy-sprint-map"
-
-async function awardBadge(supabase: any, teamId: string, name: string, description: string) {
-  const { data } = await supabase.from("Badge").select("id").eq("teamId", teamId).eq("name", name).limit(1)
-  if (!data || data.length === 0) {
-    await supabase.from("Badge").insert({ name, description, teamId })
-  }
-}
 
 function DashboardInner() {
   const [team, setTeam] = useState<any>(null)
   const [ceremonies, setCeremonies] = useState<any[]>([])
   const [actions, setActions] = useState<any[]>([])
-  const [badges, setBadges] = useState<any[]>([])
   const [recentComments, setRecentComments] = useState<any[]>([])
-  const [sprintMap, setSprintMap] = useState<SprintMap | null>(null)
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState<string | null>(null)
   const [completing, setCompleting] = useState<string | null>(null)
@@ -54,15 +40,6 @@ function DashboardInner() {
             if (rc) setRecentComments(rc)
           }
         }
-        const { data: b } = await supabase.from("Badge").select("*").eq("teamId", teamId).order("earnedAt", { ascending: false })
-        if (b) setBadges(b)
-        const { data: sprints } = await supabase.from("Sprint").select("id,number").eq("teamId", teamId)
-        let board: any[] = []
-        if (c && c.length > 0) {
-          const { data: bc } = await supabase.from("Comment").select("id,content,createdAt,ceremonyId").in("ceremonyId", c.map((x: any) => x.id)).eq("category", BOARD_CATEGORY).order("createdAt", { ascending: true })
-          if (bc) board = bc
-        }
-        setSprintMap(buildSprintMapFromBoardComments(teamId, c ?? [], sprints ?? [], board))
       } catch (e: any) {
         setError(e?.message ?? "Failed to load team.")
       } finally {
@@ -110,10 +87,7 @@ function DashboardInner() {
         await supabase.from("Team").update({ xp: (t.xp ?? 0) + gain }).eq("id", teamId)
         setTeam({ ...team, xp: (t.xp ?? 0) + gain })
       }
-      await awardBadge(supabase, teamId, "Action Completer", "Completed action items consistently")
       setActions(prev => prev.map(a => (a.id === action.id ? { ...a, status: "completed", completedAt: new Date().toISOString() } : a)))
-      const { data: b } = await supabase.from("Badge").select("*").eq("teamId", teamId).order("earnedAt", { ascending: false })
-      if (b) setBadges(b)
     } finally {
       setCompleting(null)
     }
@@ -188,7 +162,6 @@ function DashboardInner() {
           <a href="/" className="hover:text-teal transition">Home</a>
           <span>/</span>
           <span className="text-gray-300">Dashboard</span>
-          {teamId && <><span>/</span><a href={`/history?team=${teamId}`} className="hover:text-teal transition">History</a></>}
         </nav>
         <div className="flex items-center gap-6 mb-6 mt-2">
           <div className="text-6xl">{team.mascot}</div>
@@ -287,21 +260,6 @@ function DashboardInner() {
             </section>
           )
         })()}
-        <details className="mb-8 glass rounded-xl p-4">
-          <summary className="cursor-pointer font-bold text-lg">🏅 Mastery & Team Progress <span className="text-sm font-normal text-gray-400">(expand)</span></summary>
-          <div className="mt-4">
-            {badges.length === 0 ? (
-              <div className="glass rounded-xl p-4 text-sm text-gray-400 mb-4">
-                No mastery badges yet. Badges signal team mastery (not participation) — they unlock as your team demonstrates learning patterns over time.
-              </div>
-            ) : (
-              <div className="flex gap-3 flex-wrap mb-4">{badges.map((b: any) => <div key={b.id} title={b.description} className="glass rounded-xl px-4 py-2 text-sm"><span className="font-bold">{b.name}</span> <span className="text-gray-400">· {b.description}</span></div>)}
-              </div>
-            )}
-            {teamId && <MasteryDeckDisplay teamId={teamId} initialDeck={buildDeckFromBadges(teamId, badges)} />}
-            {sprintMap && <LegacySprintMap map={sprintMap} />}
-          </div>
-        </details>
         <section className="mb-12"><h2 className="text-2xl font-bold mb-4">📋 Past ceremonies</h2>
           <div className="space-y-4">{ceremonies.length === 0 && <p className="text-gray-400">No ceremonies yet — start the first one above!</p>}
             {(ceremonies || []).filter(Boolean).map((c: any) => {
