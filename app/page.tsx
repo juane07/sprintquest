@@ -123,9 +123,10 @@ export default function Home() {
         .select()
         .single()
       await supabase.from("Comment").insert([
-        { ceremonyId: ceremony.id, content: "We shipped the checkout flow two days early 🚀", author: "Alex (demo)", category: "Positive" },
-        { ceremonyId: ceremony.id, content: "Code reviews are sitting for 3+ days on average", author: "Sam (demo)", category: "Challenge" },
-        { ceremonyId: ceremony.id, content: "Try a 15-minute review SLA for urgent PRs", author: "Alex (demo)", category: "Idea" },
+        { ceremonyId: ceremony.id, content: "We shipped the checkout flow two days early 🚀", author: "Alex (demo)", category: "🌬️ Wind" },
+        { ceremonyId: ceremony.id, content: "Code reviews are sitting for 3+ days on average", author: "Sam (demo)", category: "⚓ Anchor" },
+        { ceremonyId: ceremony.id, content: "The payment sandbox is flaky and may block testing next sprint", author: "Anonymous", anonymous: true, category: "🪨 Rocks" },
+        { ceremonyId: ceremony.id, content: "Ship checkout to 100% of users with zero P1 bugs", author: "Alex (demo)", category: "🏝️ Island" },
       ])
       router.push(`/retro/${ceremony.id}`)
       saveTeam(team)
@@ -227,6 +228,22 @@ export default function Home() {
       <button onClick={startDemo} disabled={demoBusy} className="mt-5 text-teal hover:text-white transition disabled:opacity-50 font-medium">
         {demoBusy ? "Preparing your demo..." : "⚡ Just looking? Try an instant demo — no setup"}
       </button>
+      <div className="mt-10 w-full max-w-2xl">
+        <p className="text-center text-xs uppercase tracking-[0.2em] text-mist/50 mb-3">How it works</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { n: "1", title: "Create or join", text: "A 6-letter code is all players need — no accounts, no installs." },
+            { n: "2", title: "Sail 4 rounds", text: "Wind, anchors, rocks and your island — one idea per entry." },
+            { n: "3", title: "Commit to change", text: "Finish with actions that open the next retro automatically." },
+          ].map((s) => (
+            <div key={s.n} className="glass rounded-xl p-4">
+              <div className="text-[10px] font-bold tracking-widest text-gold mb-1">STEP {s.n}</div>
+              <div className="font-bold text-sm">{s.title}</div>
+              <div className="text-xs text-mist/60 mt-1 leading-relaxed">{s.text}</div>
+            </div>
+          ))}
+        </div>
+      </div>
       {facilitated.length > 0 && (
         <div className="mt-8 w-full max-w-md">
           <p className="text-sm text-mist/70 mb-2 text-center uppercase tracking-wider">Teams you facilitate</p>
@@ -289,12 +306,12 @@ export default function Home() {
 
       <section className="max-w-6xl mx-auto px-6 sm:px-8 py-10">
         <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-center mb-2">Board-game mechanics, built for learning</h2>
-        <p className="text-gray-400 text-center mb-10 max-w-2xl mx-auto">Cooperative tabletop ideas adapted to Scrum — every mechanic serves team learning, never competition. The Team Journey Board wraps any mode: one team token, zero dice for advancing, zero XP for moving.</p>
+        <p className="text-gray-400 text-center mb-10 max-w-2xl mx-auto">Cooperative tabletop ideas adapted to Scrum — every mechanic serves team learning, never competition. The Team Journey Board wraps every retro: one team token, zero dice for advancing, zero XP for moving.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="glass rounded-xl p-5 border-gold"><div className="text-3xl mb-2">🗺️</div><h3 className="font-bold mb-1">Team Journey Board <span className="text-xs font-normal text-gold">NEW</span></h3><p className="text-sm text-gray-400">Your retro as a cooperative board: 5 squares from Start to Quest, one team token, depth boosters that deepen reflection instead of speeding it up. Toggle it on or off anytime.</p></div>
           <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🃏</div><h3 className="font-bold mb-1">Hanabi Warm-Up</h3><p className="text-sm text-gray-400">Teammates hold cards from past sprints they can&apos;t show. Describe them verbally so the team reconstructs past commitments — spaced retrieval as a cooperative game.</p></div>
           <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🏆</div><h3 className="font-bold mb-1">Mastery Deck</h3><p className="text-sm text-gray-400">Cards like Pattern Spotter or Bridge Builder unlock only when the team demonstrates the behavior — mastery signals, never participation prizes.</p></div>
-          <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🗺️</div><h3 className="font-bold mb-1">Legacy Sprint Map</h3><p className="text-sm text-gray-400">A persistent board that evolves every sprint — winds, anchors, bosses defeated. Recurring patterns surface so the team can finally break them.</p></div>
+          <div className="glass rounded-xl p-5"><div className="text-3xl mb-2">🗺️</div><h3 className="font-bold mb-1">Legacy Sprint Map</h3><p className="text-sm text-gray-400">A persistent board that evolves every sprint — winds, anchors, rocks and islands. Recurring patterns surface so the team can finally break them.</p></div>
         </div>
       </section>
 
@@ -313,11 +330,12 @@ export default function Home() {
         <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-center mb-8">Questions your coworkers will ask</h2>
         <div className="space-y-3">
           <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Do players need an account?</h3><p className="text-sm text-gray-400">No. They open the link, enter the 6-letter team code, and play — on any device. Only facilitators optionally sign in with GitHub or Google.</p></div>
+          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Why only one game mode?</h3><p className="text-sm text-gray-400">Less setup debate, more reflection. Sailboat already covers what pushes us forward (wind), what holds us back (anchors), what risks are ahead (rocks) and where we are going (island). One flow keeps onboarding to a minute and every retro comparable with the last.</p></div>
           <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Does it replace Jira?</h3><p className="text-sm text-gray-400">No, it sits on top of it. Import open sprint issues as quests with one click; completing a quest can move the Jira issue to Done.</p></div>
           <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Is it surveillance disguised as a game?</h3><p className="text-sm text-gray-400">No. Metrics are team-level and informational — like a fitness tracker, never a prize. Entries can be anonymous, there are no individual rankings, and votes stay within the ceremony.</p></div>
           <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">Why no individual leaderboards?</h3><p className="text-sm text-gray-400">Social comparison triggers the brain&apos;s loss-detection circuits and kills psychological safety. We measure team learning only — cooperation outperforms competition without the stress.</p></div>
           <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">What are Mastery Cards?</h3><p className="text-sm text-gray-400">Cards like Pattern Spotter or Safety Builder unlock when the team demonstrably shows that behavior across sprints. They signal mastery, not attendance.</p></div>
-          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">What is the Team Journey Board?</h3><p className="text-sm text-gray-400">A cooperative wrapper over any retro mode: the team moves one shared token across 5 squares (Start, Share, Deepen, Vote, Quest). No dice for advancing, no XP for moving, no rankings. Three optional depth boosters (Magnifier, Why Twice, Bridge) add reflection — never shortcuts. You can hide it anytime and keep the classic view.</p></div>
+          <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">What is the Team Journey Board?</h3><p className="text-sm text-gray-400">A cooperative wrapper over your Sailboat retro: the team moves one shared token across 5 squares (Start, Share, Deepen, Vote, Quest). No dice for advancing, no XP for moving, no rankings. Three optional depth boosters (Magnifier, Why Twice, Bridge) add reflection — never shortcuts. You can hide it anytime and keep the classic view.</p></div>
           <div className="glass rounded-xl p-5"><h3 className="font-bold mb-1">What does it cost?</h3><p className="text-sm text-gray-400">The project runs permanently on free tiers. AI facilitation uses a free Groq key; nothing here generates infrastructure bills.</p></div>
         </div>
       </section>

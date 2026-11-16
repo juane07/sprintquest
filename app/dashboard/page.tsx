@@ -212,13 +212,32 @@ function DashboardInner() {
         {error && <div className="bg-red-900/60 text-red-200 p-3 rounded mb-4 text-sm">{error}</div>}
 
         {ceremonies.length === 0 && (
-          <div className="glass rounded-xl p-6 mb-8">
-            <h2 className="text-xl font-bold mb-3">🧭 Your first retro in 3 steps</h2>
-            <ol className="space-y-2 text-gray-300">
-              <li><span className="font-bold text-gold">1.</span> Invite — share <span className="font-mono text-teal font-bold">{team.joinCode}</span> (no account, works on mobile)</li>
-              <li><span className="font-bold text-gold">2.</span> Start the Sailboat retro</li>
-              <li><span className="font-bold text-gold">3.</span> Finish → share your engagement level</li>
+          <div className="glass rounded-xl p-6 mb-8 border-gold/30">
+            <h2 className="text-xl font-bold mb-1">🚀 Welcome aboard — your first retro in 4 steps</h2>
+            <p className="text-sm text-gray-400 mb-4">One mode, one flow. No setup debate — just sail.</p>
+            <ol className="grid gap-3 sm:grid-cols-2 text-sm text-gray-300">
+              <li className="rounded-lg bg-dark/40 p-3">
+                <span className="text-xs font-bold tracking-widest text-gold">STEP 1</span>
+                <div className="font-bold mt-1">Invite your team</div>
+                <div className="text-gray-400">Share the code <span className="font-mono text-teal font-bold">{team.joinCode}</span> — players join from any phone, no account.</div>
+              </li>
+              <li className="rounded-lg bg-dark/40 p-3">
+                <span className="text-xs font-bold tracking-widest text-gold">STEP 2</span>
+                <div className="font-bold mt-1">Start the Sailboat retro</div>
+                <div className="text-gray-400">Everyone lands on the same shared board — whoever moves the team token, everyone follows.</div>
+              </li>
+              <li className="rounded-lg bg-dark/40 p-3">
+                <span className="text-xs font-bold tracking-widest text-gold">STEP 3</span>
+                <div className="font-bold mt-1">Sail the 4 rounds</div>
+                <div className="text-gray-400">🌬️ Wind → ⚓ Anchor → 🪨 Rocks → 🏝️ Island. One idea per entry, anonymous by default.</div>
+              </li>
+              <li className="rounded-lg bg-dark/40 p-3">
+                <span className="text-xs font-bold tracking-widest text-gold">STEP 4</span>
+                <div className="font-bold mt-1">Reflect and commit</div>
+                <div className="text-gray-400">Finish with guided reflection and action items — they open the next retro automatically.</div>
+              </li>
             </ol>
+            <p className="text-xs text-gray-500 mt-4">⏱️ The round timer is a gentle guide, not a deadline — it never closes the ceremony for you.</p>
           </div>
         )}
         {(() => {

@@ -102,9 +102,9 @@ export default function RetroPage({ params }: { params: { id: string } }) {
   }
 
   useEffect(() => {
-    try { if (!window.localStorage.getItem("sq_coach_seen")) setCoachShow(true) } catch { /* private mode */ }
+    try { if (!window.localStorage.getItem("sq_coach_v2_seen")) setCoachShow(true) } catch { /* private mode */ }
   }, [])
-  const dismissCoach = () => { try { window.localStorage.setItem("sq_coach_seen", "1") } catch { /* ignore */ }; setCoachShow(false) }
+  const dismissCoach = () => { try { window.localStorage.setItem("sq_coach_v2_seen", "1") } catch { /* ignore */ }; setCoachShow(false) }
 
   const [actionFor, setActionFor] = useState<any>(null)
   const [actionTitle, setActionTitle] = useState("")
@@ -693,13 +693,13 @@ export default function RetroPage({ params }: { params: { id: string } }) {
               <p className="font-bold">👋 First time here? 60-second tour</p>
               <button onClick={dismissCoach} className="text-xs text-gray-500 hover:text-white">Got it ✕</button>
             </div>
-            <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
-              <li><b>Recall</b> — review what your team committed last sprint.</li>
-              <li><b>Share</b> — post entries below, one idea per entry, anonymous if you like.</li>
-              <li><b>Reflect</b> — guided prompts deepen team learning.</li>
-              <li><b>Finish</b> — lock in, share engagement level, actions become next sprint&apos;s quests.</li>
+            <ol className="text-sm text-gray-300 space-y-1.5 list-decimal list-inside">
+              <li><b>Recall</b> — answer the warm-up prompt. One shared team token; the first sprint can skip it.</li>
+              <li><b>Sail 4 rounds</b> — 🌬️ Wind, ⚓ Anchor, 🪨 Rocks, 🏝️ Island. One idea per entry.</li>
+              <li><b>Stay safe</b> — entries are anonymous by default, names are optional. ⏱️ The timer is a guide, never a deadline.</li>
+              <li><b>Reflect &amp; finish</b> — guided reflection, vote what matters, then turn it into actions for the next retro.</li>
             </ol>
-            <p className="text-sm text-gray-300 mt-2 list-inside">The whole team sees the same board. Whoever moves the token, everyone moves.</p>
+            <p className="text-sm text-gray-300 mt-2">The whole team shares this board — when one person moves the token, everyone moves.</p>
           </div>
         )}
 

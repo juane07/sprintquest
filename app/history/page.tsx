@@ -93,7 +93,11 @@ function HistoryInner() {
         </div>
         <section className="mb-10"><h2 className="text-2xl font-bold mb-4">🎮 Ceremonies</h2>
           <div className="space-y-3">
-            {ceremonies.length === 0 && <p className="text-gray-400">No ceremonies yet.</p>}
+            {ceremonies.length === 0 && (
+              <div className="glass rounded-xl p-6 text-sm text-gray-400">
+                No ceremonies yet. <a href={`/dashboard?team=${teamId}`} className="text-teal hover:text-white underline-offset-4 hover:underline">Start your first Sailboat retro →</a>
+              </div>
+            )}
             {(ceremonies || []).filter(Boolean).map((c: any) => (
               <a key={c.id} href={`/retro/${c.id}`} className="glass rounded-xl p-4 flex justify-between items-center hover:border-gold transition block">
                 <span className="font-bold">🏝️ Sailboat Retro</span>
