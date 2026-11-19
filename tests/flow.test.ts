@@ -161,6 +161,12 @@ describe("seedFlowFromCeremony", () => {
     expect(seedFlowFromCeremony({ round: 0, status: "active" }, 4)).toEqual(emptyFlow())
   })
 
+  it("starts at the start square while the ceremony is still loading", () => {
+    // The retro page renders once with a null ceremony before its fetch lands.
+    expect(seedFlowFromCeremony(null, 4)).toEqual(emptyFlow())
+    expect(seedFlowFromCeremony(undefined, 4)).toEqual(emptyFlow())
+  })
+
   it("adopts pre-flow ceremonies from their durable round", () => {
     expect(seedFlowFromCeremony({ round: 2, status: "active" }, 4)).toMatchObject({ round: 2, recallDone: true, stage: "board" })
     expect(seedFlowFromCeremony({ round: 4, status: "active" }, 4)).toMatchObject({ round: 4, stage: "vote" })
