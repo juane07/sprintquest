@@ -203,8 +203,12 @@ export function isFlowRow(c: FlowRow): boolean {
 // Ceremonies started before the shared flow existed have no log. Seed their
 // phase from whatever durable progress we do have, then let live events take
 // over from there.
-export function seedFlowFromCeremony(c: { round?: number | null; status?: string | null }, totalRounds: number): FlowState {
+export function seedFlowFromCeremony(c: { round?: number | null; status?: string | null } | null | undefined, totalRounds: number): FlowState {
   const base = emptyFlow()
+  // The first render happens before the ceremony fetch resolves. Without this
+  // guard the whole page throws while server-rendering and again on hydration,
+  // so a freshly started ceremony dies before anyone can use it.
+  if (!c) return base
   if (c.status === "completed") return { ...base, stage: "done" }
   const stored = typeof c.round === "number" ? Math.floor(c.round) : 0
   if (stored <= 0) return base
