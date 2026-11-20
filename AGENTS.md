@@ -2,6 +2,14 @@
 
 **Project language: English (for now)**
 
+## Current scope (decided 2026-11-20 — takes precedence over the rest of this file)
+
+The goal is now **the minimum tool that runs a Scrum Sprint Retrospective**. Source of truth: the 2020 Scrum Guide, "Sprint Retrospective" — inspect how the sprint went, identify and order what went well and potential improvements, and create a plan with **at least one improvement** to implement in the next Sprint.
+
+The active product is: create/join a team by code → start a retrospective for a sprint → share observations ("What went well" / "What to improve", anonymous by default) → mark items to discuss first → agree at least one improvement with an owner → finish → review the previous sprint's improvements at the next retro. Three pages (`/`, `/dashboard`, `/retro/[id]`), client-side Supabase persistence, realtime on Comment/Vote/Action/Ceremony.
+
+**Removed from scope** (the sections below are historical design reference only, not active requirements): XP, levels, streaks, engagement metrics, badges, quests, team journey board, depth boosters, Hanabi/spaced retrieval, Sailboat mode, AI facilitator/summary, canvas game feel, round timer, PWA, facilitator accounts. Do not re-add them without an explicit user request. `lib/retro.ts` holds the only product logic that matters.
+
 ## What is this project
 
 SprintQuest is a **learning-science-informed gamified Agile ceremony platform** that converts Sprint Reviews and Retrospectives into experiences optimized for team learning and continuous improvement. Uses Team XP, levels, badges, quests, and streaks — all grounded in neuroscience and self-determination theory.

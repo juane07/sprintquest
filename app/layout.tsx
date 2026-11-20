@@ -1,22 +1,15 @@
 import type { Metadata } from "next"
 import "./globals.css"
-import PwaRegister from "@/components/PwaRegister"
-import AuthProvider from "@/components/AuthProvider"
 
 export const metadata: Metadata = {
-  title: "SprintQuest — Gamified Agile Ceremonies",
-  description: "Convert your Sprint Reviews and Retrospectives into a learning game grounded in neuroscience. Engagement metrics, spaced retrieval, structured reflection.",
-  themeColor: "#0b1020",
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "SprintQuest" },
+  title: "SprintQuest — Sprint Retrospective",
+  description: "Inspect the sprint, agree on improvements, and carry them into the next sprint.",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-dark text-white font-body antialiased">
-        <PwaRegister />
-        <AuthProvider>{children}</AuthProvider>
-      </body>
+      <body className="bg-dark text-white font-body antialiased">{children}</body>
     </html>
   )
 }
